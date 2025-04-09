@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -12,19 +13,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id(); // Primary key
-            $table->string('role'); // Role of the user (e.g., admin, student, etc.)
+            $table->uuid('id')->primary()->default(Str::uuid());
+            $table->string('role');
             $table->string('first_name');
             $table->string('last_name');
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('telephone')->nullable();
             $table->string('password');
-            $table->string('token')->nullable(); // For authentication or verification
+            $table->string('token')->nullable();
             $table->enum('status', ['active', 'inactive', 'banned'])->default('active');
-            $table->string('photo_profile')->nullable(); // Path to profile photo
-            $table->timestamps(); // created_at and updated_at
-            $table->softDeletes(); // deleted_at
+            $table->string('photo_profile')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('user_detail', function (Blueprint $table) {
+            $table->uuid('id')->primary()->default(Str::uuid());
+            $table->uuid('id_user');
+            $table->string('expertise')->nullable();
+            $table->text('about')->nullable();
+            $table->boolean('update_password')->default(false);
+            $table->string('photo_cover')->nullable();
+            $table->json('social_media')->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -34,12 +48,12 @@ return new class extends Migration
         });
 
         Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary(); // Session ID
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade'); // Optional user ID
-            $table->string('ip_address', 45)->nullable(); // IP address of the session
-            $table->text('user_agent')->nullable(); // User agent of the session
-            $table->text('payload'); // Session data
-            $table->integer('last_activity'); // Last activity timestamp
+            $table->string('id')->primary();
+            $table->foreignUuid('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->text('payload');
+            $table->integer('last_activity');
         });
     }
 
@@ -49,6 +63,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('user_detail');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
     }

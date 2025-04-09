@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  laravel-franken:
+    container_name: laravel-franken
+    image: image_laravel_franken
+    build: .
+    ports:
+      - 8001:80
+    env_file:
+      - .env
+    volumes:
+      - .:/app # Mount seluruh project ke /app di container
+      - ./vendor:/app/vendor # Override vendor supaya sinkron
+      - ./storage:/app/storage # Pastikan storage writable
