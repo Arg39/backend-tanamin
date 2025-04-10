@@ -30,7 +30,7 @@ class CertificateController extends Controller
             // Path QR temp file (PNG karena DomPDF lebih stabil)
             $qrTempPath = storage_path('app/qr_temp.png');
             QrCode::format('png')
-                ->size(200)
+                ->size(300)
                 ->margin(2)
                 ->merge($logoPath, 0.2, true)
                 ->generate($qrCodeUrl, $qrTempPath);
@@ -55,7 +55,7 @@ class CertificateController extends Controller
                 'issued_at' => '2025-10-01',
                 'certificate_code' => $id_certificate,
                 'qr_code' => $qrCodeBase64,
-                'bg_image' => asset('images/certificate-bg.png'), // inject asset full path
+                'bg_image' => asset('images/certificate-bg.png'),
             ];
 
             // Save debug HTML (optional)
@@ -70,7 +70,7 @@ class CertificateController extends Controller
 
             Log::info("PDF saved to: storage/app/{$filename}");
 
-            return $pdf->download("certificate.pdf");
+            return $pdf->stream("certificate.pdf");
         } catch (Exception $e) {
             Log::error($e->getMessage());
             return response("Internal Server Error: " . $e->getMessage(), 500);
