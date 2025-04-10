@@ -8,11 +8,12 @@ Ini adalah repository **backend** dari aplikasi **Sistem Kursus Online** yang di
 
 ### ⚙️ Requirement
 
-- PHP >= 8.3
-- Composer
-- Laravel 11
-- MySQL
-- FrankenPHP
+-   PHP >= 8.3
+-   Composer
+-   Laravel 11
+-   MySQL
+-   FrankenPHP
+-   Docker
 
 ---
 
@@ -41,5 +42,44 @@ php artisan db:seed
 
 # Jalankan server lokal
 php artisan serve
-# backend-tanamin
-# backend-tanamin
+```
+
+---
+
+### 🐳 Menjalankan dengan Docker dan FrankenPHP
+
+1. **Pastikan Docker sudah terinstal** di sistem Anda. Jika belum, silakan instal Docker dari [sini](https://www.docker.com/).
+
+2. **Bangun dan jalankan container Docker:**
+
+    ```bash
+    # Bangun image Docker
+    docker build -t backend-tanamin .
+
+    # Jalankan container
+    docker run -d -p 80:80 --name backend-tanamin backend-tanamin
+    ```
+
+3. **Akses aplikasi Laravel** melalui browser di `http://localhost`.
+
+4. **Hentikan container** jika diperlukan:
+
+    ```bash
+    docker stop backend-tanamin
+    ```
+
+5. **Hapus container** jika tidak lagi digunakan:
+
+    ```bash
+    docker rm backend-tanamin
+    ```
+
+---
+
+### 📂 Struktur Direktori
+
+-   `dockerfile`: File konfigurasi Docker untuk membangun image Laravel dengan FrankenPHP.
+-   `app/`: Direktori utama aplikasi Laravel.
+-   `.env`: File konfigurasi lingkungan aplikasi.
+
+---
