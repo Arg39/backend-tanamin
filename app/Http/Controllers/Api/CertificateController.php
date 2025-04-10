@@ -30,7 +30,7 @@ class CertificateController extends Controller
             // Path QR temp file (PNG karena DomPDF lebih stabil)
             $qrTempPath = storage_path('app/qr_temp.png');
             QrCode::format('png')
-                ->size(300)
+                ->size(400)
                 ->margin(2)
                 ->merge($logoPath, 0.2, true)
                 ->generate($qrCodeUrl, $qrTempPath);
@@ -49,10 +49,10 @@ class CertificateController extends Controller
 
             // Prepare data
             $viewData = [
-                'user' => 'Alfian Pabannu',
-                'course' => 'Fullstack Mobile Developer',
+                'user' => 'George Smith dawning',
+                'course' => 'Machine Learning for Beginners 2024',
                 'insructor' => 'Bacimm darynth Ashornto',
-                'issued_at' => '2025-10-01',
+                'issued_at' => '2024-10-01',
                 'certificate_code' => $id_certificate,
                 'qr_code' => $qrCodeBase64,
                 'bg_image' => asset('images/certificate-bg.png'),
