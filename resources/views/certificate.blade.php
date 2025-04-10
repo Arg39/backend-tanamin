@@ -48,7 +48,7 @@
                 style="width: 60%; height: 100%; position: absolute; right: 54px; top: 0; text-align: left; word-wrap: break-word; overflow-wrap: break-word; color: #006840; ">
                 <div style="position: absolute; top: 0;">
                     <p style="font-size: 86px; font-weight: bold;">CERTIFICATE</p>
-                    <p style="margin-top: -90px; font-size: 32px;">of completion</p>
+                    <p style="margin-top: -90px; font-size: 32px;">of course completion</p>
                     <p style="margin-top: -6px; font-size: 50px; font-weight: bold;">
                         {{ $course }}</p>
                     <p style="font-size: 18px; margin-top: -32px;">instructor <span
