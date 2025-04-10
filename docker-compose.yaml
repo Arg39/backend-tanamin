@@ -10,6 +10,6 @@ services:
     env_file:
       - .env
     volumes:
-      - .:/app # Mount seluruh project ke /app di container
-      - ./vendor:/app/vendor # Override vendor supaya sinkron
-      - ./storage:/app/storage # Pastikan storage writable
+      - .:/app
+      - ./vendor:/app/vendor
+      - ./storage:/app/storage
