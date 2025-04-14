@@ -22,6 +22,9 @@ RUN apt update && apt install -y \
 
 RUN echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memlimit.ini
 
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
+
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 
 RUN composer install
