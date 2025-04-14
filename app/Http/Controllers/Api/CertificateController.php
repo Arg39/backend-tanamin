@@ -57,13 +57,12 @@ class CertificateController extends Controller
 
             $pdf = Pdf::loadView('certificate', $viewData)->setPaper('a4', 'landscape');
 
-            $filename = 'test_' . Str::random(5) . '.pdf';
+            $filename = 'certificate_' . Str::slug($viewData['user'], ' ') . '.pdf'; // Nama file diubah menjadi "certificate_(nama)"
             $pdf->save(storage_path("app/{$filename}"));
 
             Log::info("PDF saved to: storage/app/{$filename}");
 
-            // return $pdf->stream("certificate.pdf");
-            return $pdf->download("certificate.pdf");
+            return $pdf->download($filename);
         } catch (Exception $e) {
             Log::error($e->getMessage());
             return response("Internal Server Error: " . $e->getMessage(), 500);
