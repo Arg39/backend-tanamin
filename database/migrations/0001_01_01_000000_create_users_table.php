@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -13,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
+            $table->uuid('id')->primary(); // UUID type
             $table->string('role');
             $table->string('first_name');
             $table->string('last_name');
@@ -21,7 +20,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('telephone')->nullable();
             $table->string('password');
-            $table->string('token')->nullable();
+            $table->text('token')->nullable();
             $table->enum('status', ['active', 'inactive', 'banned'])->default('active');
             $table->string('photo_profile')->nullable();
             $table->timestamps();
@@ -29,8 +28,7 @@ return new class extends Migration
         });
 
         Schema::create('user_detail', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
-            $table->uuid('id_user');
+            $table->uuid('id_user')->primary();
             $table->string('expertise')->nullable();
             $table->text('about')->nullable();
             $table->boolean('update_password')->default(false);

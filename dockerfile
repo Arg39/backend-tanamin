@@ -21,6 +21,7 @@ RUN apt update && apt install -y \
     && docker-php-ext-enable zip gd pdo_mysql imagick
 
 RUN echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memlimit.ini
+RUN echo "max_execution_time=120" > /usr/local/etc/php/conf.d/execution_time.ini
 
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache

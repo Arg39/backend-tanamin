@@ -48,9 +48,9 @@ php artisan serve
 
 ### 🐳 Menjalankan dengan Docker dan FrankenPHP
 
-1. **Pastikan Docker sudah terinstal** di sistem Anda. Jika belum, silakan instal Docker dari [sini](https://www.docker.com/).
+1.  **Pastikan Docker sudah terinstal** di sistem Anda. Jika belum, silakan instal Docker dari [sini](https://www.docker.com/).
 
-2. **Bangun dan jalankan container Docker:**
+2.  **Bangun dan jalankan container Docker:**
 
     ```bash
     # Bangun image Docker
@@ -60,18 +60,31 @@ php artisan serve
     docker run -d -p 80:80 --name backend-tanamin backend-tanamin
     ```
 
-3. **Akses aplikasi Laravel** melalui browser di `http://localhost`.
+3.  **Akses aplikasi Laravel** melalui browser di `http://localhost`.
 
-4. **Hentikan container** jika diperlukan:
+4.  **Hentikan container** jika diperlukan:
 
     ```bash
     docker stop backend-tanamin
     ```
 
-5. **Hapus container** jika tidak lagi digunakan:
+5.  **Hapus container** jika tidak lagi digunakan:
 
     ```bash
     docker rm backend-tanamin
+    ```
+
+6.  **Masuk ke dalam container Docker** untuk menjalankan perintah Laravel:
+
+    ```bash
+    docker exec -it laravel-franken bash
+    ```
+
+    Setelah masuk ke dalam container, Anda dapat menjalankan perintah Laravel seperti biasa, contohnya:
+
+    ```bash
+    php artisan migrate
+    php artisan db:seed
     ```
 
 ---

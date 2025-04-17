@@ -227,12 +227,7 @@
     "ItalicAngle": "0",
     "IsFixedPitch": "false",
     "CharacterSet": "ExtendedRoman",
-    "FontBBox": [
-        "-168",
-        "-218",
-        "1000",
-        "935"
-    ],
+    "FontBBox": ["-168", "-218", "1000", "935"],
     "UnderlinePosition": "-100",
     "UnderlineThickness": "50",
     "Version": "002.000",
