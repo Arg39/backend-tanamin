@@ -44,10 +44,16 @@ class PostResource extends JsonResource
      */
     public function toArray($request)
     {
+        $data = parent::toArray($request);
+
+        if (isset($data['detail']) && isset($data['detail']['id_user'])) {
+            unset($data['detail']['id_user']);
+        }
+
         return [
             'status'  => $this->status,
             'message' => $this->message,
-            'data'    => $this->resource,
+            'data'    => $data,
         ];
     }
 }
