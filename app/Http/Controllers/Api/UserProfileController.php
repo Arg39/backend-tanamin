@@ -40,7 +40,7 @@ class UserProfileController extends Controller
         $user->update($request->only('first_name', 'last_name', 'email', 'username', 'telephone'));
 
         // Update user detail information
-        $user->detail()->updateOrCreate(
+        $user->detail()->update(
             ['id_user' => $user->id],
             $request->only('expertise', 'about', 'social_media')
         );

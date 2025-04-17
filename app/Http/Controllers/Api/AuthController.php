@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\UserDetail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -34,13 +35,22 @@ class AuthController extends Controller
         $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
 
         $user = User::create([
-            'id' => \Illuminate\Support\Str::uuid()->toString(), // Generate UUID
+            'id' => \Illuminate\Support\Str::uuid()->toString(),
             'first_name' => $firstName,
             'last_name' => $lastName,
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
+        ]);
+
+        UserDetail::create([
+            'id_user' => $user->id,
+            'expertise' => null,
+            'about' => null,
+            'social_media' => null,
+            'photo_cover' => null,
+            'update_password' => false,
         ]);
 
         // Generate and save the token
