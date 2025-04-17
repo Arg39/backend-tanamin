@@ -1,10 +1,12 @@
-version: "3"
+version: '3'
 
 services:
   laravel-franken:
     container_name: laravel-franken
     image: image_laravel_franken
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile
     ports:
       - 8001:80
     env_file:

@@ -19,6 +19,7 @@ class CertificateController extends Controller
 
             $id_certificate = 'TC-ADS-1234567890';
             $qrCodeUrl = env('APP_URL') . "/api/certificates/{$id_certificate}/pdf";
+            dd($qrCodeUrl);
 
             $logoPath = public_path('images/logo.png');
 
@@ -57,7 +58,7 @@ class CertificateController extends Controller
 
             $pdf = Pdf::loadView('certificate', $viewData)->setPaper('a4', 'landscape');
 
-            $filename = 'certificate_' . Str::slug($viewData['user'], ' ') . '.pdf'; // Nama file diubah menjadi "certificate_(nama)"
+            $filename = 'certificate_' . Str::slug($viewData['user'], ' ') . '.pdf';
             $pdf->save(storage_path("app/{$filename}"));
 
             Log::info("PDF saved to: storage/app/{$filename}");
