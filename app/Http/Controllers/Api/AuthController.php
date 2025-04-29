@@ -80,7 +80,19 @@ class AuthController extends Controller
         $user = JWTAuth::user();
         $user->update(['token' => $token]);
 
-        return (new PostResource(true, 'Login successful', ['token' => $token]))
+        $userData = [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'role' => $user->role,
+        ];
+
+        return (new PostResource(true, 'Login successful', [
+            'token' => $token,
+            'user' => $userData,
+        ]))
             ->response()
             ->setStatusCode(200);
     }
