@@ -15,6 +15,7 @@ RUN apt update && apt install -y \
     libmagickwand-dev \
     libmagickcore-dev \
     imagemagick \
+    default-mysql-client \
     && docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install zip gd pdo_mysql \
     && pecl install imagick \
