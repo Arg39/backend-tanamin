@@ -37,6 +37,9 @@ php artisan key:generate
 # Lalu jalankan migrasi
 php artisan migrate
 
+# menambahkan key `JWT_SECRET` ke file `.env`.
+php artisan jwt:secret
+
 # (Opsional) Seed data awal
 php artisan db:seed
 
