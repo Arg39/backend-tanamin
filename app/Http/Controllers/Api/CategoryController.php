@@ -3,17 +3,33 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ErrorResource;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\TableResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::all();
-        return new PostResource(true, 'Categories retrieved successfully', $categories);
+        try {
+            $sortBy = $request->input('sortBy', 'name');
+            $sortOrder = $request->input('sortOrder', 'asc');
+            $perPage = (int) $request->input('perPage', 10);
+
+            // Retrieve categories with sorting and pagination
+            $categories = Category::orderBy($sortBy, $sortOrder)->paginate($perPage);
+
+            return new TableResource(true, 'Categories retrieved successfully', [
+                'data' => $categories,
+            ], 200);
+        } catch (\Exception $e) {
+            return (new ErrorResource(['message' => 'Failed to retrieve categories: ' . $e->getMessage()]))
+                ->response()
+                ->setStatusCode(500);
+        }
     }
 
     public function store(Request $request)

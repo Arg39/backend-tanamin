@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Resources\ErrorResource;
 
 class AdminMiddleware
 {
@@ -19,24 +20,21 @@ class AdminMiddleware
     {
         try {
             if (!$user = JWTAuth::parseToken()->authenticate()) {
-                return response()->json([
-                    'status' => 'failed',
-                    'message' => 'User not found',
-                ], Response::HTTP_UNAUTHORIZED);
+                return (new ErrorResource(['message' => 'User not found']))
+                    ->response()
+                    ->setStatusCode(Response::HTTP_UNAUTHORIZED);
             }
 
             // Periksa apakah pengguna adalah admin
             if ($user->role !== 'admin') {
-                return response()->json([
-                    'status' => 'failed',
-                    'message' => 'Unauthorized',
-                ], Response::HTTP_FORBIDDEN);
+                return (new ErrorResource(['message' => 'Unauthorized']))
+                    ->response()
+                    ->setStatusCode(Response::HTTP_FORBIDDEN);
             }
         } catch (JWTException $e) {
-            return response()->json([
-                'status' => 'failed',
-                'message' => 'Token is invalid or not provided',
-            ], Response::HTTP_UNAUTHORIZED);
+            return (new ErrorResource(['message' => 'Token is invalid or not provided']))
+                ->response()
+                ->setStatusCode(Response::HTTP_UNAUTHORIZED);
         }
 
         return $next($request);

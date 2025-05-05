@@ -14,4 +14,16 @@ class Category extends Model
     protected $fillable = [
         'name',
     ];
+
+    // Accessor for created_at
+    public function getCreatedAtAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('Y-m-d H:i');
+    }
+
+    // Accessor for updated_at
+    public function getUpdatedAtAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('Y-m-d H:i');
+    }
 }
