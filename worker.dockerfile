@@ -1,6 +1,8 @@
-FROM dunglas/frankenphp:1.0.0
+FROM php:8.3-cli
 
 WORKDIR /app
+
+COPY --chown=www-data:www-data . /app
 
 # Dependencies
 RUN apt update && apt upgrade -y && apt install -y \
@@ -12,22 +14,14 @@ RUN apt update && apt upgrade -y && apt install -y \
     && docker-php-ext-enable zip gd pdo_mysql imagick \
     && rm -rf /var/lib/apt/lists/*
 
-# Composer
+# Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Copy project
-COPY . /app
+# Install Laravel Octane and dependencies
+RUN composer install && \
+    composer require laravel/octane && \
+    php artisan octane:install --server=frankenphp
 
-# Install PHP deps
-RUN composer install --no-dev --optimize-autoloader
+EXPOSE 8000
 
-# Permission
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache && \
-    chmod -R 775 /app/storage /app/bootstrap/cache
-
-# Start frankenphp directly with .franken.yaml
-CMD ["frankenphp", "serve"]
-
-RUN composer require laravel/octane
-RUN chmod -R 777 .
-RUN php artisan octane:install
+CMD php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000

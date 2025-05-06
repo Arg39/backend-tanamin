@@ -5,13 +5,9 @@ services:
     container_name: laravel-franken
     image: image_laravel_franken
     build:
+      dockerfile: worker.dockerfile
       context: .
-      dockerfile: dockerfile
     ports:
-      - 8001:80
+      - 8001:8000
     env_file:
       - .env
-    volumes:
-      - .:/app
-      - ./vendor:/app/vendor
-      - ./storage:/app/storage
