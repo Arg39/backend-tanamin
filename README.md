@@ -90,6 +90,34 @@ php artisan serve
     php artisan db:seed
     ```
 
+7.  **Menjalankan FrankenPHP dalam mode worker menggunakan Laravel Octane:**
+
+    Jika Anda menggunakan Laravel Octane, pastikan untuk melakukan cache ulang route setelah ada perubahan. Langkah-langkahnya:
+
+    - Masuk ke dalam container Docker:
+
+      ```bash
+      docker exec -it laravel-franken bash
+      ```
+
+    - Jalankan perintah berikut untuk cache ulang route:
+
+      ```bash
+      php artisan route:cache
+      ```
+
+    - Keluar dari container:
+
+      ```bash
+      exit
+      ```
+
+    - Restart layanan dengan Docker Compose:
+
+      ```bash
+      docker compose restart laravel-franken
+      ```
+
 ---
 
 ### 📂 Struktur Direktori
