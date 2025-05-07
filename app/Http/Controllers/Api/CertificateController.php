@@ -61,12 +61,10 @@ class CertificateController extends Controller
             file_put_contents(storage_path('app/pdf_debug.html'), view('certificate', $viewData)->render());
 
             $pdf = Pdf::loadView('certificate', $viewData)->setPaper('a4', 'landscape');
-
+            
             $filename = 'certificate_' . Str::slug($viewData['user'], ' ') . '.pdf';
-            $pdf->save(storage_path("app/{$filename}"));
 
-            Log::info("PDF saved to: storage/app/{$filename}");
-
+            // dd($filename);
             return $pdf->download($filename);
         } catch (Exception $e) {
             Log::error($e->getMessage());

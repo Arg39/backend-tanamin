@@ -38,7 +38,18 @@ return [
     |
     */
 
-    'server' => env('OCTANE_SERVER', 'roadrunner'),
+    'server' => env('OCTANE_SERVER', 'frankenphp'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | RPC Port
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the port used for communication with the Octane server.
+    |
+    */
+
+    'rpc_port' => env('RPC_PORT', 6001),
 
     /*
     |--------------------------------------------------------------------------
@@ -81,7 +92,8 @@ return [
         ],
 
         RequestTerminated::class => [
-            // FlushUploadedFiles::class,
+            FlushUploadedFiles::class,
+            FlushTemporaryContainerInstances::class,
         ],
 
         TaskReceived::class => [

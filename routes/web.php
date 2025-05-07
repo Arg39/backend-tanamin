@@ -11,8 +11,8 @@ Route::get('/phpinfo', function () {
 });
 
 Route::get('/phpinfo-franken', function () {
-    ob_start(); // Start output buffering
-    phpinfo();  // Execute phpinfo()
-    $phpinfo = ob_get_clean(); // Get the output and clean the buffer
-    return response($phpinfo)->header('Content-Type', 'text/html'); // Return as HTML response
+    ob_start();
+    phpinfo();
+    $phpinfo = ob_get_clean();
+    return response($phpinfo)->header('Content-Type', 'text/html');
 });

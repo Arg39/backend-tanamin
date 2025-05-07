@@ -59,7 +59,7 @@ class AuthController extends Controller
 
         return (new PostResource(true, 'User registered successfully', ['token' => $token]))
             ->response()
-            ->setStatusCode(201);
+            ->setStatusCode(200);
     }
 
     /**

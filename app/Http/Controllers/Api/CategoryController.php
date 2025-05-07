@@ -8,6 +8,7 @@ use App\Http\Resources\PostResource;
 use App\Http\Resources\TableResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CategoryController extends Controller
@@ -19,7 +20,6 @@ class CategoryController extends Controller
             $sortOrder = $request->input('sortOrder', 'asc');
             $perPage = (int) $request->input('perPage', 10);
 
-            // Retrieve categories with sorting and pagination
             $categories = Category::orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             return new TableResource(true, 'Categories retrieved successfully', [
@@ -35,6 +35,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $user = JWTAuth::user();
+        dd($user);
         if ($user->role !== 'admin') {
             return new PostResource(false, 'Unauthorized', null);
         }
@@ -42,27 +43,21 @@ class CategoryController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:255|unique:categories,name',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
+            dd($request->all());
+
+            $imagePath = $request->file('image') ? $request->file('image')->store('categories') : null;
 
             $category = Category::create([
                 'name' => $request->name,
+                'image' => $imagePath,
             ]);
 
             return new PostResource(true, 'Category created successfully', $category);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to create category: ' . $e->getMessage(), null);
         }
-    }
-
-    public function show($id)
-    {
-        $category = Category::find($id);
-
-        if (!$category) {
-            return new PostResource(false, 'Category not found', null);
-        }
-
-        return new PostResource(true, 'Category retrieved successfully', $category);
     }
 
     public function update(Request $request, $id)
@@ -79,12 +74,22 @@ class CategoryController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:category,name,' . $id,
+            'name' => 'required|string|max:255|unique:categories,name,' . $id,
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi untuk gambar
         ]);
 
-        $category->update([
-            'name' => $request->name,
-        ]);
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama jika ada
+            if ($category->image) {
+                Storage::delete($category->image);
+            }
+
+            $imagePath = $request->file('image')->store('categories');
+            $category->image = $imagePath;
+        }
+
+        $category->name = $request->name;
+        $category->save();
 
         return new PostResource(true, 'Category updated successfully', $category);
     }
@@ -100,6 +105,11 @@ class CategoryController extends Controller
 
         if (!$category) {
             return new PostResource(false, 'Category not found', null);
+        }
+
+        // Hapus gambar dari storage
+        if ($category->image) {
+            Storage::delete($category->image);
         }
 
         $category->delete();
