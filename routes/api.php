@@ -18,7 +18,7 @@ Route::post('logout', [AuthController::class, 'logout']);
 // route using middleware for JWT token
 Route::middleware('isAdmin')->group(function () {
     // get image api
-    Route::get('image/{filename}', [ImageController::class, 'getImage']);
+    Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
 
     Route::get('categories', [CategoryController::class, 'index']);
     Route::post('categories', [CategoryController::class, 'store']);

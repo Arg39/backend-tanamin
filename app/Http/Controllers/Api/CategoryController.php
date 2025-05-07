@@ -35,7 +35,6 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $user = JWTAuth::user();
-        dd($user);
         if ($user->role !== 'admin') {
             return new PostResource(false, 'Unauthorized', null);
         }
@@ -45,7 +44,6 @@ class CategoryController extends Controller
                 'name' => 'required|string|max:255|unique:categories,name',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
-            dd($request->all());
 
             $imagePath = $request->file('image') ? $request->file('image')->store('categories') : null;
 
