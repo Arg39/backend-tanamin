@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PostResource extends JsonResource
 {
     /**
-     * Status of the response (true for success, false for failure).
+     * Status of the response (true for success, false for failed).
      *
      * @var bool
      */
@@ -24,7 +24,7 @@ class PostResource extends JsonResource
     /**
      * Create a new resource instance.
      *
-     * @param  bool   $status   Indicates success (true) or failure (false).
+     * @param  bool   $status   Indicates success (true) or failed (false).
      * @param  string $message  Message to include in the response.
      * @param  mixed  $resource The resource data.
      * @return void
@@ -51,7 +51,7 @@ class PostResource extends JsonResource
         }
 
         return [
-            'status'  => $this->status ? 'success' : 'failure',
+            'status'  => $this->status ? 'success' : 'failed',
             'message' => $this->message,
             'data'    => $data,
         ];

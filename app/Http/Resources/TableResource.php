@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class TableResource extends JsonResource
 {
     /**
-     * Status of the response (true for success, false for failure).
+     * Status of the response (true for success, false for failed).
      *
      * @var bool
      */
@@ -30,7 +30,7 @@ class TableResource extends JsonResource
     /**
      * Create a new resource instance.
      *
-     * @param  bool   $status   Indicates success (true) or failure (false).
+     * @param  bool   $status   Indicates success (true) or failed (false).
      * @param  string $message  Message to include in the response.
      * @param  mixed  $resource The resource data.
      * @param  int    $httpCode HTTP status code.
@@ -62,7 +62,7 @@ class TableResource extends JsonResource
         ] : null;
 
         return [
-            'status'   => $this->status ? 'success' : 'failure',
+            'status'   => $this->status ? 'success' : 'failed',
             'message'  => $this->message,
             'httpCode' => $this->httpCode,
             'data'     => $data,

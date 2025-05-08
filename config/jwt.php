@@ -228,7 +228,7 @@ return [
     | it is possible that some of them fail, due to token regeneration
     | on every request.
     |
-    | Set grace period in seconds to prevent parallel request failure.
+    | Set grace period in seconds to prevent parallel request failed.
     |
     */
 

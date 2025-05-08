@@ -32,6 +32,6 @@ class Category extends Model
     // Accessor for image URL
     public function getImageUrlAttribute()
     {
-        return $this->image ? Storage::url($this->image) : null;
+        return $this->image ? Storage::disk('public')->url($this->image) : null;
     }
-}
+}1

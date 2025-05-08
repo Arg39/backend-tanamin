@@ -45,7 +45,7 @@ class CategoryController extends Controller
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
-            $imagePath = $request->file('image') ? $request->file('image')->store('categories') : null;
+            $imagePath = $request->file('image') ? $request->file('image')->store('categories', 'public') : null;
 
             $category = Category::create([
                 'name' => $request->name,
@@ -73,16 +73,16 @@ class CategoryController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $id,
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi untuk gambar
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
             // Hapus gambar lama jika ada
             if ($category->image) {
-                Storage::delete($category->image);
+                Storage::disk('public')->delete($category->image);
             }
 
-            $imagePath = $request->file('image')->store('categories');
+            $imagePath = $request->file('image')->store('categories', 'public');
             $category->image = $imagePath;
         }
 
@@ -107,7 +107,7 @@ class CategoryController extends Controller
 
         // Hapus gambar dari storage
         if ($category->image) {
-            Storage::delete($category->image);
+            Storage::disk('public')->delete($category->image);
         }
 
         $category->delete();
