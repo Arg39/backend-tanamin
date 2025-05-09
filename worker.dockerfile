@@ -6,7 +6,7 @@ WORKDIR /app
 COPY --chown=www-data:www-data composer.json composer.lock /app/
 
 # Install dependencies & extensions
-RUN apt update && apt upgrade -y && apt install -y \
+RUN apt update && apt upgrade -y && apt install -y iputils-ping \
     curl zip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libonig-dev \
     libmagickwand-dev libmagickcore-dev imagemagick git unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \

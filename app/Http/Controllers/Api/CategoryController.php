@@ -123,9 +123,12 @@ class CategoryController extends Controller
             return new PostResource(false, 'Category not found', null);
         }
 
-        // Hapus gambar dari storage
         if ($category->image) {
-            Storage::disk('public')->delete($category->image);
+            if (Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            } else {
+                return new PostResource(false, 'Image not found', null);
+            }
         }
 
         $category->delete();
