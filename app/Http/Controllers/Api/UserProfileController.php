@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -61,6 +62,15 @@ class UserProfileController extends Controller
         $user->load('detail');
 
         return (new PostResource(true, 'User profile retrieved successfully', $user))
+            ->response()
+            ->setStatusCode(200);
+    }
+
+    public function getInstructors()
+    {
+        $instructors = User::where('role', 'instructor')->get();
+
+        return (new PostResource(true, 'Instructors retrieved successfully', $instructors))
             ->response()
             ->setStatusCode(200);
     }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\ImageController;
+use App\Http\Controllers\Api\UserProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -28,7 +29,7 @@ Route::middleware('isAdmin')->group(function () {
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
     // course api
-
+    Route::get('instructors', [UserProfileController::class, 'getInstructors']);
 });
 
 // certificate api
