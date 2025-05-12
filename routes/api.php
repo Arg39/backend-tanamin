@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -15,6 +16,9 @@ Route::get('/user', function (Request $request) {
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
+
+Route::post('/orders', [OrderController::class, 'store']);
+Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 
 // route using middleware for JWT token
 Route::middleware('isAdmin')->group(function () {
