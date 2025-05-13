@@ -48,19 +48,7 @@ class CourseController extends Controller
                 'id_category' => 'required|exists:categories,id',
                 'id_instructor' => 'required|exists:users,id',
                 'title' => 'required|string|max:255',
-                'price' => 'required|integer|min:0',
-                'duration' => 'required|string|max:255',
-                'level' => 'required|string|max:255',
-                'image_video' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:20480',
-                // DetailCourse fields
-                'detail' => 'nullable|string',
-                'description' => 'nullable|string',
-                'prerequisite' => 'nullable|string',
             ]);
-
-            $imagePath = $request->file('image_video') 
-                ? $request->file('image_video')->store('courses', 'public') 
-                : null;
 
             $courseId = (string) Str::uuid();
 
@@ -69,23 +57,37 @@ class CourseController extends Controller
                 'id_category' => $request->id_category,
                 'id_instructor' => $request->id_instructor,
                 'title' => $request->title,
-                'price' => $request->price,
-                'duration' => $request->duration,
-                'level' => $request->level,
-                'image_video' => $imagePath,
             ]);
 
-            // Create DetailCourse
             DetailCourse::create([
                 'id' => $courseId,
-                'detail' => $request->detail,
-                'description' => $request->description,
-                'prerequisite' => $request->prerequisite,
             ]);
 
             return new PostResource(true, 'Course created successfully', $course->load(['category', 'instructor', 'detail']));
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to create course: ' . $e->getMessage(), null);
+        }
+    }
+
+    public function getInstructorCourses(Request $request)
+    {
+        $user = JWTAuth::user();
+        if ($user->role !== 'instructor') {
+            return new PostResource(false, 'Unauthorized', null);
+        }
+
+        try {
+            $courses = Course::with(['category', 'instructor', 'detail', 'reviews'])
+                ->where('id_instructor', $user->id)
+                ->get();
+
+            return new TableResource(true, 'Courses retrieved successfully', [
+                'data' => $courses,
+            ], 200);
+        } catch (\Exception $e) {
+            return (new ErrorResource(['message' => 'Failed to retrieve courses: ' . $e->getMessage()]))
+                ->response()
+                ->setStatusCode(500);
         }
     }
 
@@ -104,26 +106,39 @@ class CourseController extends Controller
         }
     }
 
+    // INSTRUCTOR: Update course details (except title, id_category, id_instructor)
     public function update(Request $request, $id)
     {
         $user = JWTAuth::user();
-        if ($user->role !== 'admin') {
-            return new PostResource(false, 'Unauthorized', null);
-        }
-
         $course = Course::find($id);
 
         if (!$course) {
             return new PostResource(false, 'Course not found', null);
         }
 
+        // Only admin can change title, id_category, id_instructor
+        if ($user->role === 'admin') {
+            $request->validate([
+                'id_category' => 'sometimes|exists:categories,id',
+                'id_instructor' => 'sometimes|exists:users,id',
+                'title' => 'sometimes|string|max:255',
+            ]);
+            foreach (['id_category', 'id_instructor', 'title'] as $field) {
+                if ($request->has($field)) {
+                    $course->$field = $request->$field;
+                }
+            }
+        }
+
+        // Instructor can update other fields
+        if ($user->role === 'instructor' && $course->id_instructor !== $user->id) {
+            return new PostResource(false, 'Unauthorized', null);
+        }
+
         $request->validate([
-            'id_category' => 'sometimes|exists:categories,id',
-            'id_instructor' => 'sometimes|exists:users,id',
-            'title' => 'sometimes|string|max:255',
-            'price' => 'sometimes|integer|min:0',
-            'duration' => 'sometimes|string|max:255',
-            'level' => 'sometimes|string|max:255',
+            'price' => 'sometimes|nullable|integer|min:0',
+            'duration' => 'sometimes|nullable|string|max:255',
+            'level' => 'sometimes|nullable|string|max:255',
             'image_video' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:20480',
             // DetailCourse fields
             'detail' => 'nullable|string',
@@ -140,8 +155,7 @@ class CourseController extends Controller
             $course->image_video = $imagePath;
         }
 
-        // Update fields
-        foreach (['id_category', 'id_instructor', 'title', 'price', 'duration', 'level'] as $field) {
+        foreach (['price', 'duration', 'level'] as $field) {
             if ($request->has($field)) {
                 $course->$field = $request->$field;
             }

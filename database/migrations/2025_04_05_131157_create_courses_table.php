@@ -16,10 +16,11 @@ return new class extends Migration
             $table->uuid('id_category')->unique();
             $table->uuid('id_instructor')->unique();
             $table->string('title');
-            $table->integer('price')->default(0);
-            $table->string('duration');
-            $table->string('level');
+            $table->integer('price')->nullable();
+            $table->string('duration')->nullable();
+            $table->string('level')->nullable();
             $table->string('image_video')->nullable();
+            $table->boolean('is_published')->default(false);
             $table->timestamps();
 
             $table->foreign('id_category')->references('id')->on('categories')->onDelete('cascade');

@@ -21,6 +21,7 @@ class Course extends Model
         'duration',
         'level',
         'image_video',
+        'is_published',
     ];
 
     public function category()
