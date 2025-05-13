@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
+    // ADMIN: Get all courses
     public function index(Request $request)
     {
         try {
@@ -22,7 +23,7 @@ class CourseController extends Controller
             $sortOrder = $request->input('sortOrder', 'asc');
             $perPage = (int) $request->input('perPage', 10);
 
-            $courses = Course::with(['category', 'instructor', 'detail', 'reviews'])
+            $courses = Course::select(['id', 'id_category', 'id_instructor', 'title', 'is_published'])
                 ->orderBy($sortBy, $sortOrder)
                 ->paginate($perPage);
 
@@ -36,6 +37,7 @@ class CourseController extends Controller
         }
     }
 
+    // ADMIN: Create a new course
     public function store(Request $request)
     {
         $user = JWTAuth::user();
@@ -69,6 +71,7 @@ class CourseController extends Controller
         }
     }
 
+    // INSTRUCTOR: Get assigned courses from admin
     public function getInstructorCourses(Request $request)
     {
         $user = JWTAuth::user();
@@ -91,113 +94,17 @@ class CourseController extends Controller
         }
     }
 
+    // ADMIN & INSTRUCTOR: Get detail course by ID
     public function show($id)
     {
         try {
-            $course = Course::with(['category', 'instructor', 'detail', 'reviews'])->find($id);
-
-            if (!$course) {
-                return new PostResource(false, 'Course not found', null);
-            }
+            $course = Course::with(['category', 'instructor', 'detail', 'reviews'])
+                ->where('id', $id)
+                ->firstOrFail();
 
             return new PostResource(true, 'Course retrieved successfully', $course);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to retrieve course: ' . $e->getMessage(), null);
         }
-    }
-
-    // INSTRUCTOR: Update course details (except title, id_category, id_instructor)
-    public function update(Request $request, $id)
-    {
-        $user = JWTAuth::user();
-        $course = Course::find($id);
-
-        if (!$course) {
-            return new PostResource(false, 'Course not found', null);
-        }
-
-        // Only admin can change title, id_category, id_instructor
-        if ($user->role === 'admin') {
-            $request->validate([
-                'id_category' => 'sometimes|exists:categories,id',
-                'id_instructor' => 'sometimes|exists:users,id',
-                'title' => 'sometimes|string|max:255',
-            ]);
-            foreach (['id_category', 'id_instructor', 'title'] as $field) {
-                if ($request->has($field)) {
-                    $course->$field = $request->$field;
-                }
-            }
-        }
-
-        // Instructor can update other fields
-        if ($user->role === 'instructor' && $course->id_instructor !== $user->id) {
-            return new PostResource(false, 'Unauthorized', null);
-        }
-
-        $request->validate([
-            'price' => 'sometimes|nullable|integer|min:0',
-            'duration' => 'sometimes|nullable|string|max:255',
-            'level' => 'sometimes|nullable|string|max:255',
-            'image_video' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:20480',
-            // DetailCourse fields
-            'detail' => 'nullable|string',
-            'description' => 'nullable|string',
-            'prerequisite' => 'nullable|string',
-        ]);
-
-        // Update file jika ada
-        if ($request->hasFile('image_video')) {
-            if ($course->image_video) {
-                Storage::disk('public')->delete($course->image_video);
-            }
-            $imagePath = $request->file('image_video')->store('courses', 'public');
-            $course->image_video = $imagePath;
-        }
-
-        foreach (['price', 'duration', 'level'] as $field) {
-            if ($request->has($field)) {
-                $course->$field = $request->$field;
-            }
-        }
-        $course->save();
-
-        // Update DetailCourse
-        $detail = DetailCourse::find($id);
-        if ($detail) {
-            foreach (['detail', 'description', 'prerequisite'] as $field) {
-                if ($request->has($field)) {
-                    $detail->$field = $request->$field;
-                }
-            }
-            $detail->save();
-        }
-
-        return new PostResource(true, 'Course updated successfully', $course->load(['category', 'instructor', 'detail']));
-    }
-
-    public function destroy($id)
-    {
-        $user = JWTAuth::user();
-        if ($user->role !== 'admin') {
-            return new PostResource(false, 'Unauthorized', null);
-        }
-
-        $course = Course::find($id);
-
-        if (!$course) {
-            return new PostResource(false, 'Course not found', null);
-        }
-
-        if ($course->image_video) {
-            if (Storage::disk('public')->exists($course->image_video)) {
-                Storage::disk('public')->delete($course->image_video);
-            }
-        }
-
-        // DetailCourse will be deleted automatically by cascade
-        $course->delete();
-
-        return new PostResource(true, 'Course deleted successfully', null);
     }
 }

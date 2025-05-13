@@ -32,6 +32,7 @@ return new class extends Migration
             $table->text('detail')->nullable();
             $table->text('description')->nullable();
             $table->text('prerequisite')->nullable();
+            $table->timestamps();
 
             $table->foreign('id')->references('id')->on('courses')->onDelete('cascade');
         });
