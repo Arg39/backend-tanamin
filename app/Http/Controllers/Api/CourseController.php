@@ -65,7 +65,31 @@ class CourseController extends Controller
                 'id' => $courseId,
             ]);
 
-            return new PostResource(true, 'Course created successfully', $course->load(['category', 'instructor', 'detail']));
+            // Fetch only needed fields for category and instructor
+            $category = $course->category()->select('id', 'name')->first();
+            $instructor = $course->instructor()->select('id', 'first_name', 'last_name')->first();
+            $detail = $course->detail;
+
+            $responseData = [
+                'id' => $course->id,
+                'id_category' => $course->id_category,
+                'id_instructor' => $course->id_instructor,
+                'title' => $course->title,
+                'updated_at' => $course->updated_at,
+                'created_at' => $course->created_at,
+                'category' => $category ? [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                ] : null,
+                'instructor' => $instructor ? [
+                    'id' => $instructor->id,
+                    'first_name' => $instructor->first_name,
+                    'last_name' => $instructor->last_name,
+                ] : null,
+                'detail' => $detail,
+            ];
+
+            return new PostResource(true, 'Course created successfully', $responseData);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to create course: ' . $e->getMessage(), null);
         }
