@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
+use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\OrderController;
@@ -34,6 +35,14 @@ Route::middleware('isAdmin')->group(function () {
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
     // course api
+    Route::get('courses', [CourseController::class, 'index']);
+    Route::post('courses', [CourseController::class, 'store']);
+    Route::get('courses/{id}', [CourseController::class, 'show']);
+    Route::put('courses/{id}', [CourseController::class, 'update']);
+    Route::post('courses/{id}', [CourseController::class, 'update']); // optional, for compatibility
+    Route::delete('courses/{id}', [CourseController::class, 'destroy']);
+
+    // instructor api
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
 });
 
