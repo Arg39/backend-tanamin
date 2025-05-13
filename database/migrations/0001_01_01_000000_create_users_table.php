@@ -28,7 +28,7 @@ return new class extends Migration
         });
 
         Schema::create('user_detail', function (Blueprint $table) {
-            $table->uuid('id_user')->primary();
+            $table->uuid('id_user')->primary(); // shared primary key from users.id
             $table->string('expertise')->nullable();
             $table->text('about')->nullable();
             $table->boolean('update_password')->default(false);

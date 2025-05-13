@@ -20,6 +20,7 @@ Route::post('logout', [AuthController::class, 'logout']);
 Route::post('/orders', [OrderController::class, 'store']);
 Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 
+
 // route using middleware for JWT token
 Route::middleware('isAdmin')->group(function () {
     // get image api
