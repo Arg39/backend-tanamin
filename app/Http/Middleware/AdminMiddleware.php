@@ -20,21 +20,24 @@ class AdminMiddleware
     {
         try {
             if (!$user = JWTAuth::parseToken()->authenticate()) {
-                return (new ErrorResource(['message' => 'User not found']))
-                    ->response()
-                    ->setStatusCode(Response::HTTP_UNAUTHORIZED);
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'User not found'
+                ], Response::HTTP_UNAUTHORIZED);
             }
 
             // Periksa apakah pengguna adalah admin
             if ($user->role !== 'admin') {
-                return (new ErrorResource(['message' => 'Unauthorized']))
-                    ->response()
-                    ->setStatusCode(Response::HTTP_FORBIDDEN);
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'Unauthorized'
+                ], Response::HTTP_FORBIDDEN);
             }
-        } catch (JWTException $e) {
-            return (new ErrorResource(['message' => 'Token is invalid or not provided']))
-                ->response()
-                ->setStatusCode(Response::HTTP_UNAUTHORIZED);
+        } catch (JWTException) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Token is invalid or not provided'
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
         return $next($request);

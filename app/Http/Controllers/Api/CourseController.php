@@ -23,9 +23,35 @@ class CourseController extends Controller
             $sortOrder = $request->input('sortOrder', 'asc');
             $perPage = (int) $request->input('perPage', 10);
 
-            $courses = Course::select(['id', 'id_category', 'id_instructor', 'title', 'is_published'])
+            $courses = Course::with([
+                    'category:id,name',
+                    'instructor:id,first_name,last_name'
+                ])
+                ->select(['id', 'id_category', 'id_instructor', 'title', 'is_published', 'created_at', 'updated_at'])
                 ->orderBy($sortBy, $sortOrder)
                 ->paginate($perPage);
+
+            $courses->getCollection()->transform(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'id_category' => $course->id_category,
+                    'id_instructor' => $course->id_instructor,
+                    'title' => $course->title,
+                    'is_published' => $course->is_published,
+                    'category' => $course->category ? [
+                        'id' => $course->category->id,
+                        'name' => $course->category->name,
+                    ] : null,
+                    'instructor' => $course->instructor ? [
+                        'id' => $course->instructor->id,
+                        'first_name' => $course->instructor->first_name,
+                        'last_name' => $course->instructor->last_name,
+                        'full_name' => trim($course->instructor->first_name . ' ' . $course->instructor->last_name),
+                    ] : null,
+                    'created_at' => $course->created_at,
+                    'updated_at' => $course->updated_at,
+                ];
+            });
 
             return new TableResource(true, 'Courses retrieved successfully', [
                 'data' => $courses,

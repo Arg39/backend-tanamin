@@ -51,4 +51,10 @@ class Category extends Model
     {
         return $this->image ? Storage::disk('public')->url($this->image) : null;
     }
+
+    // Relationship to courses
+    public function courses()
+    {
+        return $this->hasMany(Course::class, 'id_category', 'id');
+    }
 }
