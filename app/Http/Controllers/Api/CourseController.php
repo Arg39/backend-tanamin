@@ -85,6 +85,7 @@ class CourseController extends Controller
                 'id_category' => $request->id_category,
                 'id_instructor' => $request->id_instructor,
                 'title' => $request->title,
+                'is_published' => false,
             ]);
 
             DetailCourse::create([
