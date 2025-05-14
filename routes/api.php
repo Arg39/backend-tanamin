@@ -26,14 +26,15 @@ Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 Route::middleware('isAdmin')->group(function () {
     // get image api
     Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
-
+    
     Route::get('categories', [CategoryController::class, 'index']);
     Route::post('categories', [CategoryController::class, 'store']);
     Route::get('categories/{id}', [CategoryController::class, 'getCategoryById']);
     Route::post('categories/{id}', [CategoryController::class, 'update']);
     Route::put('categories/{id}', [CategoryController::class, 'update']);
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
-
+    Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
+    
     // course api
     Route::get('courses', [CourseController::class, 'index']);
     Route::post('courses', [CourseController::class, 'store']);

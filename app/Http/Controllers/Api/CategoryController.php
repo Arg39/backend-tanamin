@@ -135,4 +135,19 @@ class CategoryController extends Controller
 
         return new PostResource(true, 'Category deleted successfully', null);
     }
+
+    public function getCategoriesForSelect()
+    {
+        try {
+            $categories = Category::select('id', 'name')->get();
+
+            if ($categories->isEmpty()) {
+                return new PostResource(false, 'No categories found', []);
+            }
+
+            return new PostResource(true, 'Categories retrieved successfully', $categories);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to retrieve categories: ' . $e->getMessage(), null);
+        }
+    }
 }
