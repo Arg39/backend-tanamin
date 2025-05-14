@@ -19,14 +19,31 @@ class CategoryController extends Controller
             $sortBy = $request->input('sortBy', 'name');
             $sortOrder = $request->input('sortOrder', 'asc');
             $perPage = (int) $request->input('perPage', 10);
-
-            $categories = Category::orderBy($sortBy, $sortOrder)->paginate($perPage);
-
+    
+            $name = $request->input('name');
+            $startDate = $request->input('startDate');
+            $endDate = $request->input('endDate');
+    
+            $query = Category::query();
+    
+            if ($name) {
+                $query->where('name', 'like', '%' . $name . '%');
+            }
+    
+            if ($startDate) {
+                $query->whereDate('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->whereDate('created_at', '<=', $endDate);
+            }
+    
+            $categories = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+    
             $categories->getCollection()->transform(function ($category) {
                 $category->used = $category->courses()->count();
                 return $category;
             });
-
+    
             return new TableResource(true, 'Categories retrieved successfully', [
                 'data' => $categories,
             ], 200);
