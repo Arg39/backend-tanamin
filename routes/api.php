@@ -24,6 +24,9 @@ Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 
 // route using middleware for JWT token
 Route::middleware('isAdmin')->group(function () {
+    // user api
+    Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
+
     // get image api
     Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
     

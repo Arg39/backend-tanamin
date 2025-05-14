@@ -74,4 +74,29 @@ class UserProfileController extends Controller
             ->response()
             ->setStatusCode(200);
     }
+
+    public function getInstructorForSelect()
+    {
+        try {
+            $instructors = User::where('role', 'instructor')
+            ->select('id', 'first_name', 'last_name')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => trim($user->first_name . ' ' . $user->last_name),
+                ];
+            });
+
+            if ($instructors->isEmpty()) {
+                return new PostResource(false, 'No instructor found', []);
+            }
+
+            return (new PostResource(true, 'Instructor retrieved successfully', $instructors))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to retrieve instructor: ' . $e->getMessage(), null);
+        }
+    }
 }
