@@ -22,6 +22,11 @@ class CategoryController extends Controller
 
             $categories = Category::orderBy($sortBy, $sortOrder)->paginate($perPage);
 
+            $categories->getCollection()->transform(function ($category) {
+                $category->used = $category->courses()->count();
+                return $category;
+            });
+
             return new TableResource(true, 'Categories retrieved successfully', [
                 'data' => $categories,
             ], 200);
