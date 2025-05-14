@@ -23,13 +23,37 @@ class CourseController extends Controller
             $sortOrder = $request->input('sortOrder', 'asc');
             $perPage = (int) $request->input('perPage', 10);
 
-            $courses = Course::with([
+            $search = $request->input('search');
+            $category = $request->input('category');
+            $instructor = $request->input('instructor');
+            $dateStart = $request->input('dateStart');
+            $dateEnd = $request->input('dateEnd');
+
+            $query = Course::with([
                     'category:id,name',
                     'instructor:id,first_name,last_name'
                 ])
-                ->select(['id', 'id_category', 'id_instructor', 'title', 'is_published', 'created_at', 'updated_at'])
-                ->orderBy($sortBy, $sortOrder)
-                ->paginate($perPage);
+                ->select(['id', 'id_category', 'id_instructor', 'title', 'is_published', 'created_at', 'updated_at']);
+
+            // Filtering
+            if ($search) {
+                $query->search($search);
+            }
+            if ($category) {
+                $query->category($category);
+            }
+            if ($instructor) {
+                $query->instructor($instructor);
+            }
+            if ($dateStart && $dateEnd) {
+                $query->dateRange($dateStart, $dateEnd);
+            } elseif ($dateStart) {
+                $query->whereDate('created_at', '>=', $dateStart);
+            } elseif ($dateEnd) {
+                $query->whereDate('created_at', '<=', $dateEnd);
+            }
+
+            $courses = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             $courses->getCollection()->transform(function ($course) {
                 return [

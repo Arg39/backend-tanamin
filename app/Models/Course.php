@@ -43,4 +43,25 @@ class Course extends Model
     {
         return $this->hasMany(CourseReview::class, 'course_id');
     }
+
+    // filtering
+    public function scopeSearch($query, $search)
+    {
+        return $query->where('title', 'like', '%' . $search . '%');
+    }
+
+    public function scopeCategory($query, $categoryId)
+    {
+        return $query->where('id_category', $categoryId);
+    }
+
+    public function scopeInstructor($query, $instructorId)
+    {
+        return $query->where('id_instructor', $instructorId);
+    }
+
+    public function scopeDateRange($query, $start, $end)
+    {
+        return $query->whereBetween('created_at', [$start . ' 00:00:00', $end . ' 23:59:59']);
+    }
 }
