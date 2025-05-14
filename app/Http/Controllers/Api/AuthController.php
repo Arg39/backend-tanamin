@@ -13,6 +13,9 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+    /**
+     * Register a new user.
+     */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -20,7 +23,6 @@ class AuthController extends Controller
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|string|in:student,admin,instructor',
         ]);
 
         if ($validator->fails()) {
@@ -41,7 +43,7 @@ class AuthController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => 'student',
         ]);
 
         UserDetail::create([
@@ -58,6 +60,54 @@ class AuthController extends Controller
         $user->update(['token' => $token]);
 
         return (new PostResource(true, 'User registered successfully', ['token' => $token]))
+            ->response()
+            ->setStatusCode(200);
+    }
+
+    /**
+     * Register an admin user.
+     */
+    public function adminRegister(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+            'role' => 'required|string|in:admin,instructor',
+        ]);
+
+        if ($validator->fails()) {
+            return (new PostResource(false, 'Validation errors', $validator->errors()))
+                ->response()
+                ->setStatusCode(422);
+        }
+
+        // Split name
+        $nameParts = explode(' ', $request->name, 2);
+        $firstName = $nameParts[0];
+        $lastName = $nameParts[1] ?? '';
+
+        $user = User::create([
+            'id' => \Illuminate\Support\Str::uuid()->toString(),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+        ]);
+
+        UserDetail::create([
+            'id_user' => $user->id,
+            'expertise' => null,
+            'about' => null,
+            'social_media' => null,
+            'photo_cover' => null,
+            'update_password' => false,
+        ]);
+
+        return (new PostResource(true, 'Admin/Instructor registered successfully', null))
             ->response()
             ->setStatusCode(200);
     }
