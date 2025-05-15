@@ -146,7 +146,8 @@ class CourseController extends Controller
         }
     }
 
-    public function getInstructorCourses(Request $request)
+    // INSTRUCTOR: Get courses by instructor
+    public function getInstructorCourse(Request $request)
     {
         $user = JWTAuth::user();
         if ($user->role !== 'instructor') {
@@ -157,12 +158,27 @@ class CourseController extends Controller
             $sortBy = $request->input('sortBy', 'title');
             $sortOrder = $request->input('sortOrder', 'asc');
             $perPage = (int) $request->input('perPage', 10);
+            $search = $request->input('search');
+            $dateStart = $request->input('dateStart');
+            $dateEnd = $request->input('dateEnd');
 
-            $courses = Course::with('category:id,name')
+            $query = Course::with('category:id,name')
                 ->where('id_instructor', $user->id)
-                ->select('id', 'title', 'id_category', 'created_at', 'updated_at')
-                ->orderBy($sortBy, $sortOrder)
-                ->paginate($perPage);
+                ->select('id', 'title', 'id_category', 'created_at', 'updated_at');
+
+            if ($search) {
+                $query->where('title', 'like', '%' . $search . '%');
+            }
+
+            if ($dateStart) {
+                $query->whereDate('created_at', '>=', $dateStart);
+            }
+
+            if ($dateEnd) {
+                $query->whereDate('created_at', '<=', $dateEnd);
+            }
+
+            $courses = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
 
             $courses->getCollection()->transform(function ($course) {
                 return [

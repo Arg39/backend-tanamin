@@ -49,7 +49,7 @@ Route::middleware('role:admin')->group(function () {
 });
 
 Route::middleware('role:instructor')->group(function () {
-    Route::get('courses-instructor', [CourseController::class, 'getInstructorCourses']);
+    Route::get('courses-instructor', [CourseController::class, 'getInstructorCourse']);
 });
 
 Route::middleware('role:admin,instructor')->group(function () {
