@@ -146,7 +146,6 @@ class CourseController extends Controller
         }
     }
 
-    // INSTRUCTOR: Get assigned courses from admin
     public function getInstructorCourses(Request $request)
     {
         $user = JWTAuth::user();
@@ -155,9 +154,25 @@ class CourseController extends Controller
         }
 
         try {
-            $courses = Course::with(['category', 'instructor', 'detail', 'reviews'])
+            $sortBy = $request->input('sortBy', 'title');
+            $sortOrder = $request->input('sortOrder', 'asc');
+            $perPage = (int) $request->input('perPage', 10);
+
+            $courses = Course::with('category:id,name')
                 ->where('id_instructor', $user->id)
-                ->get();
+                ->select('id', 'title', 'id_category', 'created_at', 'updated_at')
+                ->orderBy($sortBy, $sortOrder)
+                ->paginate($perPage);
+
+            $courses->getCollection()->transform(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'category' => $course->category ? $course->category->name : null,
+                    'created_at' => $course->created_at,
+                    'updated_at' => $course->updated_at,
+                ];
+            });
 
             return new TableResource(true, 'Courses retrieved successfully', [
                 'data' => $courses,

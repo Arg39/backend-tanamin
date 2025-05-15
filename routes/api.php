@@ -23,7 +23,7 @@ Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 
 
 // route using middleware for JWT token
-Route::middleware('isAdmin')->group(function () {
+Route::middleware('role:admin')->group(function () {
     // user api
     Route::post('/admin/register', [AuthController::class, 'adminRegister']);
     Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
@@ -43,10 +43,17 @@ Route::middleware('isAdmin')->group(function () {
     Route::get('courses', [CourseController::class, 'index']);
     Route::post('courses', [CourseController::class, 'store']);
     Route::get('courses/{id}', [CourseController::class, 'show']);
-    Route::get('courses/instructor', [CourseController::class, 'getInstructorCourses']);
-
+    
     // instructor api
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
+});
+
+Route::middleware('role:instructor')->group(function () {
+    Route::get('courses-instructor', [CourseController::class, 'getInstructorCourses']);
+});
+
+Route::middleware('role:admin,instructor')->group(function () {
+    // api for instructor and admin
 });
 
 // certificate api
