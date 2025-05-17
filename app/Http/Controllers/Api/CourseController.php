@@ -200,6 +200,67 @@ class CourseController extends Controller
         }
     }
 
+    // INSTRUCTOR: Get detail course by ID
+    public function getDetailCourse($tab, $id)
+    {
+        try {
+            $user = JWTAuth::user();
+            if ($user->role !== 'instructor') {
+                return new PostResource(false, 'Unauthorized', null);
+            }
+
+            if ($tab === 'informasi-utama') {
+                $course = Course::with(['category', 'instructor', 'detail'])
+                    ->where('id', $id)
+                    ->where('id_instructor', $user->id)
+                    ->firstOrFail();
+
+                $data = [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'category' => $course->category ? [
+                        'id' => $course->category->id,
+                        'name' => $course->category->name,
+                    ] : null,
+                    'instructor' => $course->instructor ? [
+                        'id' => $course->instructor->id,
+                        'full_name' => trim($course->instructor->first_name . ' ' . $course->instructor->last_name),
+                    ] : null,
+                    'level' => $course->level,
+                    'price' => $course->price,
+                    'image_video' => $course->image_video,
+                    'detail' => $course->detail->detail,
+                ];
+
+                return new PostResource(true, 'Course retrieved successfully', $data);
+            } else if ($tab === 'persyaratan') {
+                $preRequisite = DetailCourse::where('id', $id)->value('prerequisite');
+                $data = [
+                    [
+                        'id' => $id,
+                        'prerequisite' => $preRequisite,
+                    ]
+                ];
+                return new TableResource(true, 'Prerequisite retrieved successfully', [
+                    'data' => $data,
+                ], 200);
+            } else if ($tab === 'deskripsi') {
+                $description = DetailCourse::where('id', $id)->value('description');
+                $data = [
+                    [
+                        'id' => $id,
+                        'description' => $description,
+                    ]
+                ];
+                return new TableResource(true, 'Description retrieved successfully', [
+                    'data' => $data,
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to retrieve course: ' . $e->getMessage(), null);
+        }
+    }
+
     // ADMIN & INSTRUCTOR: Get detail course by ID
     public function show($id)
     {

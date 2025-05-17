@@ -49,7 +49,9 @@ Route::middleware('role:admin')->group(function () {
 });
 
 Route::middleware('role:instructor')->group(function () {
-    Route::get('courses-instructor', [CourseController::class, 'getInstructorCourse']);
+    // course api
+    Route::get('instructor/courses', [CourseController::class, 'getInstructorCourse']);
+    Route::get('instructor/courses/{tab}/{id}', [CourseController::class,'getDetailCourse']);
 });
 
 Route::middleware('role:admin,instructor')->group(function () {
