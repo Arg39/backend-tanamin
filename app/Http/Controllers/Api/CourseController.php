@@ -230,6 +230,8 @@ class CourseController extends Controller
                     'price' => $course->price,
                     'image_video' => $course->image_video,
                     'detail' => $course->detail->detail,
+                    'updated_at' => $course->updated_at,
+                    'created_at' => $course->created_at,
                 ];
 
                 return new PostResource(true, 'Course retrieved successfully', $data);
