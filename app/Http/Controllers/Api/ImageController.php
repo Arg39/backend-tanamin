@@ -26,4 +26,20 @@ class ImageController extends Controller
     
         return response($image, 200)->header('Content-Type', $mimeType);
     }
+
+    public function postImage(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+    
+        $request->validate([
+            'image' => 'required|image|max:2048'
+        ]);
+    
+        $path = $request->file('image')->store('public/images');
+        $url = Storage::url($path);
+    
+        return response()->json(['url' => $url], 201);
+    }
 }

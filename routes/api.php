@@ -54,9 +54,7 @@ Route::middleware('role:instructor')->group(function () {
     Route::get('instructor/courses/{tab}/{id}', [CourseController::class,'getDetailCourse']);
 });
 
-Route::middleware('role:admin,instructor')->group(function () {
-    // api for instructor and admin
-});
+Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);
 
 // certificate api
 Route::middleware(['isAdmin', 'disable.octane'])->group(function () {

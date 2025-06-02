@@ -209,7 +209,7 @@ class CourseController extends Controller
                 return new PostResource(false, 'Unauthorized', null);
             }
 
-            if ($tab === 'informasi-utama') {
+            if ($tab === 'ringkasan') {
                 $course = Course::with(['category', 'instructor', 'detail'])
                     ->where('id', $id)
                     ->where('id_instructor', $user->id)
