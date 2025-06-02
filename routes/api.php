@@ -52,6 +52,9 @@ Route::middleware('role:instructor')->group(function () {
     // course api
     Route::get('instructor/courses', [CourseController::class, 'getInstructorCourse']);
     Route::get('instructor/courses/{tab}/{id}', [CourseController::class,'getDetailCourse']);
+
+    // update course api
+    Route::post('instructor/courses/ringkasan/{id}/update', [CourseController::class, 'updateSummary']);
 });
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);
