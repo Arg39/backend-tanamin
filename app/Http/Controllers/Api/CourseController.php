@@ -322,11 +322,31 @@ class CourseController extends Controller
                 ->where('id_instructor', $user->id)
                 ->firstOrFail();
 
+            // Handle image upload
+            if ($request->hasFile('image_video')) {
+                $newImagePath = $request->file('image_video')->store('course', 'public');
+    
+                // Check if the new image is different from the current one
+                if ($course->image_video && $course->image_video !== $newImagePath) {
+                    // Delete the old image from storage
+                    if (Storage::disk('public')->exists($course->image_video)) {
+                        Storage::disk('public')->delete($course->image_video);
+                    }
+                }
+    
+                // Update the course's image_video attribute
+                $course->image_video = $newImagePath;
+            }
+    
+            // Update course attributes
+            $course->title = $validated['title'];
+            $course->level = $validated['level'];
+            $course->price = $validated['price'];
+    
             $oldDetail = $course->detail ? $course->detail->detail : '';
             $newDetail = $validated['detail'];
 
             $imagesToDelete = $this->getImagesToDeleteFromDetail($oldDetail, $newDetail);
-
             $newDetailCleaned = $this->removeDeletedImagesFromDetail($newDetail, $imagesToDelete);
 
             foreach ($imagesToDelete as $imgPath) {
@@ -339,6 +359,8 @@ class CourseController extends Controller
                 $course->detail->detail = $newDetailCleaned;
                 $course->detail->save();
             }
+
+            $course->save();
 
             $data = [
                 'id' => $course->id,
