@@ -263,6 +263,43 @@ class CourseController extends Controller
         }
     }
 
+    // Helper to extract local wysiwyg image paths from HTML
+    private function getImagesToDeleteFromDetail($oldDetail, $newDetail)
+    {
+        $extractLocalImages = function($html) {
+            $images = [];
+            preg_match_all('/<img[^>]+src="([^">]+)"/', $html, $matches);
+            if (isset($matches[1])) {
+                foreach ($matches[1] as $imgUrl) {
+                    if (strpos($imgUrl, '/storage/wysiwyg/') !== false) {
+                        $path = preg_replace('#^.*?/storage/#', '', $imgUrl);
+                        $images[] = $path;
+                    }
+                }
+            }
+            return $images;
+        };
+
+        $oldImages = $extractLocalImages($oldDetail);
+        $newImages = $extractLocalImages($newDetail);
+
+        $toDelete = array_diff($oldImages, $newImages);
+
+        return array_values($toDelete);
+    }
+
+    // Helper to remove <img> tags for deleted images from HTML detail
+    private function removeDeletedImagesFromDetail($detailHtml, $imagesToDelete)
+    {
+        if (empty($imagesToDelete)) return $detailHtml;
+
+        foreach ($imagesToDelete as $imgPath) {
+            $pattern = '#<img[^>]+src="[^">]*' . preg_quote($imgPath, '#') . '[^">]*"[^>]*>#i';
+            $detailHtml = preg_replace($pattern, '', $detailHtml);
+        }
+        return $detailHtml;
+    }
+
     // INSTRUCTOR: UPDATE course by ID
     public function updateSummary(Request $request, $id)
     {
@@ -272,7 +309,6 @@ class CourseController extends Controller
         }
 
         try {
-            // Validate input
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'level' => 'required|string|max:50',
@@ -281,42 +317,36 @@ class CourseController extends Controller
                 'detail' => 'required|string',
             ]);
 
-            // Find course and check ownership
-            $course = Course::where('id', $id)
+            $course = Course::with(['detail'])
+                ->where('id', $id)
                 ->where('id_instructor', $user->id)
                 ->firstOrFail();
 
-            // Handle file upload if present
-            if ($request->hasFile('image_video')) {
-                // Delete old file if exists
-                if ($course->image_video && Storage::disk('public')->exists($course->image_video)) {
-                    Storage::disk('public')->delete($course->image_video);
+            $oldDetail = $course->detail ? $course->detail->detail : '';
+            $newDetail = $validated['detail'];
+
+            $imagesToDelete = $this->getImagesToDeleteFromDetail($oldDetail, $newDetail);
+
+            $newDetailCleaned = $this->removeDeletedImagesFromDetail($newDetail, $imagesToDelete);
+
+            foreach ($imagesToDelete as $imgPath) {
+                if (Storage::disk('public')->exists($imgPath)) {
+                    Storage::disk('public')->delete($imgPath);
                 }
-                $imageVideoPath = $request->file('image_video')->store('courses', 'public');
-                $course->image_video = $imageVideoPath;
             }
 
-            // Update course fields
-            $course->title = $validated['title'];
-            $course->level = $validated['level'];
-            $course->price = $validated['price'];
-            $course->save();
-
-            // Update detail course (wysiwyg)
-            $detailCourse = DetailCourse::where('id', $id)->first();
-            if ($detailCourse) {
-                $detailCourse->detail = $validated['detail'];
-                $detailCourse->save();
+            if ($course->detail) {
+                $course->detail->detail = $newDetailCleaned;
+                $course->detail->save();
             }
 
-            // Prepare response data
             $data = [
                 'id' => $course->id,
                 'title' => $course->title,
                 'level' => $course->level,
                 'price' => $course->price,
                 'image_video' => $course->image_video ? asset('storage/' . $course->image_video) : null,
-                'detail' => $detailCourse ? $detailCourse->detail : null,
+                'detail' => $newDetailCleaned,
                 'updated_at' => $course->updated_at,
             ];
 
