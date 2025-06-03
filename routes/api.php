@@ -34,8 +34,7 @@ Route::middleware('role:admin')->group(function () {
     Route::get('categories', [CategoryController::class, 'index']);
     Route::post('categories', [CategoryController::class, 'store']);
     Route::get('categories/{id}', [CategoryController::class, 'getCategoryById']);
-    Route::post('categories/{id}', [CategoryController::class, 'update']);
-    Route::put('categories/{id}', [CategoryController::class, 'update']);
+    Route::match(['put', 'post'], 'categories/{id}', [CategoryController::class, 'update']);
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
     Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
     
@@ -54,7 +53,7 @@ Route::middleware('role:instructor')->group(function () {
     Route::get('instructor/courses/{tab}/{id}', [CourseController::class,'getDetailCourse']);
 
     // update course api
-    Route::post('instructor/courses/ringkasan/{id}/update', [CourseController::class, 'updateSummary']);
+    Route::match(['put', 'post'], 'instructor/courses/ringkasan/{id}/update', [CourseController::class, 'updateSummary']);
 });
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);

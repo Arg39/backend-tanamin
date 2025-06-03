@@ -228,7 +228,7 @@ class CourseController extends Controller
                     ] : null,
                     'level' => $course->level,
                     'price' => $course->price,
-                    'image_video' => $course->image_video,
+                    'image_video' => $course->image_video ? asset('storage/' . $course->image_video) : null,
                     'detail' => $course->detail->detail,
                     'updated_at' => $course->updated_at,
                     'created_at' => $course->created_at,
@@ -263,7 +263,7 @@ class CourseController extends Controller
         }
     }
 
-    // INSTRUCTOR: UPDATE course by ID: name, level, price, image_video, detail course
+    // INSTRUCTOR: UPDATE course by ID
     public function updateSummary(Request $request, $id)
     {
         $user = JWTAuth::user();
@@ -277,7 +277,7 @@ class CourseController extends Controller
                 'title' => 'required|string|max:255',
                 'level' => 'required|string|max:50',
                 'price' => 'required|numeric|min:0',
-                'image_video' => 'nullable|string|max:255',
+                'image_video' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov,avi|max:20480', // 20MB max
                 'detail' => 'required|string',
             ]);
 
@@ -286,11 +286,20 @@ class CourseController extends Controller
                 ->where('id_instructor', $user->id)
                 ->firstOrFail();
 
+            // Handle file upload if present
+            if ($request->hasFile('image_video')) {
+                // Delete old file if exists
+                if ($course->image_video && Storage::disk('public')->exists($course->image_video)) {
+                    Storage::disk('public')->delete($course->image_video);
+                }
+                $imageVideoPath = $request->file('image_video')->store('courses', 'public');
+                $course->image_video = $imageVideoPath;
+            }
+
             // Update course fields
             $course->title = $validated['title'];
             $course->level = $validated['level'];
             $course->price = $validated['price'];
-            $course->image_video = $validated['image_video'] ?? $course->image_video;
             $course->save();
 
             // Update detail course (wysiwyg)
@@ -306,7 +315,7 @@ class CourseController extends Controller
                 'title' => $course->title,
                 'level' => $course->level,
                 'price' => $course->price,
-                'image_video' => $course->image_video,
+                'image_video' => $course->image_video ? asset('storage/' . $course->image_video) : null,
                 'detail' => $detailCourse ? $detailCourse->detail : null,
                 'updated_at' => $course->updated_at,
             ];
