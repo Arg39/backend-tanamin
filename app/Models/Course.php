@@ -9,6 +9,7 @@ class Course extends Model
 {
     use HasFactory;
 
+    protected $table = 'courses';
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -18,10 +19,10 @@ class Course extends Model
         'id_instructor',
         'title',
         'price',
-        'duration',
         'level',
-        'image_video',
-        'is_published',
+        'image',
+        'status',
+        'detail',
     ];
 
     public function category()
@@ -34,14 +35,24 @@ class Course extends Model
         return $this->belongsTo(User::class, 'id_instructor');
     }
 
-    public function detail()
+    public function descriptions()
     {
-        return $this->hasOne(DetailCourse::class, 'id');
+        return $this->hasMany(CourseDescription::class, 'id_course');
+    }
+
+    public function prerequisites()
+    {
+        return $this->hasMany(CoursePrerequisite::class, 'id_course');
     }
 
     public function reviews()
     {
-        return $this->hasMany(CourseReview::class, 'course_id');
+        return $this->hasMany(CourseReview::class, 'id_course');
+    }
+
+    public function discounts()
+    {
+        return $this->hasMany(CourseDiscount::class, 'course_id');
     }
 
     // filtering

@@ -17,36 +17,70 @@ return new class extends Migration
             $table->uuid('id_instructor');
             $table->string('title');
             $table->integer('price')->nullable();
-            $table->string('duration')->nullable();
-            $table->string('level')->nullable();
-            $table->string('image_video')->nullable();
-            $table->boolean('is_published')->default(false);
+            $table->enum('level', ['beginner', 'intermediate', 'advance'])->nullable();
+            $table->string('image')->nullable();
+            $table->enum('status', ['new', 'edited', 'published'])->default('new');
+            $table->text('detail')->nullable();
             $table->timestamps();
 
             $table->foreign('id_category')->references('id')->on('categories')->onDelete('cascade');
             $table->foreign('id_instructor')->references('id')->on('users')->onDelete('cascade');
         });
 
-        Schema::create('detail_course', function (Blueprint $table) {
-            $table->uuid('id')->primary(); // shared primary key from courses.id
-            $table->text('detail')->nullable();
-            $table->text('description')->nullable();
-            $table->text('prerequisite')->nullable();
+        Schema::create('course_descriptions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('id_course');
+            $table->text('content');
             $table->timestamps();
 
-            $table->foreign('id')->references('id')->on('courses')->onDelete('cascade');
+            $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
+        });
+
+        Schema::create('course_prerequisites', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('id_course');
+            $table->text('content');
+            $table->timestamps();
+
+            $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
         });
 
         Schema::create('course_reviews', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('course_id');
-            $table->uuid('user_id');
+            $table->uuid('id_user');
+            $table->uuid('id_course');
             $table->integer('rating');
             $table->text('review')->nullable();
             $table->timestamps();
 
+            $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
+            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
+        });
+
+        Schema::create('course_discounts', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('course_id');
+            $table->enum('type', ['percent', 'nominal']);
+            $table->integer('value');
+            $table->dateTime('start_at');
+            $table->dateTime('end_at');
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        });
+
+        Schema::create('course_coupons', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('code')->unique();
+            $table->enum('type', ['percent', 'nominal']);
+            $table->integer('value');
+            $table->dateTime('start_at');
+            $table->dateTime('end_at');
+            $table->boolean('is_active')->default(true);
+            $table->integer('max_usage')->nullable();
+            $table->integer('used_count')->default(0);
+            $table->timestamps();
         });
     }
 
@@ -55,8 +89,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('course_coupons');
+        Schema::dropIfExists('course_discounts');
         Schema::dropIfExists('course_reviews');
-        Schema::dropIfExists('detail_course');
+        Schema::dropIfExists('course_prerequisites');
+        Schema::dropIfExists('course_descriptions');
         Schema::dropIfExists('courses');
     }
 };

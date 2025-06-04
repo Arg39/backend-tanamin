@@ -7,7 +7,8 @@ use App\Http\Resources\ErrorResource;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\TableResource;
 use App\Models\Course;
-use App\Models\DetailCourse;
+use App\Models\CourseDescription;
+use App\Models\CoursePrerequisite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -33,7 +34,7 @@ class CourseController extends Controller
                     'category:id,name',
                     'instructor:id,first_name,last_name'
                 ])
-                ->select(['id', 'id_category', 'id_instructor', 'title', 'is_published', 'created_at', 'updated_at']);
+                ->select(['id', 'id_category', 'id_instructor', 'title', 'price', 'level', 'image', 'status', 'detail', 'created_at', 'updated_at']);
 
             // Filtering
             if ($search) {
@@ -61,7 +62,11 @@ class CourseController extends Controller
                     'id_category' => $course->id_category,
                     'id_instructor' => $course->id_instructor,
                     'title' => $course->title,
-                    'is_published' => $course->is_published,
+                    'price' => $course->price,
+                    'level' => $course->level,
+                    'image' => $course->image ? asset('storage/' . $course->image) : null,
+                    'status' => $course->status,
+                    'detail' => $course->detail,
                     'category' => $course->category ? [
                         'id' => $course->category->id,
                         'name' => $course->category->name,
@@ -100,32 +105,46 @@ class CourseController extends Controller
                 'id_category' => 'required|exists:categories,id',
                 'id_instructor' => 'required|exists:users,id',
                 'title' => 'required|string|max:255',
+                'price' => 'nullable|numeric|min:0',
+                'level' => 'nullable|in:beginner,intermediate,advance',
+                'image' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+                'status' => 'nullable|in:new,edited,published',
+                'detail' => 'nullable|string',
             ]);
 
             $courseId = (string) Str::uuid();
+
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('course', 'public');
+            }
 
             $course = Course::create([
                 'id' => $courseId,
                 'id_category' => $request->id_category,
                 'id_instructor' => $request->id_instructor,
                 'title' => $request->title,
-                'is_published' => false,
-            ]);
-
-            DetailCourse::create([
-                'id' => $courseId,
+                'price' => $request->price,
+                'level' => $request->level,
+                'image' => $imagePath,
+                'status' => $request->status ?? 'new',
+                'detail' => $request->detail,
             ]);
 
             // Fetch only needed fields for category and instructor
             $category = $course->category()->select('id', 'name')->first();
             $instructor = $course->instructor()->select('id', 'first_name', 'last_name')->first();
-            $detail = $course->detail;
 
             $responseData = [
                 'id' => $course->id,
                 'id_category' => $course->id_category,
                 'id_instructor' => $course->id_instructor,
                 'title' => $course->title,
+                'price' => $course->price,
+                'level' => $course->level,
+                'image' => $course->image ? asset('storage/' . $course->image) : null,
+                'status' => $course->status,
+                'detail' => $course->detail,
                 'updated_at' => $course->updated_at,
                 'created_at' => $course->created_at,
                 'category' => $category ? [
@@ -137,7 +156,6 @@ class CourseController extends Controller
                     'first_name' => $instructor->first_name,
                     'last_name' => $instructor->last_name,
                 ] : null,
-                'detail' => $detail,
             ];
 
             return new PostResource(true, 'Course created successfully', $responseData);
@@ -164,7 +182,7 @@ class CourseController extends Controller
 
             $query = Course::with('category:id,name')
                 ->where('id_instructor', $user->id)
-                ->select('id', 'title', 'id_category', 'created_at', 'updated_at');
+                ->select('id', 'title', 'id_category', 'price', 'level', 'image', 'status', 'detail', 'created_at', 'updated_at');
 
             if ($search) {
                 $query->where('title', 'like', '%' . $search . '%');
@@ -184,6 +202,11 @@ class CourseController extends Controller
                 return [
                     'id' => $course->id,
                     'title' => $course->title,
+                    'price' => $course->price,
+                    'level' => $course->level,
+                    'image' => $course->image ? asset('storage/' . $course->image) : null,
+                    'status' => $course->status,
+                    'detail' => $course->detail,
                     'category' => $course->category ? $course->category->name : null,
                     'created_at' => $course->created_at,
                     'updated_at' => $course->updated_at,
@@ -210,7 +233,7 @@ class CourseController extends Controller
             }
 
             if ($tab === 'ringkasan') {
-                $course = Course::with(['category', 'instructor', 'detail'])
+                $course = Course::with(['category', 'instructor'])
                     ->where('id', $id)
                     ->where('id_instructor', $user->id)
                     ->firstOrFail();
@@ -228,32 +251,33 @@ class CourseController extends Controller
                     ] : null,
                     'level' => $course->level,
                     'price' => $course->price,
-                    'image_video' => $course->image_video ? asset('storage/' . $course->image_video) : null,
-                    'detail' => $course->detail->detail,
+                    'image' => $course->image ? asset('storage/' . $course->image) : null,
+                    'detail' => $course->detail,
+                    'status' => $course->status,
                     'updated_at' => $course->updated_at,
                     'created_at' => $course->created_at,
                 ];
 
                 return new PostResource(true, 'Course retrieved successfully', $data);
             } else if ($tab === 'persyaratan') {
-                $preRequisite = DetailCourse::where('id', $id)->value('prerequisite');
-                $data = [
-                    [
-                        'id' => $id,
-                        'prerequisite' => $preRequisite,
-                    ]
-                ];
+                $prerequisites = CoursePrerequisite::where('id_course', $id)->get(['id', 'content']);
+                $data = $prerequisites->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'prerequisite' => $item->content,
+                    ];
+                });
                 return new TableResource(true, 'Prerequisite retrieved successfully', [
                     'data' => $data,
                 ], 200);
             } else if ($tab === 'deskripsi') {
-                $description = DetailCourse::where('id', $id)->value('description');
-                $data = [
-                    [
-                        'id' => $id,
-                        'description' => $description,
-                    ]
-                ];
+                $descriptions = CourseDescription::where('id_course', $id)->get(['id', 'content']);
+                $data = $descriptions->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'description' => $item->content,
+                    ];
+                });
                 return new TableResource(true, 'Description retrieved successfully', [
                     'data' => $data,
                 ], 200);
@@ -311,39 +335,38 @@ class CourseController extends Controller
         try {
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
-                'level' => 'required|string|max:50',
+                'level' => 'required|in:beginner,intermediate,advance',
                 'price' => 'required|numeric|min:0',
-                'image_video' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov,avi|max:20480', // 20MB max
+                'image' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
                 'detail' => 'required|string',
             ]);
 
-            $course = Course::with(['detail'])
-                ->where('id', $id)
+            $course = Course::where('id', $id)
                 ->where('id_instructor', $user->id)
                 ->firstOrFail();
 
             // Handle image upload
-            if ($request->hasFile('image_video')) {
-                $newImagePath = $request->file('image_video')->store('course', 'public');
-    
+            if ($request->hasFile('image')) {
+                $newImagePath = $request->file('image')->store('course', 'public');
+
                 // Check if the new image is different from the current one
-                if ($course->image_video && $course->image_video !== $newImagePath) {
+                if ($course->image && $course->image !== $newImagePath) {
                     // Delete the old image from storage
-                    if (Storage::disk('public')->exists($course->image_video)) {
-                        Storage::disk('public')->delete($course->image_video);
+                    if (Storage::disk('public')->exists($course->image)) {
+                        Storage::disk('public')->delete($course->image);
                     }
                 }
-    
-                // Update the course's image_video attribute
-                $course->image_video = $newImagePath;
+
+                // Update the course's image attribute
+                $course->image = $newImagePath;
             }
-    
+
             // Update course attributes
             $course->title = $validated['title'];
             $course->level = $validated['level'];
             $course->price = $validated['price'];
-    
-            $oldDetail = $course->detail ? $course->detail->detail : '';
+
+            $oldDetail = $course->detail ?? '';
             $newDetail = $validated['detail'];
 
             $imagesToDelete = $this->getImagesToDeleteFromDetail($oldDetail, $newDetail);
@@ -355,11 +378,7 @@ class CourseController extends Controller
                 }
             }
 
-            if ($course->detail) {
-                $course->detail->detail = $newDetailCleaned;
-                $course->detail->save();
-            }
-
+            $course->detail = $newDetailCleaned;
             $course->save();
 
             $data = [
@@ -367,7 +386,7 @@ class CourseController extends Controller
                 'title' => $course->title,
                 'level' => $course->level,
                 'price' => $course->price,
-                'image_video' => $course->image_video ? asset('storage/' . $course->image_video) : null,
+                'image' => $course->image ? asset('storage/' . $course->image) : null,
                 'detail' => $newDetailCleaned,
                 'updated_at' => $course->updated_at,
             ];
@@ -384,7 +403,7 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
-            $course = Course::with(['category', 'instructor', 'detail', 'reviews'])
+            $course = Course::with(['category', 'instructor', 'descriptions', 'prerequisites', 'reviews'])
                 ->where('id', $id)
                 ->firstOrFail();
 
