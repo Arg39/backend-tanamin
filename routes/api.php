@@ -54,6 +54,10 @@ Route::middleware('role:instructor')->group(function () {
 
     // update course api
     Route::match(['put', 'post'], 'instructor/courses/ringkasan/{id}/update', [CourseController::class, 'updateSummary']);
+    Route::post('instructor/courses/info/{id}/add', [CourseController::class, 'addCourseInfo']);
+    Route::get('instructor/courses/info/{id}/view', [CourseController::class, 'getInstructorCourseInfo']);
+    Route::put('instructor/courses/info/{id}/update{id_info}', [CourseController::class, 'updateInstructorCourseInfo']);
+    Route::delete('instructor/courses/info/{id}/delete{id_info}', [CourseController::class, 'deleteInstructorCourseInfo']);
 });
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);

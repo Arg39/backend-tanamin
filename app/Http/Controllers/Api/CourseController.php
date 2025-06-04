@@ -412,4 +412,150 @@ class CourseController extends Controller
             return new PostResource(false, 'Failed to retrieve course: ' . $e->getMessage(), null);
         }
     }
+
+    // INSTRUCTOR: Add course description or prerequisite
+    public function addCourseInfo(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'content' => 'required|string|max:255',
+            'type' => 'required|in:prerequisite,description',
+        ]);
+
+        // Cek course milik instructor
+        $course = Course::where('id', $id)
+            ->first();
+
+        if (!$course) {
+            return new PostResource(false, 'Course not found or not owned by instructor', null);
+        }
+
+        $uuid = (string) Str::uuid();
+        if ($validated['type'] === 'prerequisite') {
+            $prereq = CoursePrerequisite::create([
+                'id' => $uuid,
+                'id_course' => $course->id,
+                'content' => $validated['content'],
+            ]);
+            return new PostResource(true, 'Prerequisite added successfully', [
+                'id' => $prereq->id,
+                'prerequisite' => $prereq->content,
+            ]);
+        } else {
+            $desc = CourseDescription::create([
+                'id' => $uuid,
+                'id_course' => $course->id, // FIX: add this line
+                'content' => $validated['content'],
+            ]);
+            return new PostResource(true, 'Description added successfully', [
+                'id' => $desc->id,
+                'description' => $desc->content,
+            ]);
+        }
+    }
+
+    // Instructor: view all description and prerequisite
+    public function getInstructorCourseInfo($id)
+    {
+        try {
+            $course = Course::with([
+                    'descriptions' => function ($q) {
+                        $q->orderBy('created_at', 'asc');
+                    },
+                    'prerequisites' => function ($q) {
+                        $q->orderBy('created_at', 'asc');
+                    }
+                ])
+                ->where('id', $id)
+                ->firstOrFail();
+
+            $prerequisites = $course->prerequisites->map(function ($pre) {
+                return [
+                    'id' => $pre->id,
+                    'content' => $pre->content,
+                ];
+            });
+            $descriptions = $course->descriptions->map(function ($desc) {
+                return [
+                    'id' => $desc->id,
+                    'content' => $desc->content,
+                ];
+            });
+
+            return new PostResource(true, 'Course info retrieved successfully', [
+                'prerequisites' => $prerequisites,
+                'descriptions' => $descriptions,
+            ]);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to retrieve course info: ' . $e->getMessage(), null);
+        }
+    }
+
+    // INSTRUCTOR: Update course description or prerequisite
+    public function updateInstructorCourseInfo(Request $request, $id, $id_info)
+    {
+        $validated = $request->validate([
+            'content' => 'required|string|max:255',
+            'type' => 'required|in:prerequisite,description',
+        ]);
+
+        // Cek course milik instructor
+        $course = Course::where('id', $id)->first();
+        if (!$course) {
+            return new PostResource(false, 'Course not found or not owned by instructor', null);
+        }
+
+        if ($validated['type'] === 'prerequisite') {
+            $info = CoursePrerequisite::where('id', $id_info)->where('id_course', $course->id)->first();
+            if (!$info) {
+                return new PostResource(false, 'Prerequisite not found', null);
+            }
+            $info->content = $validated['content'];
+            $info->save();
+            return new PostResource(true, 'Prerequisite updated successfully', [
+                'id' => $info->id,
+                'prerequisite' => $info->content,
+            ]);
+        } else {
+            $info = CourseDescription::where('id', $id_info)->where('id_course', $course->id)->first();
+            if (!$info) {
+                return new PostResource(false, 'Description not found', null);
+            }
+            $info->content = $validated['content'];
+            $info->save();
+            return new PostResource(true, 'Description updated successfully', [
+                'id' => $info->id,
+                'description' => $info->content,
+            ]);
+        }
+    }
+
+    // INSTRUCTOR: Delete course description or prerequisite
+    public function deleteInstructorCourseInfo(Request $request, $id, $id_info)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:prerequisite,description',
+        ]);
+
+        // Cek course milik instructor
+        $course = Course::where('id', $id)->first();
+        if (!$course) {
+            return new PostResource(false, 'Course not found or not owned by instructor', null);
+        }
+
+        if ($validated['type'] === 'prerequisite') {
+            $info = CoursePrerequisite::where('id', $id_info)->where('id_course', $course->id)->first();
+            if (!$info) {
+                return new PostResource(false, 'Prerequisite not found', null);
+            }
+            $info->delete();
+            return new PostResource(true, 'Prerequisite deleted successfully', null);
+        } else {
+            $info = CourseDescription::where('id', $id_info)->where('id_course', $course->id)->first();
+            if (!$info) {
+                return new PostResource(false, 'Description not found', null);
+            }
+            $info->delete();
+            return new PostResource(true, 'Description deleted successfully', null);
+        }
+    }
 }
