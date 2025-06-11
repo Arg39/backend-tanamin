@@ -16,7 +16,6 @@ use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
-    // ADMIN: Get all courses
     public function index(Request $request)
     {
         try {
@@ -92,7 +91,6 @@ class CourseController extends Controller
         }
     }
 
-    // ADMIN: Create a new course
     public function store(Request $request)
     {
         $user = JWTAuth::user();
@@ -164,7 +162,6 @@ class CourseController extends Controller
         }
     }
 
-    // INSTRUCTOR: Get courses by instructor
     public function getInstructorCourse(Request $request)
     {
         $user = JWTAuth::user();
@@ -223,7 +220,6 @@ class CourseController extends Controller
         }
     }
 
-    // INSTRUCTOR: Get detail course by ID
     public function getDetailCourse($tab, $id)
     {
         try {
@@ -287,7 +283,6 @@ class CourseController extends Controller
         }
     }
 
-    // Helper to extract local wysiwyg image paths from HTML
     private function getImagesToDeleteFromDetail($oldDetail, $newDetail)
     {
         $extractLocalImages = function($html) {
@@ -312,7 +307,6 @@ class CourseController extends Controller
         return array_values($toDelete);
     }
 
-    // Helper to remove <img> tags for deleted images from HTML detail
     private function removeDeletedImagesFromDetail($detailHtml, $imagesToDelete)
     {
         if (empty($imagesToDelete)) return $detailHtml;
@@ -324,7 +318,6 @@ class CourseController extends Controller
         return $detailHtml;
     }
 
-    // INSTRUCTOR: UPDATE course by ID
     public function updateSummary(Request $request, $id)
     {
         $user = JWTAuth::user();
@@ -399,7 +392,6 @@ class CourseController extends Controller
         }
     }
 
-    // ADMIN & INSTRUCTOR: Get detail course by ID
     public function show($id)
     {
         try {
@@ -413,7 +405,6 @@ class CourseController extends Controller
         }
     }
 
-    // INSTRUCTOR: Add course description or prerequisite
     public function addCourseInfo(Request $request, $id)
     {
         $validated = $request->validate([
@@ -453,7 +444,6 @@ class CourseController extends Controller
         }
     }
 
-    // Instructor: view all description and prerequisite
     public function getInstructorCourseInfo($id)
     {
         try {
@@ -490,7 +480,6 @@ class CourseController extends Controller
         }
     }
 
-    // INSTRUCTOR: Update course description or prerequisite
     public function updateInstructorCourseInfo(Request $request, $id, $id_info)
     {
         $validated = $request->validate([
@@ -529,7 +518,6 @@ class CourseController extends Controller
         }
     }
 
-    // INSTRUCTOR: Delete course description or prerequisite
     public function deleteInstructorCourseInfo(Request $request, $id, $id_info)
     {
         $validated = $request->validate([

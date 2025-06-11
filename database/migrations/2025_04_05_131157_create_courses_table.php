@@ -27,18 +27,10 @@ return new class extends Migration
             $table->foreign('id_instructor')->references('id')->on('users')->onDelete('cascade');
         });
 
-        Schema::create('course_descriptions', function (Blueprint $table) {
+        Schema::create('course_attributes', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('id_course');
-            $table->text('content');
-            $table->timestamps();
-
-            $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
-        });
-
-        Schema::create('course_prerequisites', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('id_course');
+            $table->enum('type', ['description', 'prerequisite']);
             $table->text('content');
             $table->timestamps();
 
@@ -92,8 +84,7 @@ return new class extends Migration
         Schema::dropIfExists('course_coupons');
         Schema::dropIfExists('course_discounts');
         Schema::dropIfExists('course_reviews');
-        Schema::dropIfExists('course_prerequisites');
-        Schema::dropIfExists('course_descriptions');
+        Schema::dropIfExists('course_attributes');
         Schema::dropIfExists('courses');
     }
 };
