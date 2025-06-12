@@ -7,12 +7,26 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class CoursePostResource extends JsonResource
 {
+    protected $extra = [];
+
     /**
-     * Transform the resource into an array.
+     * Tambahkan data ekstra ke resource.
+     *
+     * @param array $extra
+     * @return $this
+     */
+    public function withExtra(array $extra)
+    {
+        $this->extra = $extra;
+        return $this;
+    }
+
+    /**
+     * Data utama resource.
      *
      * @return array<string, mixed>
      */
-    public function toArray($request)
+    protected function baseArray()
     {
         return [
             'id' => $this->id,
@@ -32,5 +46,18 @@ class CoursePostResource extends JsonResource
                 'name' => trim($this->instructor->first_name . ' ' . $this->instructor->last_name),
             ] : null,
         ];
+    }
+
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray($request)
+    {
+        return array_merge(
+            $this->baseArray(),
+            $this->extra
+        );
     }
 }

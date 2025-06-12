@@ -16,63 +16,6 @@ use Illuminate\Support\Str;
 
 class CourselamaController extends Controller
 {
-    public function getInstructorCourse(Request $request)
-    {
-        $user = JWTAuth::user();
-        if ($user->role !== 'instructor') {
-            return new PostResource(false, 'Unauthorized', null);
-        }
-
-        try {
-            $sortBy = $request->input('sortBy', 'title');
-            $sortOrder = $request->input('sortOrder', 'asc');
-            $perPage = (int) $request->input('perPage', 10);
-            $search = $request->input('search');
-            $dateStart = $request->input('dateStart');
-            $dateEnd = $request->input('dateEnd');
-
-            $query = Course::with('category:id,name')
-                ->where('id_instructor', $user->id)
-                ->select('id', 'title', 'id_category', 'price', 'level', 'image', 'status', 'detail', 'created_at', 'updated_at');
-
-            if ($search) {
-                $query->where('title', 'like', '%' . $search . '%');
-            }
-
-            if ($dateStart) {
-                $query->whereDate('created_at', '>=', $dateStart);
-            }
-
-            if ($dateEnd) {
-                $query->whereDate('created_at', '<=', $dateEnd);
-            }
-
-            $courses = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
-
-            $courses->getCollection()->transform(function ($course) {
-                return [
-                    'id' => $course->id,
-                    'title' => $course->title,
-                    'price' => $course->price,
-                    'level' => $course->level,
-                    'image' => $course->image ? asset('storage/' . $course->image) : null,
-                    'status' => $course->status,
-                    'detail' => $course->detail,
-                    'category' => $course->category ? $course->category->name : null,
-                    'created_at' => $course->created_at,
-                    'updated_at' => $course->updated_at,
-                ];
-            });
-
-            return new TableResource(true, 'Courses retrieved successfully', [
-                'data' => $courses,
-            ], 200);
-        } catch (\Exception $e) {
-            return (new ErrorResource(['message' => 'Failed to retrieve courses: ' . $e->getMessage()]))
-                ->response()
-                ->setStatusCode(500);
-        }
-    }
 
     public function getDetailCourse($tab, $id)
     {

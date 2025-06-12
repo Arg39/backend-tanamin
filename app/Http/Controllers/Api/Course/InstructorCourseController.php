@@ -62,7 +62,14 @@ class InstructorCourseController extends Controller
                 return new PostResource(false, 'Course not found or unauthorized access', null);
             }
 
-            return new PostResource(true, 'Course retrieved successfully', (new CoursePostResource($course))->resolve(request()));
+            $data = [
+                'instructor' => $course->instructor ? [
+                        'id' => $course->instructor->id,
+                        'full_name' => trim($course->instructor->first_name . ' ' . $course->instructor->last_name),
+                    ] : null,
+            ];
+
+            return new PostResource(true, 'Course retrieved successfully', (new CoursePostResource($course))->withExtra($data)->resolve(request()));
         }
         catch (\Exception $e) {
             return new PostResource(false, 'Failed to retrieve course: ' . $e->getMessage(), null);
