@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
+use App\Http\Controllers\Api\Course\InstructorCourseController;
+use App\Http\Controllers\Api\Course\MaincourseController;
 use App\Http\Controllers\Api\CourselamaController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -41,9 +43,10 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
     Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
     
     // course api
-    Route::get('courses', [CourselamaController::class, 'index']);
-    Route::post('courses', [CourselamaController::class, 'store']);
-    Route::get('courses/{id}', [CourselamaController::class, 'show']);
+    Route::get('courses', [MaincourseController::class, 'index']);
+    Route::post('courses', [MaincourseController::class, 'store']);
+    Route::get('courses/{id}', [MaincourseController::class, 'show']);
+    Route::delete('courses/{id}', [MaincourseController::class, 'destroy']);
     
     // instructor api
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
@@ -51,8 +54,9 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
 
 Route::middleware('role:instructor')->prefix('instructor')->group(function () {
     // course api
-    Route::get('courses', [CourselamaController::class, 'getInstructorCourse']);
-    Route::get('courses/{tab}/{id}', [CourselamaController::class,'getDetailCourse']);
+    Route::get('courses', [InstructorCourseController::class, 'index']);
+    // Route::get('courses/{tab}/{id}', [CourselamaController::class,'getDetailCourse']);
+    Route::get('courses/overview/{id}', [InstructorCourseController::class, 'showOverview']);
 
     // update course api
     Route::match(['put', 'post'], 'courses/ringkasan/{id}/update', [CourselamaController::class, 'updateSummary']);

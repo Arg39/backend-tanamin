@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\Api\Course;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CoursePostResource;
 use App\Http\Resources\ErrorResource;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\TableResource;
 use App\Models\Course;
-use App\Models\CourseDescription;
-use App\Models\CoursePrerequisite;
+use App\Traits\CourseFilterTrait;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class InstructorCourseController extends Controller
 {
-    // getInstructorCourse()
+    use CourseFilterTrait;
+
+    // get list of courses for instructor
     public function index(Request $request)
     {
         $user = JWTAuth::user();
@@ -23,40 +25,13 @@ class InstructorCourseController extends Controller
         }
 
         try {
-            $sortBy = $request->input('sortBy', 'title');
-            $sortOrder = $request->input('sortOrder', 'asc');
-            $perPage = (int) $request->input('perPage', 10);
-            $search = $request->input('search');
-            $dateStart = $request->input('dateStart');
-            $dateEnd = $request->input('dateEnd');
-
-            $query = Course::with('category:id,name')
-                ->where('id_instructor', $user->id)
-                ->select('id', 'title', 'id_category', 'price', 'level', 'image', 'status', 'detail', 'created_at', 'updated_at');
-
-            if ($search) {
-                $query->where('title', 'like', '%' . $search . '%');
-            }
-
-            if ($dateStart) {
-                $query->whereDate('created_at', '>=', $dateStart);
-            }
-
-            if ($dateEnd) {
-                $query->whereDate('created_at', '<=', $dateEnd);
-            }
-
-            $courses = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+            $courses = $this->filterCourses($request, $user->id);
 
             $courses->getCollection()->transform(function ($course) {
                 return [
                     'id' => $course->id,
                     'title' => $course->title,
-                    'price' => $course->price,
-                    'level' => $course->level,
-                    'image' => $course->image ? asset('storage/' . $course->image) : null,
                     'status' => $course->status,
-                    'detail' => $course->detail,
                     'category' => $course->category ? $course->category->name : null,
                     'created_at' => $course->created_at,
                     'updated_at' => $course->updated_at,
@@ -74,43 +49,22 @@ class InstructorCourseController extends Controller
     }
 
     // getDetailCourse()
-    public function showDetail($tab, $id)
+    public function showOverview($id)
     {
         try {
             $user = JWTAuth::user();
-            if ($user->role !== 'instructor') {
-                return new PostResource(false, 'Unauthorized', null);
+            $course = Course::with(['category', 'instructor'])
+                ->where('id', $id)
+                ->where('id_instructor', $user->id)
+                ->first();
+
+            if (!$course) {
+                return new PostResource(false, 'Course not found or unauthorized access', null);
             }
 
-            if ($tab === 'ringkasan') {
-                $course = Course::with(['category', 'instructor'])
-                    ->where('id', $id)
-                    ->where('id_instructor', $user->id)
-                    ->firstOrFail();
-
-                $data = [
-                    'id' => $course->id,
-                    'title' => $course->title,
-                    'category' => $course->category ? [
-                        'id' => $course->category->id,
-                        'name' => $course->category->name,
-                    ] : null,
-                    'instructor' => $course->instructor ? [
-                        'id' => $course->instructor->id,
-                        'full_name' => trim($course->instructor->first_name . ' ' . $course->instructor->last_name),
-                    ] : null,
-                    'level' => $course->level,
-                    'price' => $course->price,
-                    'image' => $course->image ? asset('storage/' . $course->image) : null,
-                    'detail' => $course->detail,
-                    'status' => $course->status,
-                    'updated_at' => $course->updated_at,
-                    'created_at' => $course->created_at,
-                ];
-
-                return new PostResource(true, 'Course retrieved successfully', $data);
-            }
-        } catch (\Exception $e) {
+            return new PostResource(true, 'Course retrieved successfully', (new CoursePostResource($course))->resolve(request()));
+        }
+        catch (\Exception $e) {
             return new PostResource(false, 'Failed to retrieve course: ' . $e->getMessage(), null);
         }
     }

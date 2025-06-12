@@ -44,6 +44,13 @@ class PostResource extends JsonResource
      */
     public function toArray($request)
     {
+        if (is_null($this->resource)) {
+            return [
+                'status'  => $this->status ? 'success' : 'failed',
+                'message' => $this->message,
+            ];
+        }
+
         $data = parent::toArray($request);
 
         if (isset($data['detail']) && isset($data['detail']['id_user'])) {
@@ -55,5 +62,18 @@ class PostResource extends JsonResource
             'message' => $this->message,
             'data'    => $data,
         ];
+    }
+
+    /**
+     * Remove "data" wrapping for failed/null resource responses.
+     */
+    public function withResponse($request, $response)
+    {
+        if (is_null($this->resource)) {
+            $response->setData((object) [
+                'status'  => $this->status ? 'success' : 'failed',
+                'message' => $this->message,
+            ]);
+        }
     }
 }
