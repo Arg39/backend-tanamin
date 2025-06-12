@@ -24,35 +24,7 @@ class CourselamaController extends Controller
             if ($user->role !== 'instructor') {
                 return new PostResource(false, 'Unauthorized', null);
             }
-
-            if ($tab === 'overview') {
-                $course = Course::with(['category', 'instructor'])
-                    ->where('id', $id)
-                    ->where('id_instructor', $user->id)
-                    ->firstOrFail();
-
-                $data = [
-                    'id' => $course->id,
-                    'title' => $course->title,
-                    'category' => $course->category ? [
-                        'id' => $course->category->id,
-                        'name' => $course->category->name,
-                    ] : null,
-                    'instructor' => $course->instructor ? [
-                        'id' => $course->instructor->id,
-                        'full_name' => trim($course->instructor->first_name . ' ' . $course->instructor->last_name),
-                    ] : null,
-                    'level' => $course->level,
-                    'price' => $course->price,
-                    'image' => $course->image ? asset('storage/' . $course->image) : null,
-                    'detail' => $course->detail,
-                    'status' => $course->status,
-                    'updated_at' => $course->updated_at,
-                    'created_at' => $course->created_at,
-                ];
-
-                return new PostResource(true, 'Course retrieved successfully', $data);
-            } else if ($tab === 'persyaratan') {
+            if ($tab === 'persyaratan') {
                 $prerequisites = CoursePrerequisite::where('id_course', $id)->get(['id', 'content']);
                 $data = $prerequisites->map(function ($item) {
                     return [

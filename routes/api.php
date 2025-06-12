@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
-use App\Http\Controllers\Api\Course\MaincourseController;
+use App\Http\Controllers\Api\Course\AdminCourseController;
+use App\Http\Controllers\Api\Course\OverviewCourseController;
 use App\Http\Controllers\Api\CourselamaController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -43,10 +44,10 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
     Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
     
     // course
-    Route::get('courses', [MaincourseController::class, 'index']);
-    Route::post('courses', [MaincourseController::class, 'store']);
-    Route::get('courses/{id}', [MaincourseController::class, 'show']);
-    Route::delete('courses/{id}', [MaincourseController::class, 'destroy']);
+    Route::get('courses', [AdminCourseController::class, 'index']);
+    Route::post('courses', [AdminCourseController::class, 'store']);
+    Route::get('courses/{id}', [AdminCourseController::class, 'show']);
+    Route::delete('courses/{id}', [AdminCourseController::class, 'destroy']);
     
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
@@ -56,8 +57,8 @@ Route::middleware('role:instructor')->prefix('instructor')->group(function () {
     // course
     Route::get('courses', [InstructorCourseController::class, 'index']);
     // detail course
-    Route::get('courses/overview/{id}', [InstructorCourseController::class, 'showOverview']);
-    Route::match(['put', 'post'], 'courses/overview/{id}/update', [InstructorCourseController::class, 'updateOverview']);
+    Route::get('courses/overview/{id}', [OverviewCourseController::class, 'showOverview']);
+    Route::match(['put', 'post'], 'courses/overview/{id}/update', [OverviewCourseController::class, 'updateOverview']);
 
     // update course
     Route::post('courses/info/{id}/add', [CourselamaController::class, 'addCourseInfo']);

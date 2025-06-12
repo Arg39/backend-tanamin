@@ -7,7 +7,7 @@ use App\Http\Resources\PostResource;
 use App\Models\CourseAttribute;
 use Illuminate\Http\Request;
 
-class CourseAttributeController extends Controller
+class AttributeCourseController extends Controller
 {
     public function index($id)
     {
