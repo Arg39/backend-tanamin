@@ -28,11 +28,11 @@ Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 
 // route using middleware for JWT token
 Route::middleware('role:admin')->prefix('admin')->group(function () {
-    // user api
+    // user
     Route::post('register-instructor', [AuthController::class, 'registerInstructor']);
     Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
 
-    // get image api
+    // get image
     Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
     
     Route::get('categories', [CategoryController::class, 'index']);
@@ -42,24 +42,24 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
     Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
     
-    // course api
+    // course
     Route::get('courses', [MaincourseController::class, 'index']);
     Route::post('courses', [MaincourseController::class, 'store']);
     Route::get('courses/{id}', [MaincourseController::class, 'show']);
     Route::delete('courses/{id}', [MaincourseController::class, 'destroy']);
     
-    // instructor api
+    // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
 });
 
 Route::middleware('role:instructor')->prefix('instructor')->group(function () {
-    // course api
+    // course
     Route::get('courses', [InstructorCourseController::class, 'index']);
-    // Route::get('courses/{tab}/{id}', [CourselamaController::class,'getDetailCourse']);
+    // detail course
     Route::get('courses/overview/{id}', [InstructorCourseController::class, 'showOverview']);
+    Route::match(['put', 'post'], 'courses/overview/{id}/update', [InstructorCourseController::class, 'updateOverview']);
 
-    // update course api
-    Route::match(['put', 'post'], 'courses/ringkasan/{id}/update', [CourselamaController::class, 'updateSummary']);
+    // update course
     Route::post('courses/info/{id}/add', [CourselamaController::class, 'addCourseInfo']);
     Route::get('courses/info/{id}/view', [CourselamaController::class, 'getInstructorCourseInfo']);
     Route::put('courses/info/{id}/update{id_info}', [CourselamaController::class, 'updateInstructorCourseInfo']);
@@ -72,7 +72,7 @@ Route::middleware('role:admin,instructor')->group(function () {
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);
 
-// certificate api
+// certificate
 Route::middleware(['isAdmin', 'disable.octane'])->group(function () {
     Route::get('certificates/{id}/pdf', [CertificateController::class, 'generatePdf']);
 });
