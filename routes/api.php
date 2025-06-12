@@ -5,10 +5,12 @@ use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
-use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\Course\CourseAttributeController;
+use App\Http\Controllers\Api\CourselamaController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\OrderController;
+use App\Models\CourseAttribute;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -23,9 +25,9 @@ Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 
 
 // route using middleware for JWT token
-Route::middleware('role:admin')->group(function () {
+Route::middleware('role:admin')->prefix('admin')->group(function () {
     // user api
-    Route::post('/admin/register', [AuthController::class, 'adminRegister']);
+    Route::post('register-instructor', [AuthController::class, 'registerInstructor']);
     Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
 
     // get image api
@@ -39,25 +41,29 @@ Route::middleware('role:admin')->group(function () {
     Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
     
     // course api
-    Route::get('courses', [CourseController::class, 'index']);
-    Route::post('courses', [CourseController::class, 'store']);
-    Route::get('courses/{id}', [CourseController::class, 'show']);
+    Route::get('courses', [CourselamaController::class, 'index']);
+    Route::post('courses', [CourselamaController::class, 'store']);
+    Route::get('courses/{id}', [CourselamaController::class, 'show']);
     
     // instructor api
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
 });
 
-Route::middleware('role:instructor')->group(function () {
+Route::middleware('role:instructor')->prefix('instructor')->group(function () {
     // course api
-    Route::get('instructor/courses', [CourseController::class, 'getInstructorCourse']);
-    Route::get('instructor/courses/{tab}/{id}', [CourseController::class,'getDetailCourse']);
+    Route::get('courses', [CourselamaController::class, 'getInstructorCourse']);
+    Route::get('courses/{tab}/{id}', [CourselamaController::class,'getDetailCourse']);
 
     // update course api
-    Route::match(['put', 'post'], 'instructor/courses/ringkasan/{id}/update', [CourseController::class, 'updateSummary']);
-    Route::post('instructor/courses/info/{id}/add', [CourseController::class, 'addCourseInfo']);
-    Route::get('instructor/courses/info/{id}/view', [CourseController::class, 'getInstructorCourseInfo']);
-    Route::put('instructor/courses/info/{id}/update{id_info}', [CourseController::class, 'updateInstructorCourseInfo']);
-    Route::delete('instructor/courses/info/{id}/delete{id_info}', [CourseController::class, 'deleteInstructorCourseInfo']);
+    Route::match(['put', 'post'], 'courses/ringkasan/{id}/update', [CourselamaController::class, 'updateSummary']);
+    Route::post('courses/info/{id}/add', [CourselamaController::class, 'addCourseInfo']);
+    Route::get('courses/info/{id}/view', [CourselamaController::class, 'getInstructorCourseInfo']);
+    Route::put('courses/info/{id}/update{id_info}', [CourselamaController::class, 'updateInstructorCourseInfo']);
+    Route::delete('courses/info/{id}/delete{id_info}', [CourselamaController::class, 'deleteInstructorCourseInfo']);
+});
+
+Route::middleware('role:admin,instructor')->group(function () {
+    Route::get('/attribute/{id}', [CourseAttributeController::class, 'index']);
 });
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);

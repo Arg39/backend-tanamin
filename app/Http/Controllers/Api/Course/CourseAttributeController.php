@@ -9,9 +9,12 @@ use Illuminate\Http\Request;
 
 class CourseAttributeController extends Controller
 {
-    public function index()
+    public function index($id)
     {
-        $courseAttributes = CourseAttribute::latest()->get();
+        if (!$id) {
+            return response()->json(['error' => 'Course ID is required'], 400);
+        }
+        $courseAttributes = CourseAttribute::where('id_course', $id)->get();
 
         return new PostResource(true, 'Data berhasil diambil.', $courseAttributes);
     }

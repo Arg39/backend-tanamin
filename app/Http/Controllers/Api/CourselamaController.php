@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Str;
 
-class CourseController extends Controller
+class CourselamaController extends Controller
 {
     public function index(Request $request)
     {

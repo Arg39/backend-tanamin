@@ -67,7 +67,7 @@ class AuthController extends Controller
     /**
      * Register an admin user.
      */
-    public function adminRegister(Request $request)
+    public function registerInstructor(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
