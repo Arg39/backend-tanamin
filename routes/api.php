@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
 use App\Http\Controllers\Api\Course\AttributeCourseController;
+use App\Http\Controllers\Api\Course\Material\ModuleCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -81,7 +82,12 @@ Route::middleware('auth:api')->group(function () {
             Route::get('{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
             Route::put('{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
             Route::delete('{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
-            // detail: review course
+            // detail: material course
+            Route::get('{courseId}/modules', [ModuleCourseController::class, 'index']);
+            Route::post('{courseId}/modules', [ModuleCourseController::class, 'store']);
+            Route::put('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'update']);
+            Route::post('{courseId}/modules', [ModuleCourseController::class, 'updateByOrder']);
+            Route::delete('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'destroy']);
         });
     });
 
