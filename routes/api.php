@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
+use App\Http\Controllers\Api\Course\AttributeCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
 use App\Http\Controllers\Api\CourselamaController;
 use App\Http\Controllers\Api\ImageController;
@@ -56,19 +57,18 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
 Route::middleware('role:instructor')->prefix('instructor')->group(function () {
     // course
     Route::get('courses', [InstructorCourseController::class, 'index']);
-    // detail course
-    Route::get('courses/overview/{id}', [OverviewCourseController::class, 'showOverview']);
-    Route::match(['put', 'post'], 'courses/overview/{id}/update', [OverviewCourseController::class, 'updateOverview']);
-
-    // update course
-    Route::post('courses/info/{id}/add', [CourselamaController::class, 'addCourseInfo']);
-    Route::get('courses/info/{id}/view', [CourselamaController::class, 'getInstructorCourseInfo']);
-    Route::put('courses/info/{id}/update{id_info}', [CourselamaController::class, 'updateInstructorCourseInfo']);
-    Route::delete('courses/info/{id}/delete{id_info}', [CourselamaController::class, 'deleteInstructorCourseInfo']);
+    // detail: overview course
+    Route::get('courses/overview/{CourseId}', [OverviewCourseController::class, 'showOverview']);
+    Route::match(['put', 'post'], 'courses/overview/{CourseId}/update', [OverviewCourseController::class, 'updateOverview']);
+    // detail: attribute course
+    Route::get('courses/attribute/{id}', [AttributeCourseController::class, 'getInstructorCourseInfo']);
+    Route::post('courses/attribute/{id}/add', [AttributeCourseController::class, 'addCourseInfo']);
+    Route::put('courses/attribute/{id}/update/{idAttribute}', [AttributeCourseController::class, 'updateInstructorCourseInfo']);
+    Route::delete('courses/info/{id}/delete/{idAttribute}', [AttributeCourseController::class, 'deleteInstructorCourseInfo']);
 });
 
 Route::middleware('role:admin,instructor')->group(function () {
-    Route::get('/attribute/{id}', [CourseAttributeController::class, 'index']);
+    Route::get('/attribute/{id}', [AttributeCourseController::class, 'index']);
 });
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);
