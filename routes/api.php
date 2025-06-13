@@ -86,7 +86,7 @@ Route::middleware('auth:api')->group(function () {
             Route::get('{courseId}/modules', [ModuleCourseController::class, 'index']);
             Route::post('{courseId}/modules', [ModuleCourseController::class, 'store']);
             Route::put('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'update']);
-            Route::post('{courseId}/modules', [ModuleCourseController::class, 'updateByOrder']);
+            Route::post('{courseId}/modules/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
             Route::delete('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'destroy']);
         });
     });

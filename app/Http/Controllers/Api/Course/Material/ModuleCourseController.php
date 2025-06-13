@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Course\Material;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ModuleCourseResource;
 use App\Http\Resources\PostResource;
 use App\Models\ModuleCourse;
 use Illuminate\Http\Request;
@@ -16,10 +17,11 @@ class ModuleCourseController extends Controller
         try {
             $modules = ModuleCourse::where('course_id', $courseId)
                 ->orderBy('order', 'asc')
-                ->select('id', 'course_id', 'title', 'order', 'created_at', 'updated_at')
                 ->get();
 
-            return new PostResource(true, 'Modules fetched successfully', $modules);
+            return new PostResource(true, 'Modules fetched successfully', [
+                'data' => ModuleCourseResource::collection($modules),
+            ]);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to fetch modules', $e->getMessage());
         }
@@ -49,7 +51,7 @@ class ModuleCourseController extends Controller
                 'order' => $order,
             ]);
 
-            return new PostResource(true, 'Module created successfully', $module);
+            return new PostResource(true, 'Module created successfully', (new ModuleCourseResource($module))->resolve(request()));
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to create module', $e->getMessage());
         }
@@ -73,7 +75,7 @@ class ModuleCourseController extends Controller
             // Perbarui urutan module setelah update
             $this->updateModuleOrder($courseId);
 
-            return new PostResource(true, 'Module updated successfully', $module);
+            return new PostResource(true, 'Module updated successfully', (new ModuleCourseResource($module))->resolve(request()));
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to update module', $e->getMessage());
         }
@@ -99,15 +101,13 @@ class ModuleCourseController extends Controller
 
             $modules = ModuleCourse::where('course_id', $courseId)
                 ->orderBy('order', 'asc')
-                ->select('id', 'course_id', 'title', 'order', 'created_at', 'updated_at')
                 ->get();
 
-            return new PostResource(true, 'Modules reordered successfully', $modules);
+            return new PostResource(true, 'Modules reordered successfully', (new ModuleCourseResource($module))->resolve(request()));
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to reorder modules', $e->getMessage());
         }
     }
-
 
     // delete a module by ID
     public function destroy($courseId, $moduleId)
