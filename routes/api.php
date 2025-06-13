@@ -15,10 +15,9 @@ use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\OrderController;
 use App\Models\CourseAttribute;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-
+// ───────────────────────────────
+// Public Routes
+// ───────────────────────────────
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
@@ -27,58 +26,71 @@ Route::post('/orders', [OrderController::class, 'store']);
 Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 
 
-// route using middleware for JWT token
-Route::middleware('role:admin')->prefix('admin')->group(function () {
-    // user
-    Route::post('register-instructor', [AuthController::class, 'registerInstructor']);
-    Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
+// ───────────────────────────────
+// Authenticated Routes
+// ───────────────────────────────
+Route::middleware('auth:api')->group(function () {
+    // ───────────────────────────────
+    // Admin Role
+    // ───────────────────────────────
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        // user
+        Route::post('register-instructor', [AuthController::class, 'registerInstructor']);
+        Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
 
-    // get image
-    Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
-    
-    // category
-    Route::get('categories', [CategoryController::class, 'index']);
-    Route::post('category', [CategoryController::class, 'store']);
-    Route::get('category/{id}', [CategoryController::class, 'getCategoryById']);
-    Route::match(['put', 'post'], 'category/{id}', [CategoryController::class, 'update']);
-    Route::delete('category/{id}', [CategoryController::class, 'destroy']);
-    Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
-    
-    // course
-    Route::get('courses', [AdminCourseController::class, 'index']);
-    Route::post('course', [AdminCourseController::class, 'store']);
-    Route::get('course/{id}', [AdminCourseController::class, 'show']);
-    Route::delete('course/{id}', [AdminCourseController::class, 'destroy']);
-    
-    // instructor
-    Route::get('instructors', [UserProfileController::class, 'getInstructors']);
-});
+        // get image
+        Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
+        
+        // category
+        Route::get('categories', [CategoryController::class, 'index']);
+        Route::post('category', [CategoryController::class, 'store']);
+        Route::get('category/{id}', [CategoryController::class, 'getCategoryById']);
+        Route::match(['put', 'post'], 'category/{id}', [CategoryController::class, 'update']);
+        Route::delete('category/{id}', [CategoryController::class, 'destroy']);
+        Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
+        
+        // course
+        Route::get('courses', [AdminCourseController::class, 'index']);
+        Route::post('course', [AdminCourseController::class, 'store']);
+        Route::get('course/{id}', [AdminCourseController::class, 'show']);
+        Route::delete('course/{id}', [AdminCourseController::class, 'destroy']);
+        
+        // instructor
+        Route::get('instructors', [UserProfileController::class, 'getInstructors']);
 
-Route::middleware('role:instructor')->prefix('instructor')->group(function () {
-    // all course
-    Route::get('courses', [InstructorCourseController::class, 'index']);
-    // instructor course
-    Route::group(['prefix' => 'course'], function () {
-        // detail: overview course
-        Route::get('{courseId}/overview', [OverviewCourseController::class, 'show']);
-        Route::match(['put', 'post'], '{courseId}/overview/update', [OverviewCourseController::class, 'update']);
-        // detail: attribute course
-        Route::get('{courseId}/attribute', [AttributeCourseController::class, 'index']);
-        Route::post('{courseId}/attribute', [AttributeCourseController::class, 'store']);
-        Route::get('{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
-        Route::put('{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
-        Route::delete('{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
-        // detail: review course
+        // certificate
+        Route::middleware('disable.octane')->group(function () {
+            Route::get('certificates/{id}/pdf', [CertificateController::class, 'generatePdf']);
+        });
     });
-});
 
-Route::middleware('role:admin,instructor')->group(function () {
-    Route::get('/attribute/{id}', [AttributeCourseController::class, 'index']);
-});
+    // ───────────────────────────────
+    // Instructor Role
+    // ───────────────────────────────
+    Route::middleware('role:instructor')->prefix('instructor')->group(function () {
+        // all course
+        Route::get('courses', [InstructorCourseController::class, 'index']);
+        // instructor course
+        Route::group(['prefix' => 'course'], function () {
+            // detail: overview course
+            Route::get('{courseId}/overview', [OverviewCourseController::class, 'show']);
+            Route::match(['put', 'post'], '{courseId}/overview/update', [OverviewCourseController::class, 'update']);
+            // detail: attribute course
+            Route::get('{courseId}/attribute', [AttributeCourseController::class, 'index']);
+            Route::post('{courseId}/attribute', [AttributeCourseController::class, 'store']);
+            Route::get('{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
+            Route::put('{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
+            Route::delete('{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
+            // detail: review course
+        });
+    });
 
-Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);
+    // ───────────────────────────────
+    // Admin & Instructor Role
+    // ───────────────────────────────
+    Route::middleware('role:admin,instructor')->group(function () {
+        Route::get('/attribute/{id}', [AttributeCourseController::class, 'index']);
+    });
 
-// certificate
-Route::middleware(['isAdmin', 'disable.octane'])->group(function () {
-    Route::get('certificates/{id}/pdf', [CertificateController::class, 'generatePdf']);
+    Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);
 });
