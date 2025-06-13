@@ -61,10 +61,10 @@ Route::middleware('role:instructor')->prefix('instructor')->group(function () {
     Route::get('courses/overview/{CourseId}', [OverviewCourseController::class, 'showOverview']);
     Route::match(['put', 'post'], 'courses/overview/{CourseId}/update', [OverviewCourseController::class, 'updateOverview']);
     // detail: attribute course
-    Route::get('courses/attribute/{id}', [AttributeCourseController::class, 'getInstructorCourseInfo']);
-    Route::post('courses/attribute/{id}/add', [AttributeCourseController::class, 'addCourseInfo']);
-    Route::put('courses/attribute/{id}/update/{idAttribute}', [AttributeCourseController::class, 'updateInstructorCourseInfo']);
-    Route::delete('courses/info/{id}/delete/{idAttribute}', [AttributeCourseController::class, 'deleteInstructorCourseInfo']);
+    Route::get('courses/attribute/{courseId}/view', [AttributeCourseController::class, 'index']);
+    Route::post('courses/attribute/{courseId}/add', [AttributeCourseController::class, 'store']);
+    Route::put('courses/attribute/{courseId}/update/{idAttribute}', [AttributeCourseController::class, 'updateInstructorCourseInfo']);
+    Route::delete('courses/info/{courseId}/delete/{idAttribute}', [AttributeCourseController::class, 'deleteInstructorCourseInfo']);
 });
 
 Route::middleware('role:admin,instructor')->group(function () {
