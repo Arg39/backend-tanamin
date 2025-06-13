@@ -16,7 +16,7 @@ class OverviewCourseController extends Controller
 {
     use WysiwygTrait;
     // getDetailCourse()
-    public function showOverview($CourseId)
+    public function show($CourseId)
     {
         try {
             $user = JWTAuth::user();
@@ -43,7 +43,7 @@ class OverviewCourseController extends Controller
         }
     }
 
-    public function updateOverview(UpdateCourseOverviewRequest $request, $CourseId)
+    public function update(UpdateCourseOverviewRequest $request, $CourseId)
     {
         $user = JWTAuth::user();
         try {

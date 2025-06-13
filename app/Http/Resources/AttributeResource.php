@@ -2,11 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Traits\DateFormatTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class AttributeResource extends JsonResource
 {
+    use DateFormatTrait;
     protected $extra = [];
 
     /**
@@ -31,8 +33,8 @@ class AttributeResource extends JsonResource
         return [
             'id' => $this->id,
             'content' => $this->content,
-            'updated_at' => $this->updated_at,
-            'created_at' => $this->created_at,
+            'updated_at' => $this->dateFormat($this->updated_at),
+            'created_at' => $this->dateFormat($this->created_at),
         ];
     }
 

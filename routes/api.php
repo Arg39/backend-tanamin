@@ -58,13 +58,14 @@ Route::middleware('role:instructor')->prefix('instructor')->group(function () {
     // course
     Route::get('courses', [InstructorCourseController::class, 'index']);
     // detail: overview course
-    Route::get('courses/overview/{CourseId}', [OverviewCourseController::class, 'showOverview']);
-    Route::match(['put', 'post'], 'courses/overview/{CourseId}/update', [OverviewCourseController::class, 'updateOverview']);
+    Route::get('courses/overview/{CourseId}', [OverviewCourseController::class, 'show']);
+    Route::match(['put', 'post'], 'courses/overview/{CourseId}/update', [OverviewCourseController::class, 'update']);
     // detail: attribute course
     Route::get('courses/attribute/{courseId}/view', [AttributeCourseController::class, 'index']);
     Route::post('courses/attribute/{courseId}/add', [AttributeCourseController::class, 'store']);
-    Route::put('courses/attribute/{courseId}/update/{idAttribute}', [AttributeCourseController::class, 'updateInstructorCourseInfo']);
-    Route::delete('courses/info/{courseId}/delete/{idAttribute}', [AttributeCourseController::class, 'deleteInstructorCourseInfo']);
+    Route::get('courses/attribute/{courseId}/view/{attributeId}', [AttributeCourseController::class, 'show']);
+    Route::put('courses/attribute/{courseId}/update/{attributeId}', [AttributeCourseController::class, 'update']);
+    Route::delete('courses/info/{courseId}/delete/{attributeId}', [AttributeCourseController::class, 'destroy']);
 });
 
 Route::middleware('role:admin,instructor')->group(function () {
