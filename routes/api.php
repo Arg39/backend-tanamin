@@ -58,14 +58,15 @@ Route::middleware('role:instructor')->prefix('instructor')->group(function () {
     // course
     Route::get('courses', [InstructorCourseController::class, 'index']);
     // detail: overview course
-    Route::get('courses/overview/{CourseId}', [OverviewCourseController::class, 'show']);
-    Route::match(['put', 'post'], 'courses/overview/{CourseId}/update', [OverviewCourseController::class, 'update']);
+    Route::get('course/{courseId}/overview', [OverviewCourseController::class, 'show']);
+    Route::match(['put', 'post'], 'course/{courseId}/overview/update', [OverviewCourseController::class, 'update']);
     // detail: attribute course
     Route::get('course/{courseId}/attribute', [AttributeCourseController::class, 'index']);
     Route::post('course/{courseId}/attribute', [AttributeCourseController::class, 'store']);
     Route::get('course/{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
     Route::put('course/{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
     Route::delete('course/{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
+    // detail: review course
 });
 
 Route::middleware('role:admin,instructor')->group(function () {

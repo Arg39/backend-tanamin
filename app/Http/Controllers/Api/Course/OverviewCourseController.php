@@ -16,12 +16,12 @@ class OverviewCourseController extends Controller
 {
     use WysiwygTrait;
     // getDetailCourse()
-    public function show($CourseId)
+    public function show($courseId)
     {
         try {
             $user = JWTAuth::user();
             $course = Course::with(['category', 'instructor'])
-                ->where('id', $CourseId)
+                ->where('id', $courseId)
                 ->where('id_instructor', $user->id)
                 ->first();
 
@@ -43,11 +43,11 @@ class OverviewCourseController extends Controller
         }
     }
 
-    public function update(UpdateCourseOverviewRequest $request, $CourseId)
+    public function update(UpdateCourseOverviewRequest $request, $courseId)
     {
         $user = JWTAuth::user();
         try {
-            $course = Course::where('id', $CourseId)
+            $course = Course::where('id', $courseId)
                 ->where('id_instructor', $user->id)
                 ->firstOrFail();
 

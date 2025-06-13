@@ -70,8 +70,12 @@ class AttributeCourseController extends Controller
             $attribute = CourseAttribute::where('id', $attributeId)
                 ->where('id_course', $courseId)
                 ->firstOrFail();
+            
+            $typeData = [
+                'type' => $attribute->type,
+            ];
 
-            return new PostResource(true, 'Atribut kursus berhasil ditemukan.', (new AttributeResource($attribute))->resolve(request()));
+            return new PostResource(true, 'Atribut kursus berhasil ditemukan.', (new AttributeResource($attribute))->withExtra($typeData)->resolve(request()));
         } catch (\Exception $e) {
             return new PostResource(false, 'Gagal menampilkan atribut kursus: ' . $e->getMessage(), null);
         }
