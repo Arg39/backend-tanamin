@@ -37,12 +37,12 @@ class Course extends Model
 
     public function descriptions()
     {
-        return $this->hasMany(CourseDescription::class, 'id_course');
+        return $this->hasMany(CourseAttribute::class, 'id_course');
     }
 
-    public function prerequisites()
+    public function modules()
     {
-        return $this->hasMany(CoursePrerequisite::class, 'id_course');
+        return $this->hasMany(ModuleCourse::class, 'course_id')->orderBy('order', 'asc');
     }
 
     public function reviews()

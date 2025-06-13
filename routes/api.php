@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
 use App\Http\Controllers\Api\Course\AttributeCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
-use App\Http\Controllers\Api\CourselamaController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\OrderController;
@@ -37,36 +36,40 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
     // get image
     Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
     
+    // category
     Route::get('categories', [CategoryController::class, 'index']);
-    Route::post('categories', [CategoryController::class, 'store']);
-    Route::get('categories/{id}', [CategoryController::class, 'getCategoryById']);
-    Route::match(['put', 'post'], 'categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+    Route::post('category', [CategoryController::class, 'store']);
+    Route::get('category/{id}', [CategoryController::class, 'getCategoryById']);
+    Route::match(['put', 'post'], 'category/{id}', [CategoryController::class, 'update']);
+    Route::delete('category/{id}', [CategoryController::class, 'destroy']);
     Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
     
     // course
     Route::get('courses', [AdminCourseController::class, 'index']);
-    Route::post('courses', [AdminCourseController::class, 'store']);
-    Route::get('courses/{id}', [AdminCourseController::class, 'show']);
-    Route::delete('courses/{id}', [AdminCourseController::class, 'destroy']);
+    Route::post('course', [AdminCourseController::class, 'store']);
+    Route::get('course/{id}', [AdminCourseController::class, 'show']);
+    Route::delete('course/{id}', [AdminCourseController::class, 'destroy']);
     
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
 });
 
 Route::middleware('role:instructor')->prefix('instructor')->group(function () {
-    // course
+    // all course
     Route::get('courses', [InstructorCourseController::class, 'index']);
-    // detail: overview course
-    Route::get('course/{courseId}/overview', [OverviewCourseController::class, 'show']);
-    Route::match(['put', 'post'], 'course/{courseId}/overview/update', [OverviewCourseController::class, 'update']);
-    // detail: attribute course
-    Route::get('course/{courseId}/attribute', [AttributeCourseController::class, 'index']);
-    Route::post('course/{courseId}/attribute', [AttributeCourseController::class, 'store']);
-    Route::get('course/{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
-    Route::put('course/{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
-    Route::delete('course/{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
-    // detail: review course
+    // instructor course
+    Route::group(['prefix' => 'course'], function () {
+        // detail: overview course
+        Route::get('{courseId}/overview', [OverviewCourseController::class, 'show']);
+        Route::match(['put', 'post'], '{courseId}/overview/update', [OverviewCourseController::class, 'update']);
+        // detail: attribute course
+        Route::get('{courseId}/attribute', [AttributeCourseController::class, 'index']);
+        Route::post('{courseId}/attribute', [AttributeCourseController::class, 'store']);
+        Route::get('{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
+        Route::put('{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
+        Route::delete('{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
+        // detail: review course
+    });
 });
 
 Route::middleware('role:admin,instructor')->group(function () {
