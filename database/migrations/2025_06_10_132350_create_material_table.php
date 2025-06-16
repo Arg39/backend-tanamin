@@ -44,31 +44,34 @@ return new class extends Migration
             $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');
         });
 
+        // Create quizzes table
         Schema::create('quizzes', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('lesson_id');
             $table->string('title');
             $table->timestamps();
-        
+
             $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');
         });
-        
+
+        // Create final_exams table
         Schema::create('final_exams', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('lesson_id');
             $table->string('title');
             $table->timestamps();
-        
+
             $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');
         });
-        
+
+        // Create questions table
         Schema::create('questions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('quiz_id')->nullable();
             $table->uuid('final_exam_id')->nullable();
             $table->text('question');
             $table->timestamps();
-        
+
             $table->foreign('quiz_id')->references('id')->on('quizzes')->onDelete('cascade');
             $table->foreign('final_exam_id')->references('id')->on('final_exams')->onDelete('cascade');
         });
@@ -108,6 +111,8 @@ return new class extends Migration
         Schema::dropIfExists('material_attempts');
         Schema::dropIfExists('answer_options');
         Schema::dropIfExists('questions');
+        Schema::dropIfExists('final_exams');
+        Schema::dropIfExists('quizzes');
         Schema::dropIfExists('materials');
         Schema::dropIfExists('lessons');
         Schema::dropIfExists('modules');
