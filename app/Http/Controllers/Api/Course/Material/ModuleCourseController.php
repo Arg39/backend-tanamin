@@ -33,7 +33,7 @@ class ModuleCourseController extends Controller
         try {
             $request->validate([
                 'title' => 'required|string|max:255',
-                'order' => 'nullable|integer|min:0',
+                'type' => 'nullable|string|in:material,quiz,final_exam',
             ]);
 
             // Perbarui urutan module jika ada celah
@@ -119,7 +119,7 @@ class ModuleCourseController extends Controller
             // Perbarui urutan module setelah penghapusan
             $this->updateModuleOrder($courseId);
 
-            return new PostResource(true, 'Module deleted successfully', null);
+            return new PostResource(true, 'Mo=6dule deleted successfully', null);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to delete module', $e->getMessage());
         }

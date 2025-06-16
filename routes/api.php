@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Course\AttributeCourseController;
 use App\Http\Controllers\Api\Course\Material\ModuleCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
 use App\Http\Controllers\Api\ImageController;
+use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\OrderController;
 use App\Models\CourseAttribute;
@@ -88,6 +89,8 @@ Route::middleware('auth:api')->group(function () {
             Route::put('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'update']);
             Route::post('{courseId}/modules/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
             Route::delete('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'destroy']);
+            // detail: material course
+            Route::get('{courseId}/modules/{moduleId}/materials', [MaterialCourseController::class, 'index']);
         });
     });
 
