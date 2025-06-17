@@ -12,18 +12,39 @@ use Illuminate\Support\Str;
 class ModuleCourseController extends Controller
 {
     // get all modules for a course
-    public function index(Request $request, $courseId)
+    public function index($courseId)
     {
         try {
-            $modules = ModuleCourse::where('course_id', $courseId)
+            // Ambil semua module untuk course terkait, urutkan berdasarkan order
+            $modules = \App\Models\ModuleCourse::where('course_id', $courseId)
                 ->orderBy('order', 'asc')
                 ->get();
 
-            return new PostResource(true, 'Modules fetched successfully', [
-                'data' => ModuleCourseResource::collection($modules),
-            ]);
+            // Bentuk array hasil sesuai format yang diminta
+            $result = [];
+            foreach ($modules as $module) {
+                $lessons = $module->lessons()
+                    ->orderBy('order', 'asc')
+                    ->get()
+                    ->map(function ($lesson) {
+                        return [
+                            'id' => $lesson->id,
+                            'type' => $lesson->type,
+                            'title' => $lesson->title,
+                        ];
+                    })
+                    ->toArray();
+
+                $result[] = [
+                    'id' => $module->id,
+                    'title' => $module->title,
+                    'lessons' => $lessons,
+                ];
+            }
+
+            return new \App\Http\Resources\PostResource(true, 'Modules fetched successfully', $result);
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to fetch modules', $e->getMessage());
+            return new \App\Http\Resources\PostResource(false, 'Failed to fetch modules', $e->getMessage());
         }
     }
 
@@ -33,7 +54,6 @@ class ModuleCourseController extends Controller
         try {
             $request->validate([
                 'title' => 'required|string|max:255',
-                'type' => 'nullable|string|in:material,quiz,final_exam',
             ]);
 
             // Perbarui urutan module jika ada celah

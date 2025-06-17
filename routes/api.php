@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
 use App\Http\Controllers\Api\Course\AttributeCourseController;
+use App\Http\Controllers\Api\Course\Material\LessonCourseController;
 use App\Http\Controllers\Api\Course\Material\ModuleCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
 use App\Http\Controllers\Api\ImageController;
@@ -85,12 +86,12 @@ Route::middleware('auth:api')->group(function () {
             Route::delete('{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
             // detail: material course
             Route::get('{courseId}/modules', [ModuleCourseController::class, 'index']);
-            Route::post('{courseId}/modules', [ModuleCourseController::class, 'store']);
-            Route::put('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'update']);
-            Route::post('{courseId}/modules/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
-            Route::delete('{courseId}/modules/{moduleId}', [ModuleCourseController::class, 'destroy']);
-            // detail: material course
-            Route::get('{courseId}/modules/{moduleId}/materials', [MaterialCourseController::class, 'index']);
+            Route::post('{courseId}/module', [ModuleCourseController::class, 'store']);
+            Route::put('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'update']);
+            Route::post('{courseId}/module/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
+            Route::delete('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'destroy']);
+            // detail: material course => lesson
+            Route::post('{courseId}/module/{moduleId}/material', [LessonCourseController::class, 'store']);
         });
     });
 
