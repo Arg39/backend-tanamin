@@ -32,16 +32,16 @@ class LessonCourse extends Model
     /**
      * Relasi ke model Material.
      */
-    // public function materials()
-    // {
-    //     return $this->hasMany(Material::class, 'lesson_id');
-    // }
+    public function materials()
+    {
+        return $this->hasMany(LessonMaterial::class, 'lesson_id');
+    }
 
     /**
      * Relasi ke model Question.
      */
-    // public function questions()
-    // {
-    //     return $this->hasMany(Question::class, 'lesson_id');
-    // }
+    public function quiz()
+    {
+        return $this->hasMany(LessonQuiz::class, 'lesson_id');
+    }
 }

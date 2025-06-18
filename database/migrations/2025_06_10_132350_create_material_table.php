@@ -67,9 +67,10 @@ return new class extends Migration
         // Create questions table
         Schema::create('questions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('quiz_id')->nullable();
-            $table->uuid('final_exam_id')->nullable();
+            $table->uuid('quiz_id')->nullable(); // filled if filled if not final_exam
+            $table->uuid('final_exam_id')->nullable(); // filled if filled if not quiz
             $table->text('question');
+            // $table->integer('order')->default(0);
             $table->timestamps();
 
             $table->foreign('quiz_id')->references('id')->on('quizzes')->onDelete('cascade');

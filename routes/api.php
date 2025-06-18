@@ -92,6 +92,7 @@ Route::middleware('auth:api')->group(function () {
             Route::delete('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'destroy']);
             // detail: material course => lesson
             Route::post('{courseId}/module/{moduleId}/material', [LessonCourseController::class, 'store']);
+            Route::get('material/{lessonId}', [LessonCourseController::class, 'show']);
         });
     });
 

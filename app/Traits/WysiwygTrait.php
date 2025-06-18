@@ -2,11 +2,20 @@
 
 namespace App\Traits;
 
+use Illuminate\Support\Facades\Storage;
+
 trait WysiwygTrait
 {
-    public function getImagesToDeleteFromDetail($oldDetail, $newDetail)
+    /**
+     * Handles WYSIWYG content update: compare, clean up, and delete unused images.
+     *
+     * @param string $oldHtml
+     * @param string $newHtml
+     * @return string $cleanedNewHtml
+     */
+    public function handleWysiwygUpdate(string $oldHtml, string $newHtml): string
     {
-        $extractLocalImages = function($html) {
+        $extractImages = function ($html) {
             $images = [];
             preg_match_all('/<img[^>]+src="([^">]+)"/', $html, $matches);
             if (isset($matches[1])) {
@@ -20,22 +29,23 @@ trait WysiwygTrait
             return $images;
         };
 
-        $oldImages = $extractLocalImages($oldDetail);
-        $newImages = $extractLocalImages($newDetail);
+        $oldImages = $extractImages($oldHtml);
+        $newImages = $extractImages($newHtml);
+        $imagesToDelete = array_diff($oldImages, $newImages);
 
-        $toDelete = array_diff($oldImages, $newImages);
+        // Delete image files from storage
+        foreach ($imagesToDelete as $imgPath) {
+            if (Storage::disk('public')->exists($imgPath)) {
+                Storage::disk('public')->delete($imgPath);
+            }
+        }
 
-        return array_values($toDelete);
-    }
-
-    public function removeDeletedImagesFromDetail($detailHtml, $imagesToDelete)
-    {
-        if (empty($imagesToDelete)) return $detailHtml;
-
+        // Remove <img> tags for deleted images
         foreach ($imagesToDelete as $imgPath) {
             $pattern = '#<img[^>]+src="[^">]*' . preg_quote($imgPath, '#') . '[^">]*"[^>]*>#i';
-            $detailHtml = preg_replace($pattern, '', $detailHtml);
+            $newHtml = preg_replace($pattern, '', $newHtml);
         }
-        return $detailHtml;
+
+        return $newHtml;
     }
 }

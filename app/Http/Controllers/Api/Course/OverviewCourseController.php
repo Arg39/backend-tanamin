@@ -70,17 +70,7 @@ class OverviewCourseController extends Controller
             $course->price = $request->price;
 
             // wysiwyg detail handling
-            $oldDetail = $course->detail ?? '';
-            $newDetail = $request->detail;
-            $imagesToDelete = $this->getImagesToDeleteFromDetail($oldDetail, $newDetail);
-            $newDetailCleaned = $this->removeDeletedImagesFromDetail($newDetail, $imagesToDelete);
-            foreach ($imagesToDelete as $imgPath) {
-                if (Storage::disk('public')->exists($imgPath)) {
-                    Storage::disk('public')->delete($imgPath);
-                }
-            }
-
-            $course->detail = $newDetailCleaned;
+            $course->detail = $this->handleWysiwygUpdate($course->detail ?? '', $request->detail);
             $course->save();
 
             $dataInstructor = [
