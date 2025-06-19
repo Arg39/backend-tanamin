@@ -116,7 +116,7 @@ class LessonCourseController extends Controller
             $quiz = $lesson->quiz->first();
             if ($quiz) {
                 $content = [];
-                foreach ($quiz->questions as $question) {
+                foreach ($quiz->questions->sortBy('order') as $question) {
                     $options = [];
                     foreach ($question->answerOptions as $option) {
                         $options[] = [
@@ -128,9 +128,9 @@ class LessonCourseController extends Controller
                         'id' => $question->id,
                         'question' => $question->question,
                         'options' => $options,
-                        'order' => $question->order,
                     ];
                 }
+        
                 $data['content'] = $content;
             } else {
                 $data['quiz'] = null;
