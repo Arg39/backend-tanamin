@@ -16,7 +16,7 @@ class Question extends Model
         'quiz_id',
         'final_exam_id',
         'question',
-        // 'order'
+        'order'
     ];
 
     public $incrementing = false;

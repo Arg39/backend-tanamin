@@ -65,6 +65,7 @@ class LessonCourseController extends Controller
                         'id' => (string) Str::uuid(),
                         'quiz_id' => $quiz->id,
                         'question' => $this->handleWysiwygUpdate('', $qData['question']),
+                        'order' => $qIndex,
                     ]);
 
                     foreach ($qData['options'] as $optIndex => $optionText) {
@@ -92,8 +93,7 @@ class LessonCourseController extends Controller
     // view lesson details by ID
     public function show($lessonId)
     {
-        $lesson = LessonCourse::with(['materials', 'quiz.questions.answerOptions'])->find($lessonId);
-        // dd($lesson->toArray());
+        $lesson = LessonCourse::with(['module', 'materials', 'quiz.questions.answerOptions'])->find($lessonId);
 
         if (!$lesson) {
             return new PostResource(false, 'Lesson not found', null);
@@ -101,41 +101,37 @@ class LessonCourseController extends Controller
 
         $data = [
             'id' => $lesson->id,
-            'title' => $lesson->title,
+            'module_title' => $lesson->module->title,
+            'lesson_title' => $lesson->title,
             'type' => $lesson->type,
-            'order' => $lesson->order,
         ];
 
         if ($lesson->type === 'material') {
             $material = $lesson->materials->first();
-            $data['material'] = $material ? [
+            $data['content'] = $material ? [
                 'id' => $material->id,
-                'content' => $material->content,
+                'material' => $material->content,
             ] : null;
         } elseif ($lesson->type === 'quiz') {
             $quiz = $lesson->quiz->first();
             if ($quiz) {
-                $questions = [];
+                $content = [];
                 foreach ($quiz->questions as $question) {
                     $options = [];
                     foreach ($question->answerOptions as $option) {
                         $options[] = [
-                            'id' => $option->id,
                             'answer' => $option->answer,
                             'is_correct' => $option->is_correct,
                         ];
                     }
-                    $questions[] = [
+                    $content[] = [
                         'id' => $question->id,
                         'question' => $question->question,
                         'options' => $options,
+                        'order' => $question->order,
                     ];
                 }
-                $data['quiz'] = [
-                    'id' => $quiz->id,
-                    'title' => $quiz->title,
-                    'questions' => $questions,
-                ];
+                $data['content'] = $content;
             } else {
                 $data['quiz'] = null;
             }
