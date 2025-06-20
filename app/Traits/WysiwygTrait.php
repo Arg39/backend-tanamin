@@ -48,4 +48,29 @@ trait WysiwygTrait
 
         return $newHtml;
     }
+
+    public function deleteWysiwygImages(string $html): void
+    {
+        $extractImages = function ($html) {
+            $images = [];
+            preg_match_all('/<img[^>]+src="([^">]+)"/', $html, $matches);
+            if (isset($matches[1])) {
+                foreach ($matches[1] as $imgUrl) {
+                    if (strpos($imgUrl, '/storage/wysiwyg/') !== false) {
+                        $path = preg_replace('#^.*?/storage/#', '', $imgUrl);
+                        $images[] = $path;
+                    }
+                }
+            }
+            return $images;
+        };
+
+        $images = $extractImages($html);
+
+        foreach ($images as $imgPath) {
+            if (Storage::disk('public')->exists($imgPath)) {
+                Storage::disk('public')->delete($imgPath);
+            }
+        }
+    }
 }

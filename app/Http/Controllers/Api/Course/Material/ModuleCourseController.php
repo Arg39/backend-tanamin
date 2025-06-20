@@ -101,31 +101,36 @@ class ModuleCourseController extends Controller
         }
     }
 
-    // update by order
-    public function updateByOrder(Request $request, $courseId)
+    // update module order by drag and drop (single move) WITHOUT courseId
+    public function updateByOrder(Request $request)
     {
         try {
             $request->validate([
-                'id' => 'required|array|min:1',
+                'id' => 'required|string',
+                'order' => 'required|integer|min:0',
             ]);
 
-            $moduleIds = $request->input('id');
-            if (count($moduleIds) < 1) {
-                return new PostResource(false, 'At least one module ID is required', null);
-            }
+            // Find the module to move
+            $movedModule = ModuleCourse::findOrFail($request->id);
 
-            foreach ($moduleIds as $index => $moduleId) {
-                $module = ModuleCourse::where('course_id', $courseId)->findOrFail($moduleId);
+            // Get all modules in the same course
+            $modules = ModuleCourse::where('course_id', $movedModule->course_id)
+                ->orderBy('order', 'asc')
+                ->get()
+                ->filter(fn ($mod) => $mod->id !== $movedModule->id)
+                ->values()
+                ->all();
+
+            $newOrder = min($request->order, count($modules));
+            array_splice($modules, $newOrder, 0, [$movedModule]);
+
+            foreach ($modules as $index => $module) {
                 $module->update(['order' => $index]);
             }
 
-            $modules = ModuleCourse::where('course_id', $courseId)
-                ->orderBy('order', 'asc')
-                ->get();
-
-            return new PostResource(true, 'Modules reordered successfully', (new ModuleCourseResource($module))->resolve(request()));
+            return new PostResource(true, 'Module order updated successfully', (new ModuleCourseResource($movedModule))->resolve(request()));
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to reorder modules', $e->getMessage());
+            return new PostResource(false, 'Failed to update module order', $e->getMessage());
         }
     }
 
@@ -139,7 +144,7 @@ class ModuleCourseController extends Controller
             // Perbarui urutan module setelah penghapusan
             $this->updateModuleOrder($courseId);
 
-            return new PostResource(true, 'Mo=6dule deleted successfully', null);
+            return new PostResource(true, 'Module deleted successfully', null);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to delete module', $e->getMessage());
         }

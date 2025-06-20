@@ -80,11 +80,12 @@ Route::middleware('role:instructor')->prefix('instructor')->group(function () {
         Route::get('{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
         Route::put('{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
         Route::delete('{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
-        // detail: material course
+        // detail: module course
         Route::get('{courseId}/modules', [ModuleCourseController::class, 'index']);
         Route::post('{courseId}/module', [ModuleCourseController::class, 'store']);
         Route::put('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'update']);
-        Route::post('{courseId}/module/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
+        Route::patch('module/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
+        Route::patch('lesson/updateOrder', [LessonCourseController::class, 'updateByOrder']);
         Route::delete('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'destroy']);
         // detail: material course => lesson
         Route::post('{courseId}/module/{moduleId}/material', [LessonCourseController::class, 'store']);
