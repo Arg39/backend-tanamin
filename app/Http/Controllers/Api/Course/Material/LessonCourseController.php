@@ -19,9 +19,8 @@ class LessonCourseController extends Controller
     use WysiwygTrait;
 
     // post a new lesson to a module
-    public function store(Request $request, $courseId, $moduleId)
+    public function store(Request $request, $moduleId)
     {
-        // dd($request->all());
         try {
             $request->validate([
                 'title' => 'required|string|max:255',
@@ -186,6 +185,42 @@ class LessonCourseController extends Controller
         }
 
         return new PostResource(true, 'Lesson detail fetched successfully', $data);
+    }
+
+    // delete a lesson by ID
+    public function destroy($lessonId)
+    {
+        $lesson = LessonCourse::with(['materials', 'quiz.questions.answerOptions'])->find($lessonId);
+
+        if (!$lesson) {
+            return new PostResource(false, 'Lesson not found', null);
+        }
+
+        $moduleId = $lesson->module_id;
+
+        if ($lesson->type === 'material') {
+            foreach ($lesson->materials as $material) {
+                $this->deleteWysiwygImages($material->content);
+                $material->delete();
+            }
+        } elseif ($lesson->type === 'quiz') {
+            foreach ($lesson->quiz as $quiz) {
+                foreach ($quiz->questions as $question) {
+                    $this->deleteWysiwygImages($question->question);
+                    foreach ($question->answerOptions as $option) {
+                        $option->delete();
+                    }
+                    $question->delete();
+                }
+                $quiz->delete();
+            }
+        }
+
+        $lesson->delete();
+
+        $this->updateLessonOrder($moduleId);
+
+        return new PostResource(true, 'Lesson deleted successfully', null);
     }
 
     // Update the order of lessons after deletion or insertion
