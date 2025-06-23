@@ -48,6 +48,17 @@ class ModuleCourseController extends Controller
         }
     }
 
+    // get module by id
+    public function show($courseId, $moduleId)
+    {
+        try {
+            $module = ModuleCourse::where('course_id', $courseId)->findOrFail($moduleId);
+            return new PostResource(true, 'Module found', (new ModuleCourseResource($module))->resolve(request()));
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Module not found', $e->getMessage());
+        }
+    }
+
     // create a new module for a course
     public function store(Request $request, $courseId)
     {
@@ -97,7 +108,7 @@ class ModuleCourseController extends Controller
 
             return new PostResource(true, 'Module updated successfully', (new ModuleCourseResource($module))->resolve(request()));
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to update module', $e->getMessage());
+            return new PostResource(false, 'Failed to update module', ['error' => $e->getMessage()]);
         }
     }
 
