@@ -64,36 +64,45 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
 });
 
 // ───────────────────────────────
+// Instructor & admin Role
+// ───────────────────────────────
+
+Route::middleware('role:admin,instructor')->group(function () {
+    // detail: overview course
+    Route::get('course/{courseId}/overview', [OverviewCourseController::class, 'show']);
+    // detail: attribute course
+    Route::get('course/{courseId}/attribute', [AttributeCourseController::class, 'index']);
+    Route::get('course/{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
+    // detail: module course
+    Route::get('course/{courseId}/modules', [ModuleCourseController::class, 'index']);
+    Route::get('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'show']);
+    // detail: material course => lesson
+    Route::get('course/lesson/{lessonId}', [LessonCourseController::class, 'show']);
+});
+
+// ───────────────────────────────
 // Instructor Role
 // ───────────────────────────────
-Route::middleware('role:instructor')->prefix('instructor')->group(function () {
+Route::middleware('role:instructor')->group(function () {
     // all course
-    Route::get('courses', [InstructorCourseController::class, 'index']);
+    Route::get('/instructor/courses', [InstructorCourseController::class, 'index']);
     // instructor course
-    Route::group(['prefix' => 'course'], function () {
-        // detail: overview course
-        Route::get('{courseId}/overview', [OverviewCourseController::class, 'show']);
-        Route::match(['put', 'post'], '{courseId}/overview/update', [OverviewCourseController::class, 'update']);
-        // detail: attribute course
-        Route::get('{courseId}/attribute', [AttributeCourseController::class, 'index']);
-        Route::post('{courseId}/attribute', [AttributeCourseController::class, 'store']);
-        Route::get('{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
-        Route::put('{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
-        Route::delete('{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
-        // detail: module course
-        Route::get('{courseId}/modules', [ModuleCourseController::class, 'index']);
-        Route::post('{courseId}/module', [ModuleCourseController::class, 'store']);
-        Route::get('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'show']);
-        Route::patch('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'update']);
-        Route::patch('module/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
-        Route::delete('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'destroy']);
-        // detail: material course => lesson
-        Route::post('module/{moduleId}/lesson', [LessonCourseController::class, 'store']);
-        Route::get('lesson/{lessonId}', [LessonCourseController::class, 'show']);
-        Route::patch('lesson/updateOrder', [LessonCourseController::class, 'updateByOrder']);
-        Route::put('lesson/{lessonId}', [LessonCourseController::class, 'update']);
-        Route::delete('lesson/{lessonId}', [LessonCourseController::class, 'destroy']);
-    });
+    // detail: overview course
+    Route::match(['put', 'post'], 'course/{courseId}/overview/update', [OverviewCourseController::class, 'update']);
+    // detail: attribute course
+    Route::post('course/{courseId}/attribute', [AttributeCourseController::class, 'store']);
+    Route::put('course/{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
+    Route::delete('course/{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
+    // detail: module course
+    Route::post('course/{courseId}/module', [ModuleCourseController::class, 'store']);
+    Route::patch('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'update']);
+    Route::patch('course/module/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
+    Route::delete('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'destroy']);
+    // detail: material course => lesson
+    Route::post('course/module/{moduleId}/lesson', [LessonCourseController::class, 'store']);
+    Route::patch('course/lesson/updateOrder', [LessonCourseController::class, 'updateByOrder']);
+    Route::put('course/lesson/{lessonId}', [LessonCourseController::class, 'update']);
+    Route::delete('course/lesson/{lessonId}', [LessonCourseController::class, 'destroy']);
 });
 
 // ───────────────────────────────

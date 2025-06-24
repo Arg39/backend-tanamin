@@ -19,10 +19,8 @@ class OverviewCourseController extends Controller
     public function show($courseId)
     {
         try {
-            $user = JWTAuth::user();
             $course = Course::with(['category', 'instructor'])
                 ->where('id', $courseId)
-                ->where('id_instructor', $user->id)
                 ->first();
 
             if (!$course) {
