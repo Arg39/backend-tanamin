@@ -86,11 +86,12 @@ Route::middleware('role:instructor')->prefix('instructor')->group(function () {
         Route::get('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'show']);
         Route::patch('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'update']);
         Route::patch('module/updateOrder', [ModuleCourseController::class, 'updateByOrder']);
-        Route::patch('lesson/updateOrder', [LessonCourseController::class, 'updateByOrder']);
         Route::delete('{courseId}/module/{moduleId}', [ModuleCourseController::class, 'destroy']);
         // detail: material course => lesson
         Route::post('module/{moduleId}/lesson', [LessonCourseController::class, 'store']);
         Route::get('lesson/{lessonId}', [LessonCourseController::class, 'show']);
+        Route::patch('lesson/updateOrder', [LessonCourseController::class, 'updateByOrder']);
+        Route::put('lesson/{lessonId}', [LessonCourseController::class, 'update']);
         Route::delete('lesson/{lessonId}', [LessonCourseController::class, 'destroy']);
     });
 });

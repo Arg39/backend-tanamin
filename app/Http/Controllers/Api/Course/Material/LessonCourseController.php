@@ -187,6 +187,125 @@ class LessonCourseController extends Controller
         return new PostResource(true, 'Lesson detail fetched successfully', $data);
     }
 
+    // update a lesson by ID
+    public function update(Request $request, $lessonId)
+    {
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'materialContent' => 'required_if:type,material',
+                'quizContent' => 'required_if:type,quiz|array',
+            ]);
+
+            $lesson = LessonCourse::with(['materials', 'quiz.questions.answerOptions'])->find($lessonId);
+
+            // dd($request->all()); // Remove debug
+
+            if (!$lesson) {
+                return new PostResource(false, 'Lesson not found', null);
+            }
+
+            // Only update title, not type
+            $lesson->title = $request->title;
+            $lesson->save();
+
+            if ($lesson->type === 'material') {
+                $material = $lesson->materials->first();
+                if (!$material) {
+                    return new PostResource(false, 'Material not found for this lesson', null);
+                }
+                $oldContent = $material->content ?? '';
+                $newContent = $this->handleWysiwygUpdate($oldContent, $request->materialContent);
+                $material->content = $newContent;
+                $material->save();
+            } elseif ($lesson->type === 'quiz') {
+                $quiz = $lesson->quiz->first();
+                if (!$quiz) {
+                    return new PostResource(false, 'Quiz not found for this lesson', null);
+                }
+
+                $existingQuestions = $quiz->questions->keyBy('id');
+                $requestQuestions = collect($request->quizContent)->keyBy(function($q) {
+                    return $q['id'] ?? null;
+                });
+
+                // Update or create questions
+                $questionOrder = 0;
+                $questionIdsToKeep = [];
+                foreach ($request->quizContent as $qData) {
+                    $questionId = $qData['id'] ?? null;
+                    if ($questionId && $existingQuestions->has($questionId)) {
+                        // Update existing question
+                        $question = $existingQuestions[$questionId];
+                        $oldQ = $question->question ?? '';
+                        $question->question = $this->handleWysiwygUpdate($oldQ, $qData['question']);
+                        $question->order = $questionOrder;
+                        $question->save();
+                    } else {
+                        // Create new question
+                        $question = Question::create([
+                            'id' => (string) Str::uuid(),
+                            'quiz_id' => $quiz->id,
+                            'question' => $this->handleWysiwygUpdate('', $qData['question']),
+                            'order' => $questionOrder,
+                        ]);
+                    }
+                    $questionIdsToKeep[] = $question->id;
+
+                    // Handle answer options
+                    $existingOptions = $question->answerOptions->keyBy('id');
+                    $optionIdsToKeep = [];
+                    foreach ($qData['options'] as $optIndex => $optionText) {
+                        $isCorrect = $optIndex == $qData['correctAnswer'];
+                        $optionId = $qData['option_ids'][$optIndex] ?? null; // expects option_ids[] in request if updating
+                        if ($optionId && $existingOptions->has($optionId)) {
+                            $option = $existingOptions[$optionId];
+                            $option->answer = $optionText;
+                            $option->is_correct = $isCorrect;
+                            $option->save();
+                        } else {
+                            $option = AnswerOption::create([
+                                'id' => (string) Str::uuid(),
+                                'question_id' => $question->id,
+                                'answer' => $optionText,
+                                'is_correct' => $isCorrect,
+                            ]);
+                        }
+                        $optionIdsToKeep[] = $option->id;
+                    }
+                    // Delete removed options
+                    foreach ($existingOptions as $opt) {
+                        if (!in_array($opt->id, $optionIdsToKeep)) {
+                            $opt->delete();
+                        }
+                    }
+                    $questionOrder++;
+                }
+                // Delete removed questions (and their options)
+                foreach ($existingQuestions as $q) {
+                    if (!in_array($q->id, $questionIdsToKeep)) {
+                        // Delete WYSIWYG images in question
+                        $this->deleteWysiwygImages($q->question);
+                        foreach ($q->answerOptions as $opt) {
+                            $opt->delete();
+                        }
+                        $q->delete();
+                    }
+                }
+            }
+
+            return new PostResource(true, 'Lesson updated successfully', [
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'type' => $lesson->type,
+            ]);
+        } catch (ValidationException $e) {
+            return new PostResource(false, 'Validation failed', $e->errors());
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to update lesson', $e->getMessage());
+        }
+    }
+
     // delete a lesson by ID
     public function destroy($lessonId)
     {
