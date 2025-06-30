@@ -13,6 +13,7 @@ use App\Models\AnswerOption;
 use App\Traits\WysiwygTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class LessonCourseController extends Controller
 {
