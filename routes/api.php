@@ -27,12 +27,13 @@ Route::post('logout', [AuthController::class, 'logout']);
 
 Route::post('/orders', [OrderController::class, 'store']);
 Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
+Route::get('categories', [CategoryController::class, 'index']);
 
 
 // ───────────────────────────────
 // Admin Role
 // ───────────────────────────────
-Route::middleware('role:admin')->prefix('admin')->group(function () {
+Route::middleware('role:admin')->group(function () {
     // user
     Route::post('register-instructor', [AuthController::class, 'registerInstructor']);
     Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
@@ -41,7 +42,6 @@ Route::middleware('role:admin')->prefix('admin')->group(function () {
     Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
     
     // category
-    Route::get('categories', [CategoryController::class, 'index']);
     Route::post('category', [CategoryController::class, 'store']);
     Route::get('category/{id}', [CategoryController::class, 'getCategoryById']);
     Route::match(['put', 'post'], 'category/{id}', [CategoryController::class, 'update']);

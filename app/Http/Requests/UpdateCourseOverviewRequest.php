@@ -14,11 +14,11 @@ class UpdateCourseOverviewRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|string|max:255',
-            'level' => 'required|in:beginner,intermediate,advance',
-            'price' => 'required|numeric|min:0',
+            'title' => 'sometimes|string|max:255',
+            'level' => 'sometimes|in:beginner,intermediate,advance',
+            'price' => 'sometimes|numeric|min:0',
             'image' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'detail' => 'required|string',
+            'detail' => 'sometimes|string',
         ];
     }
 }
