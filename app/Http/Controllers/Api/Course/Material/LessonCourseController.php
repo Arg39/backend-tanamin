@@ -25,7 +25,7 @@ class LessonCourseController extends Controller
         try {
             $request->validate([
                 'title' => 'required|string|max:255',
-                'type' => 'required|string|in:material,quiz,final_exam',
+                'type' => 'required|string|in:material,quiz',
                 'materialContent' => 'required_if:type,material',
                 'quizContent' => 'required_if:type,quiz|array',
             ]);

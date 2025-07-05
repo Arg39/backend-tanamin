@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('price')->nullable();
             $table->enum('level', ['beginner', 'intermediate', 'advance'])->nullable();
             $table->string('image')->nullable();
-            $table->enum('status', ['new', 'edited', 'published'])->default('new');
+            $table->enum('status', ['new', 'edited', 'awaiting_approval', 'published'])->default('new');
             $table->text('detail')->nullable();
             $table->timestamps();
 

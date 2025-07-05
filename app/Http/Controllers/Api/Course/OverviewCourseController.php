@@ -43,10 +43,8 @@ class OverviewCourseController extends Controller
 
     public function update(UpdateCourseOverviewRequest $request, $courseId)
     {
-        $user = JWTAuth::user();
         try {
             $course = Course::where('id', $courseId)
-                ->where('id_instructor', $user->id)
                 ->firstOrFail();
 
             // Handle image upload
@@ -63,13 +61,16 @@ class OverviewCourseController extends Controller
             }
 
             // Update course attributes
-            $course->title = $request->title;
-            $course->level = $request->level;
-            $course->price = $request->price;
+            $course->title = $request->has('title') ? $request->title : $course->title;
+            $course->level = $request->has('level') ? $request->level : $course->level;
+            $course->price = $request->has('price') ? $request->price : $course->price;
+            $course->status = $request->has('status') ? $request->status : $course->status;
 
             // wysiwyg detail handling
-            $course->detail = $this->handleWysiwygUpdate($course->detail ?? '', $request->detail);
+            $course->detail = $this->handleWysiwygUpdate($course->detail ?? '', $request->detail ?? $course->detail);
+
             $course->save();
+            $course->touch();
 
             $dataInstructor = [
                 'instructor' => $course->instructor ? [

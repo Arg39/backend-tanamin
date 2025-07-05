@@ -70,6 +70,7 @@ Route::middleware('role:admin')->group(function () {
 Route::middleware('role:admin,instructor')->group(function () {
     // detail: overview course
     Route::get('course/{courseId}/overview', [OverviewCourseController::class, 'show']);
+    Route::match(['put', 'post'], 'course/{courseId}/overview/update', [OverviewCourseController::class, 'update']);
     // detail: attribute course
     Route::get('course/{courseId}/attribute', [AttributeCourseController::class, 'index']);
     Route::get('course/{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
@@ -87,8 +88,6 @@ Route::middleware('role:instructor')->group(function () {
     // all course
     Route::get('/instructor/courses', [InstructorCourseController::class, 'index']);
     // instructor course
-    // detail: overview course
-    Route::match(['put', 'post'], 'course/{courseId}/overview/update', [OverviewCourseController::class, 'update']);
     // detail: attribute course
     Route::post('course/{courseId}/attribute', [AttributeCourseController::class, 'store']);
     Route::put('course/{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);

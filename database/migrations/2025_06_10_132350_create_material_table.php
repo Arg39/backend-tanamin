@@ -27,7 +27,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('module_id');
             $table->string('title');
-            $table->enum('type', ['material', 'quiz', 'final_exam']);
+            $table->enum('type', ['material', 'quiz']);
             $table->integer('order')->default(0);
             $table->timestamps();
 
@@ -54,27 +54,15 @@ return new class extends Migration
             $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');
         });
 
-        // Create final_exams table
-        Schema::create('final_exams', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('lesson_id');
-            $table->string('title');
-            $table->timestamps();
-
-            $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');
-        });
-
         // Create questions table
         Schema::create('questions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('quiz_id')->nullable(); // filled if filled if not final_exam
-            $table->uuid('final_exam_id')->nullable(); // filled if filled if not quiz
+            $table->uuid('quiz_id')->nullable();
             $table->text('question');
             $table->integer('order')->default(0);
             $table->timestamps();
 
             $table->foreign('quiz_id')->references('id')->on('quizzes')->onDelete('cascade');
-            $table->foreign('final_exam_id')->references('id')->on('final_exams')->onDelete('cascade');
         });
 
         // Create answer_options table
@@ -112,7 +100,6 @@ return new class extends Migration
         Schema::dropIfExists('material_attempts');
         Schema::dropIfExists('answer_options');
         Schema::dropIfExists('questions');
-        Schema::dropIfExists('final_exams');
         Schema::dropIfExists('quizzes');
         Schema::dropIfExists('materials');
         Schema::dropIfExists('lessons');

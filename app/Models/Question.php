@@ -14,7 +14,6 @@ class Question extends Model
     protected $fillable = [
         'id',
         'quiz_id',
-        'final_exam_id',
         'question',
         'order'
     ];
@@ -25,11 +24,6 @@ class Question extends Model
     public function quiz()
     {
         return $this->belongsTo(LessonQuiz::class);
-    }
-
-    public function finalExam()
-    {
-        return $this->belongsTo(LessonFinalExam::class, 'final_exam_id');
     }
 
     public function answerOptions()
