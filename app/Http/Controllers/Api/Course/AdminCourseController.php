@@ -11,13 +11,15 @@ use App\Http\Resources\PostResource;
 use App\Http\Resources\TableResource;
 use App\Models\Course;
 use App\Traits\CourseFilterTrait;
+use App\Traits\WysiwygTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Str;
 
 class AdminCourseController extends Controller
 {
-    use CourseFilterTrait;
+    use CourseFilterTrait, WysiwygTrait;
 
     public function index(Request $request)
     {
@@ -76,10 +78,38 @@ class AdminCourseController extends Controller
     public function destroy($id)
     {
         try {
-            $course = Course::findOrFail($id);
+            $course = Course::with([
+                'modules.lessons.materials',
+                'modules.lessons.quiz.questions'
+            ])->findOrFail($id);
 
-            if ($course->status !== 'new') {
-                return new PostResource(false, 'Only courses with status "new" can be deleted', null);
+            // Delete WYSIWYG images in course detail
+            if ($course->detail) {
+                $this->deleteWysiwygImages($course->detail);
+            }
+
+            // Delete course image file if exists
+            if ($course->image && Storage::disk('public')->exists($course->image)) {
+                Storage::disk('public')->delete($course->image);
+            }
+
+            // Delete WYSIWYG images in all materials' content
+            foreach ($course->modules as $module) {
+                foreach ($module->lessons as $lesson) {
+                    foreach ($lesson->materials as $material) {
+                        if ($material->content) {
+                            $this->deleteWysiwygImages($material->content);
+                        }
+                    }
+                    // Delete WYSIWYG images in all questions' question field (from quizzes)
+                    foreach ($lesson->quiz as $quiz) {
+                        foreach ($quiz->questions as $question) {
+                            if ($question->question) {
+                                $this->deleteWysiwygImages($question->question);
+                            }
+                        }
+                    }
+                }
             }
 
             $course->delete();

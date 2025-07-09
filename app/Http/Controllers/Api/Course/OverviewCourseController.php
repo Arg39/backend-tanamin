@@ -69,6 +69,7 @@ class OverviewCourseController extends Controller
             // wysiwyg detail handling
             $course->detail = $this->handleWysiwygUpdate($course->detail ?? '', $request->detail ?? $course->detail);
 
+
             $course->save();
             $course->touch();
 

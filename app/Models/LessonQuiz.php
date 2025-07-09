@@ -22,7 +22,7 @@ class LessonQuiz extends Model
 
     public function lesson()
     {
-        return $this->belongsTo(LessonMaterial::class);
+        return $this->belongsTo(LessonCourse::class, 'lesson_id');
     }
 
     public function questions()
