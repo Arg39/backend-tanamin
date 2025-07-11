@@ -111,4 +111,13 @@ Route::middleware('role:admin,instructor')->group(function () {
     Route::get('/attribute/{id}', [AttributeCourseController::class, 'index']);
 });
 
+// ───────────────────────────────
+// Instructor & Student Role
+// ───────────────────────────────
+Route::middleware('role:instructor,student')->group(function () {
+    // profile
+    Route::get('/profile', [UserProfileController::class, 'getProfile']);
+    Route::match(['put', 'post'], '/profile', [UserProfileController::class, 'updateProfile']);
+});
+
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +17,7 @@ class UserProfileController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        // mengambil data user berdasarkan id
         $user = Auth::user();
-        // dd($user->id);
 
         $validator = Validator::make($request->all(), [
             'first_name' => 'sometimes|string|max:255',
@@ -40,13 +39,19 @@ class UserProfileController extends Controller
         // Update user basic information
         $user->update($request->only('first_name', 'last_name', 'email', 'username', 'telephone'));
 
-        // Update user detail information
-        $user->detail()->update(
-            ['id_user' => $user->id],
-            $request->only('expertise', 'about', 'social_media')
-        );
+        // Update or create user detail information
+        $detailData = $request->only('expertise', 'about', 'social_media');
+        if (!empty($detailData)) {
+            $user->detail()->updateOrCreate(
+                ['id_user' => $user->id],
+                $detailData
+            );
+        }
 
-        return (new PostResource(true, 'Profile updated successfully', $user->load('detail')))
+        // Reload user with detail
+        $user->load('detail');
+
+        return (new PostResource(true, 'Profile updated successfully', $user))
             ->response()
             ->setStatusCode(200);
     }
@@ -57,11 +62,9 @@ class UserProfileController extends Controller
     public function getProfile()
     {
         $user = Auth::user();
-
-        // Load user details with the related detail model
         $user->load('detail');
 
-        return (new PostResource(true, 'User profile retrieved successfully', $user))
+        return (new PostResource(true, 'Profil pengguna berhasil diambil.', (new UserResource($user))->resolve(request())))
             ->response()
             ->setStatusCode(200);
     }
