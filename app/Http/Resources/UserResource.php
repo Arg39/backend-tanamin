@@ -16,6 +16,11 @@ class UserResource extends JsonResource
     {
         $detail = $this->detail;
 
+        // Helper to get full URL for storage files
+        $storageUrl = function ($path) {
+            return $path ? url('storage/' . ltrim($path, '/')) : null;
+        };
+
         return [
             'id' => $this->id,
             'role' => $this->role,
@@ -25,15 +30,13 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'telephone' => $this->telephone,
             'status' => $this->status,
-            'photo_profile' => $this->photo_profile,
+            'photo_profile' => $storageUrl($this->photo_profile),
             'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'deleted_at' => $this->deleted_at,
             'detail' => [
                 'expertise' => $detail->expertise ?? null,
                 'about' => $detail->about ?? null,
                 'social_media' => $detail->social_media ?? null,
-                'photo_cover' => $detail->photo_cover ?? null,
+                'photo_cover' => $storageUrl($detail->photo_cover ?? null),
                 'update_password' => $detail->update_password ?? null,
             ],
         ];
