@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ErrorResource;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\TableResource;
-use App\Traits\CourseFilterTrait;
+use App\Models\Course;
+use App\Traits\FilteringTrait;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class InstructorCourseController extends Controller
 {
-    use CourseFilterTrait;
+    use FilteringTrait;
 
     // get list of courses for instructor
     public function index(Request $request)
@@ -23,7 +24,16 @@ class InstructorCourseController extends Controller
         }
 
         try {
-            $courses = $this->filterCourses($request, $user->id);
+            $query = Course::with(['category:id,name'])
+                ->select(['id', 'id_category', 'id_instructor', 'title', 'status', 'created_at', 'updated_at'])
+                ->where('id_instructor', $user->id);
+
+            $courses = $this->filterQuery(
+                $query,
+                $request,
+                ['category', 'date', 'level', 'status'],
+                ['title']
+            );
 
             $courses->getCollection()->transform(function ($course) {
                 return [

@@ -56,6 +56,7 @@ Route::middleware('role:admin')->group(function () {
     
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
+    Route::get('/user-profile/{id}', [UserProfileController::class, 'getProfileById']);
 
     // certificate
     Route::middleware('disable.octane')->group(function () {
@@ -118,6 +119,12 @@ Route::middleware('role:instructor,student')->group(function () {
     // profile
     Route::get('/profile', [UserProfileController::class, 'getProfile']);
     Route::match(['put', 'post'], '/profile', [UserProfileController::class, 'updateProfile']);
+});
+
+// ───────────────────────────────
+// All Role
+// ───────────────────────────────
+Route::middleware('role:admin,instructor,student')->group(function () {
 });
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);

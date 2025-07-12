@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('telephone')->nullable();
             $table->string('password');
             $table->text('token')->nullable();
-            $table->enum('status', ['active', 'inactive', 'banned'])->default('active');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->string('photo_profile')->nullable();
             $table->timestamps();
             $table->softDeletes();

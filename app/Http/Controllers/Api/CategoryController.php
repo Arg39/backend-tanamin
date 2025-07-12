@@ -7,89 +7,23 @@ use App\Http\Resources\ErrorResource;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\TableResource;
 use App\Models\Category;
+use App\Traits\FilteringTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CategoryController extends Controller
 {
+    use FilteringTrait;
+
     public function index(Request $request)
     {
         try {
-            $sortBy = $request->input('sortBy', 'name');
-            $sortOrder = $request->input('sortOrder', 'asc');
-            $perPage = (int) $request->input('perPage', 10);
-
-            $name = $request->input('name');
-            $startDate = $request->input('startDate');
-            $endDate = $request->input('endDate');
+            $filterable = ['name', 'date'];
 
             $query = Category::query();
 
-            if ($name) {
-                $query->where('name', 'like', '%' . $name . '%');
-            }
-
-            if ($startDate) {
-                $query->whereDate('created_at', '>=', $startDate);
-            }
-            if ($endDate) {
-                $query->whereDate('created_at', '<=', $endDate);
-            }
-
-            // Ambil user dari JWT, jika ada
-            $user = null;
-            try {
-                $user = JWTAuth::parseToken()->authenticate();
-            } catch (\Exception $e) {
-                $user = null;
-            }
-
-            // Jika user tidak login atau student, lakukan shuffling mingguan
-            if (!$user || $user->role === 'student') {
-                // Ambil semua id kategori
-                $allCategories = $query->get();
-                $categoryArray = $allCategories->all();
-
-                // Seed mingguan: tahun-minggu
-                $now = now();
-                $year = $now->year;
-                $week = $now->weekOfYear;
-                $seed = crc32($year . '-' . $week);
-
-                // Shuffle dengan seed
-                srand($seed);
-                usort($categoryArray, function($a, $b) {
-                    return rand(-1, 1);
-                });
-                srand(); // reset
-
-                // Paginate manual
-                $page = max((int)$request->input('page', 1), 1);
-                $offset = ($page - 1) * $perPage;
-                $pagedCategories = array_slice($categoryArray, $offset, $perPage);
-
-                // Buat koleksi laravel dari array
-                $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
-                    collect($pagedCategories)->values(),
-                    count($categoryArray),
-                    $perPage,
-                    $page,
-                    ['path' => $request->url(), 'query' => $request->query()]
-                );
-
-                $paginated->getCollection()->transform(function ($category) {
-                    $category->used = $category->courses()->count();
-                    return $category;
-                });
-
-                return new TableResource(true, 'Categories retrieved successfully', [
-                    'data' => $paginated,
-                ], 200);
-            }
-
-            // Jika admin, sorting biasa
-            $categories = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+            $categories = $this->filterQuery($query, $request, $filterable, ['name']);
 
             $categories->getCollection()->transform(function ($category) {
                 $category->used = $category->courses()->count();

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\TableResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Traits\FilteringTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +15,8 @@ use Illuminate\Support\Facades\Validator;
 
 class UserProfileController extends Controller
 {
+    use FilteringTrait;
+
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
@@ -69,8 +73,8 @@ class UserProfileController extends Controller
             // Pastikan relasi detail sudah ada
             $detail = $user->detail;
             // Hapus gambar lama jika ada
-            if ($detail && $detail->photo_cover && \Storage::disk('public')->exists($detail->photo_cover)) {
-                \Storage::disk('public')->delete($detail->photo_cover);
+            if ($detail && $detail->photo_cover && Storage::disk('public')->exists($detail->photo_cover)) {
+                Storage::disk('public')->delete($detail->photo_cover);
             }
             $photoCoverPath = $request->file('photo_cover')->store('cover_photos', 'public');
             $detailData['photo_cover'] = $photoCoverPath;
@@ -105,15 +109,46 @@ class UserProfileController extends Controller
             ->setStatusCode(200);
     }
 
-    public function getInstructors()
+        /**
+     * Get user profile and details by id (for admin).
+     */
+    public function getProfileById($id)
     {
-        $instructors = User::where('role', 'instructor')->get();
+        $user = User::with('detail')->find($id);
 
-        return (new PostResource(true, 'Instructors retrieved successfully', $instructors))
+        if (!$user) {
+            return (new PostResource(false, 'User not found.', null))
+                ->response()
+                ->setStatusCode(404);
+        }
+
+        return (new PostResource(true, 'Profil pengguna berhasil diambil.', (new UserResource($user))->resolve(request())))
             ->response()
             ->setStatusCode(200);
     }
 
+    public function getInstructors(Request $request)
+    {
+        $query = User::where('role', 'instructor');
+        $filterable = ['first_name', 'last_name', 'email'];
+        $searchable = ['first_name', 'last_name', 'email'];
+    
+        // Custom filter for 'name' parameter
+        if ($request->filled('name')) {
+            $name = $request->input('name');
+            $query->where(function ($q) use ($name) {
+                $q->where('first_name', 'like', "%{$name}%")
+                  ->orWhere('last_name', 'like', "%{$name}%");
+            });
+        }
+    
+        $paginated = $this->filterQuery($query, $request, $filterable, $searchable);
+    
+        // TableResource expects ['data' => $paginated]
+        return (new TableResource(true, 'Instructors retrieved successfully', ['data' => $paginated]))
+            ->response()
+            ->setStatusCode(200);
+    }
     public function getInstructorForSelect()
     {
         try {
