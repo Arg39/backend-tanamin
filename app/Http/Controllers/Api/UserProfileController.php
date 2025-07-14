@@ -21,7 +21,6 @@ class UserProfileController extends Controller
     {
         $user = Auth::user();
     
-        // Fix: Convert social_media to array if it's JSON string or null
         $input = $request->all();
         if (isset($input['social_media'])) {
             if (is_string($input['social_media']) && !empty($input['social_media'])) {
@@ -51,9 +50,7 @@ class UserProfileController extends Controller
                 ->setStatusCode(422);
         }
     
-        // Handle photo_profile upload
         if ($request->hasFile('photo_profile')) {
-            // Hapus gambar lama jika ada
             if ($user->photo_profile && Storage::disk('public')->exists($user->photo_profile)) {
                 Storage::disk('public')->delete($user->photo_profile);
             }
@@ -61,18 +58,13 @@ class UserProfileController extends Controller
             $user->photo_profile = $photoProfilePath;
         }
     
-        // Update user basic information
         $user->fill(array_intersect_key($input, array_flip(['first_name', 'last_name', 'email', 'username', 'telephone'])));
         $user->save();
     
-        // Prepare detail data
         $detailData = array_intersect_key($input, array_flip(['expertise', 'about', 'social_media']));
     
-        // Handle photo_cover upload
         if ($request->hasFile('photo_cover')) {
-            // Pastikan relasi detail sudah ada
             $detail = $user->detail;
-            // Hapus gambar lama jika ada
             if ($detail && $detail->photo_cover && Storage::disk('public')->exists($detail->photo_cover)) {
                 Storage::disk('public')->delete($detail->photo_cover);
             }
@@ -80,7 +72,6 @@ class UserProfileController extends Controller
             $detailData['photo_cover'] = $photoCoverPath;
         }
     
-        // Update or create user detail information
         if (!empty($detailData)) {
             $user->detail()->updateOrCreate(
                 ['id_user' => $user->id],
@@ -88,12 +79,45 @@ class UserProfileController extends Controller
             );
         }
     
-        // Reload user with detail
         $user->load('detail');
     
         return (new PostResource(true, 'Profile updated successfully', $user))
             ->response()
             ->setStatusCode(200);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'status' => 'required|in:active,inactive',
+            ]);
+
+            if ($validator->fails()) {
+                return (new PostResource(false, 'Validation errors', $validator->errors()))
+                    ->response()
+                    ->setStatusCode(422);
+            }
+
+            $user = User::find($id);
+
+            if (!$user) {
+                return (new PostResource(false, 'User not found.', null))
+                    ->response()
+                    ->setStatusCode(404);
+            }
+
+            $user->status = $request->input('status');
+            $user->save();
+
+            return (new PostResource(true, 'User status updated successfully.', (new UserResource($user))->resolve($request)))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new PostResource(false, 'Failed to update user status: ' . $e->getMessage(), null))
+                ->response()
+                ->setStatusCode(500);
+        }
     }
 
     /**
@@ -133,7 +157,6 @@ class UserProfileController extends Controller
         $filterable = ['first_name', 'last_name', 'email'];
         $searchable = ['first_name', 'last_name', 'email'];
     
-        // Custom filter for 'name' parameter
         if ($request->filled('name')) {
             $name = $request->input('name');
             $query->where(function ($q) use ($name) {
@@ -144,11 +167,38 @@ class UserProfileController extends Controller
     
         $paginated = $this->filterQuery($query, $request, $filterable, $searchable);
     
-        // TableResource expects ['data' => $paginated]
         return (new TableResource(true, 'Instructors retrieved successfully', ['data' => $paginated]))
             ->response()
             ->setStatusCode(200);
     }
+
+    public function getStudents(Request $request)
+    {
+        try {
+            $query = User::where('role', 'student');
+            $filterable = ['first_name', 'last_name', 'email'];
+            $searchable = ['first_name', 'last_name', 'email'];
+
+            if ($request->filled('name')) {
+                $name = $request->input('name');
+                $query->where(function ($q) use ($name) {
+                    $q->where('first_name', 'like', "%{$name}%")
+                    ->orWhere('last_name', 'like', "%{$name}%");
+                });
+            }
+
+            $paginated = $this->filterQuery($query, $request, $filterable, $searchable);
+
+            return (new TableResource(true, 'Students retrieved successfully', ['data' => $paginated]))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new TableResource(false, 'Failed to retrieve students: ' . $e->getMessage(), []))
+                ->response()
+                ->setStatusCode(500);
+        }
+    }
+
     public function getInstructorForSelect()
     {
         try {
@@ -171,6 +221,42 @@ class UserProfileController extends Controller
                 ->setStatusCode(200);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to retrieve instructor: ' . $e->getMessage(), null);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $user = User::with('detail')->find($id);
+
+            if (!$user) {
+                return (new PostResource(false, 'User not found.', null))
+                    ->response()
+                    ->setStatusCode(404);
+            }
+
+            if ($user->photo_profile && Storage::disk('public')->exists($user->photo_profile)) {
+                Storage::disk('public')->delete($user->photo_profile);
+            }
+
+            if ($user->detail && $user->detail->photo_cover && Storage::disk('public')->exists($user->detail->photo_cover)) {
+                Storage::disk('public')->delete($user->detail->photo_cover);
+            }
+
+            if ($user->detail) {
+                $user->detail->delete();
+            }
+
+            // Delete user
+            $user->delete();
+
+            return (new PostResource(true, 'User deleted successfully.', null))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new PostResource(false, 'Failed to delete user: ' . $e->getMessage(), null))
+                ->response()
+                ->setStatusCode(500);
         }
     }
 }

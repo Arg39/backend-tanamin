@@ -56,7 +56,12 @@ Route::middleware('role:admin')->group(function () {
     
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
-    Route::get('/user-profile/{id}', [UserProfileController::class, 'getProfileById']);
+    Route::get('/profile/{id}', [UserProfileController::class, 'getProfileById']);
+    Route::patch('/profile/{id}', [UserProfileController::class, 'updateStatus']);
+    Route::delete('/profile/{id}', [UserProfileController::class, 'destroy']);
+
+    // student
+    Route::get('students', [UserProfileController::class, 'getStudents']);
 
     // certificate
     Route::middleware('disable.octane')->group(function () {
