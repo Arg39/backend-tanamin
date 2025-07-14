@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
@@ -62,6 +63,10 @@ Route::middleware('role:admin')->group(function () {
 
     // student
     Route::get('students', [UserProfileController::class, 'getStudents']);
+
+    // company profile
+    Route::get('/company-profile', [CompanyController::class, 'detail']);
+    Route::post('/company-profile', [CompanyController::class, 'storeOrUpdate']);
 
     // certificate
     Route::middleware('disable.octane')->group(function () {
