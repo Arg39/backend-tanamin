@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->longText('about');
             $table->longText('vision');
-            $table->longText('mission');
+            $table->json('mission');
             $table->timestamps();
         });
 
@@ -34,6 +34,15 @@ return new class extends Migration
             $table->string('unit')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('company_carousels', function (Blueprint $table) {
+            $table->id();
+            $table->string('image');
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
+            $table->unsignedInteger('order')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -41,6 +50,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('company_carousels');
         Schema::dropIfExists('company_statistics');
         Schema::dropIfExists('company_partnerships');
         Schema::dropIfExists('company_profiles');

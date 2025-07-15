@@ -3,50 +3,88 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CompanyProfileDetailResource;
 use Illuminate\Http\Request;
 use App\Models\CompanyProfile;
 use App\Http\Resources\PostResource;
+use App\Models\CompanyStatistics;
 use Illuminate\Validation\ValidationException;
 
 class CompanyController extends Controller
 {
+    public function detail()
+    {
+        try {
+            $profile = CompanyProfile::first();
+            $statistics = CompanyStatistics::all();
+
+            if ($profile) {
+                return new PostResource(
+                    true,
+                    'Company profile retrieved successfully',
+                    (new CompanyProfileDetailResource([
+                        'profile' => $profile,
+                        'statistics' => $statistics
+                    ]))->resolve(request())
+                );
+            } else {
+                return new PostResource(false, 'Company profile not found', null);
+            }
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to retrieve company profile: ' . $e->getMessage(), null);
+        }
+    }
+
     public function storeOrUpdate(Request $request)
     {
         try {
             $validated = $request->validate([
                 'about' => 'required|string',
                 'vision' => 'required|string',
-                'mission' => 'required|string',
+                'mission' => 'required|array|min:1',
+                'mission.*' => 'required|string',
+                'statistics' => 'required|array|min:1',
+                'statistics.*.title' => 'required|string',
+                'statistics.*.value' => 'required',
+                'statistics.*.unit' => 'nullable|string',
             ]);
 
             $profile = CompanyProfile::first();
+            $profileData = [
+                'about' => $validated['about'],
+                'vision' => $validated['vision'],
+                'mission' => $validated['mission'],
+            ];
 
             if ($profile) {
-                $profile->update($validated);
+                $profile->update($profileData);
             } else {
-                $profile = CompanyProfile::create($validated);
+                $profile = CompanyProfile::create($profileData);
             }
 
-            return new PostResource(true, 'Company profile saved successfully', $profile);
+            CompanyStatistics::truncate();
+            foreach ($validated['statistics'] as $stat) {
+                CompanyStatistics::create([
+                    'title' => $stat['title'],
+                    'value' => $stat['value'],
+                    'unit' => $stat['unit'] ?? null,
+                ]);
+            }
+
+            $statistics = CompanyStatistics::all();
+
+            return new PostResource(
+                true,
+                'Company profile saved successfully',
+                (new CompanyProfileDetailResource([
+                    'profile' => $profile,
+                    'statistics' => $statistics
+                ]))->resolve(request())
+            );
         } catch (ValidationException $e) {
             return new PostResource(false, $e->getMessage(), null);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return new PostResource(false, 'Failed to save company profile', null);
-        }
-    }
-
-    public function detail()
-    {
-        try {
-            $profile = CompanyProfile::first();
-
-            if ($profile) {
-                return new PostResource(true, 'Company profile retrieved successfully', $profile);
-            } else {
-                return new PostResource(false, 'Company profile not found', null);
-            }
-        } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to retrieve company profile', null);
         }
     }
 }

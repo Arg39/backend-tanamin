@@ -13,4 +13,8 @@ class CompanyProfile extends Model
         'vision',
         'mission',
     ];
+
+    protected $casts = [
+        'mission' => 'array',
+    ];
 }
