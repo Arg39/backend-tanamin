@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('company_profiles', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->longText('about');
             $table->longText('vision');
             $table->json('mission');
@@ -20,7 +20,7 @@ return new class extends Migration
         });
 
         Schema::create('company_partnerships', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('partner_name');
             $table->string('logo')->nullable();
             $table->string('website_url')->nullable();
@@ -28,15 +28,15 @@ return new class extends Migration
         });
 
         Schema::create('company_statistics', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title');
             $table->unsignedInteger('value');
             $table->string('unit')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('company_carousels', function (Blueprint $table) {
-            $table->id();
+        Schema::create('company_activities', function (Blueprint $table) {
+            $table->uuid('id')->primary();
             $table->string('image');
             $table->string('title')->nullable();
             $table->text('description')->nullable();
@@ -50,7 +50,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('company_carousels');
+        Schema::dropIfExists('company_activities');
         Schema::dropIfExists('company_statistics');
         Schema::dropIfExists('company_partnerships');
         Schema::dropIfExists('company_profiles');

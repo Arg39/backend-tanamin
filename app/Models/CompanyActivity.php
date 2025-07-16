@@ -5,19 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class CompanyProfile extends Model
+class CompanyActivity extends Model
 {
-    protected $table = 'company_profiles';
+    protected $table = 'company_activities';
 
     protected $fillable = [
         'id',
-        'about',
-        'vision',
-        'mission',
+        'image',
+        'title',
+        'description',
+        'order',
     ];
 
     protected $casts = [
-        'mission' => 'array',
+        'order' => 'integer',
     ];
 
     public $incrementing = false;

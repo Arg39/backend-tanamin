@@ -65,8 +65,11 @@ Route::middleware('role:admin')->group(function () {
     Route::get('students', [UserProfileController::class, 'getStudents']);
 
     // company profile
-    Route::get('/company-profile', [CompanyController::class, 'detail']);
-    Route::post('/company-profile', [CompanyController::class, 'storeOrUpdate']);
+    Route::get('/company/profile', [CompanyController::class, 'detailCompanyProfile']);
+    Route::post('/company/profile', [CompanyController::class, 'storeOrUpdateCompanyProfile']);
+    Route::get('/company/activities', [CompanyController::class, 'indexCompanyActivity']);
+    Route::post('/company/activity', [CompanyController::class, 'storeCompanyActivity']);
+    Route::match(['put', 'post'], '/company/activity/{id}', [CompanyController::class, 'updateCompanyActivity']);
 
     // certificate
     Route::middleware('disable.octane')->group(function () {
