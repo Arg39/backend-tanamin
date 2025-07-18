@@ -25,6 +25,28 @@ class FaqController extends Controller
         );
     }
 
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'question' => 'required|string',
+                'answer'   => 'required|string',
+            ]);
+
+            $faq = Faq::create($validated);
+
+            return new PostResource(
+                true,
+                'FAQ created successfully',
+                (new FaqResource($faq))->resolve($request)
+            );
+        } catch (ValidationException $e) {
+            return new PostResource(false, $e->getMessage(), null);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to create FAQ: ' . $e->getMessage(), null);
+        }
+    }
+
     public function show($id)
     {
         $faq = Faq::find($id);

@@ -87,7 +87,7 @@ Route::middleware('role:admin')->group(function () {
     Route::get('/faqs', [FaqController::class, 'index']);
     Route::get('/faq/{id}', [FaqController::class, 'show']);
     Route::post('/faq', [FaqController::class, 'store']);
-    Route::match(['put', 'post'], '/faq/{id}', [FaqController::class, 'update']);
+    Route::put ('/faq/{id}', [FaqController::class, 'update']);
     Route::delete('/faq/{id}', [FaqController::class, 'destroy']);
 
     // certificate
