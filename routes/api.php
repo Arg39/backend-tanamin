@@ -5,7 +5,9 @@ use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
-use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\Company\CompanyActivityController;
+use App\Http\Controllers\Api\Company\CompanyPartnershipController;
+use App\Http\Controllers\Api\Company\CompanyProfileController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
@@ -13,6 +15,7 @@ use App\Http\Controllers\Api\Course\AttributeCourseController;
 use App\Http\Controllers\Api\Course\Material\LessonCourseController;
 use App\Http\Controllers\Api\Course\Material\ModuleCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
+use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -65,11 +68,27 @@ Route::middleware('role:admin')->group(function () {
     Route::get('students', [UserProfileController::class, 'getStudents']);
 
     // company profile
-    Route::get('/company/profile', [CompanyController::class, 'detailCompanyProfile']);
-    Route::post('/company/profile', [CompanyController::class, 'storeOrUpdateCompanyProfile']);
-    Route::get('/company/activities', [CompanyController::class, 'indexCompanyActivity']);
-    Route::post('/company/activity', [CompanyController::class, 'storeCompanyActivity']);
-    Route::match(['put', 'post'], '/company/activity/{id}', [CompanyController::class, 'updateCompanyActivity']);
+    Route::get('/company/profile', [CompanyProfileController::class, 'detailCompanyProfile']);
+    Route::post('/company/profile', [CompanyProfileController::class, 'storeOrUpdateCompanyProfile']);
+    // company activity
+    Route::get('/company/activities', [CompanyActivityController::class, 'indexCompanyActivity']);
+    Route::get('/company/activity/{id}', [CompanyActivityController::class, 'showCompanyActivity']);
+    Route::post('/company/activity', [CompanyActivityController::class, 'storeCompanyActivity']);
+    Route::match(['put', 'post'], '/company/activity/{id}', [CompanyActivityController::class, 'updateCompanyActivity']);
+    Route::delete('/company/activity/{id}', [CompanyActivityController::class, 'destroyCompanyActivity']);
+    // company partnership
+    Route::get('/company/partnerships', [CompanyPartnershipController::class, 'indexCompanyPartnership']);
+    Route::get('/company/partnership/{id}', [CompanyPartnershipController::class, 'showCompanyPartnership']);
+    Route::post('/company/partnership', [CompanyPartnershipController::class, 'storeCompanyPartnership']);
+    Route::match(['put', 'post'], '/company/partnership/{id}', [CompanyPartnershipController::class, 'updateCompanyPartnership']);
+    Route::delete('/company/partnership/{id}', [CompanyPartnershipController::class, 'destroyCompanyPartnership']);
+
+    // faq
+    Route::get('/faqs', [FaqController::class, 'index']);
+    Route::get('/faq/{id}', [FaqController::class, 'show']);
+    Route::post('/faq', [FaqController::class, 'store']);
+    Route::match(['put', 'post'], '/faq/{id}', [FaqController::class, 'update']);
+    Route::delete('/faq/{id}', [FaqController::class, 'destroy']);
 
     // certificate
     Route::middleware('disable.octane')->group(function () {

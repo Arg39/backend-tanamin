@@ -18,7 +18,7 @@ class CompanyPartnershipResource extends JsonResource
         return [
             'id' => $this->id,
             'partner_name' => $this->partner_name,
-            'logo' => $this->logo ? Storage::disk('public')->url($this->logo) : null,
+            'logo' => $this->logo ? asset('storage/' . $this->logo) : null,
             'website_url' => $this->website_url,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
