@@ -67,7 +67,9 @@ class OverviewCourseController extends Controller
             $course->status = $request->has('status') ? $request->status : $course->status;
 
             // wysiwyg detail handling
-            $course->detail = $this->handleWysiwygUpdate($course->detail ?? '', $request->detail ?? $course->detail);
+            $oldDetail = $course->detail ?? '';
+            $newDetail = $request->input('detail', $oldDetail ?? '');
+            $course->detail = $this->handleWysiwygUpdate($oldDetail, $newDetail);
 
 
             $course->save();

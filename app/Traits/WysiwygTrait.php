@@ -9,12 +9,15 @@ trait WysiwygTrait
     /**
      * Handles WYSIWYG content update: compare, clean up, and delete unused images.
      *
-     * @param string $oldHtml
-     * @param string $newHtml
+     * @param string|null $oldHtml
+     * @param string|null $newHtml
      * @return string $cleanedNewHtml
      */
-    public function handleWysiwygUpdate(string $oldHtml, string $newHtml): string
+    public function handleWysiwygUpdate(?string $oldHtml, ?string $newHtml): string
     {
+        $oldHtml = $oldHtml ?? '';
+        $newHtml = $newHtml ?? '';
+
         $extractImages = function ($html) {
             $images = [];
             preg_match_all('/<img[^>]+src="([^">]+)"/', $html, $matches);
