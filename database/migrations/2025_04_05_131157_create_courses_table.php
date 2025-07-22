@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->enum('status', ['new', 'edited', 'awaiting_approval', 'published'])->default('new');
             $table->text('detail')->nullable();
+            $table->float('avg_rating')->default(0);
+            $table->integer('total_reviews')->default(0);
+
             $table->timestamps();
 
             $table->foreign('id_category')->references('id')->on('categories')->onDelete('cascade');
