@@ -51,32 +51,6 @@ return new class extends Migration
             $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
             $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
         });
-
-        Schema::create('course_discounts', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('course_id');
-            $table->enum('type', ['percent', 'nominal']);
-            $table->integer('value');
-            $table->dateTime('start_at');
-            $table->dateTime('end_at');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-
-            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
-        });
-
-        Schema::create('course_coupons', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('code')->unique();
-            $table->enum('type', ['percent', 'nominal']);
-            $table->integer('value');
-            $table->dateTime('start_at');
-            $table->dateTime('end_at');
-            $table->boolean('is_active')->default(true);
-            $table->integer('max_usage')->nullable();
-            $table->integer('used_count')->default(0);
-            $table->timestamps();
-        });
     }
 
     /**
@@ -84,8 +58,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('course_coupons');
-        Schema::dropIfExists('course_discounts');
         Schema::dropIfExists('course_reviews');
         Schema::dropIfExists('course_attributes');
         Schema::dropIfExists('courses');

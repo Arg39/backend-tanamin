@@ -17,7 +17,6 @@ return new class extends Migration
             $table->uuid('course_id');
             $table->string('certificate_code')->unique();
             $table->timestamp('issued_at')->nullable();
-            $table->string('file_path')->nullable();
             $table->timestamps();
 
             // Define foreign key constraint

@@ -258,7 +258,7 @@ class LessonCourseController extends Controller
                     $optionIdsToKeep = [];
                     foreach ($qData['options'] as $optIndex => $optionText) {
                         $isCorrect = $optIndex == $qData['correctAnswer'];
-                        $optionId = $qData['option_ids'][$optIndex] ?? null; // expects option_ids[] in request if updating
+                        $optionId = $qData['option_ids'][$optIndex] ?? null;
                         if ($optionId && $existingOptions->has($optionId)) {
                             $option = $existingOptions[$optionId];
                             $option->answer = $optionText;
