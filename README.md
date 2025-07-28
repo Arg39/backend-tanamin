@@ -47,8 +47,6 @@ php artisan db:seed
 php artisan serve
 ```
 
----
-
 ### 🔗 Menggunakan Ngrok untuk Callback Midtrans (Local Development)
 
 Jika Anda ingin menerima callback dari Midtrans saat aplikasi masih berjalan secara lokal (belum di-hosting), Anda dapat menggunakan [ngrok](https://ngrok.com/) versi > 3.17 untuk mengekspose server lokal ke internet.
