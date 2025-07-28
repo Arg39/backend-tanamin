@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('course_discounts', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->enum('type', ['percent', 'nominal']);
             $table->integer('value');
             $table->dateTime('start_at');
@@ -22,7 +22,7 @@ return new class extends Migration
         });
 
         Schema::create('course_coupons', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('code')->unique();
             $table->enum('type', ['percent', 'nominal']);
             $table->integer('value');
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('user_id');
             $table->uuid('course_id');
-            $table->unsignedBigInteger('coupon_id');
+            $table->uuid('coupon_id'); // <-- FIXED: was unsignedBigInteger, now uuid
             $table->timestamp('used_at')->useCurrent();
 
             $table->unique(['user_id', 'course_id', 'coupon_id']);

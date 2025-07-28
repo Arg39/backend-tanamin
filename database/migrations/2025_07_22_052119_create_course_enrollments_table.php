@@ -44,6 +44,38 @@ return new class extends Migration
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
             $table->foreign('coupon_id')->references('id')->on('course_coupons')->onDelete('set null');
         });
+
+        Schema::create('course_checkout_sessions', function (Blueprint $table) {
+            $table->id();
+
+            $table->uuid('user_id');
+            $table->integer('total_price')->nullable();
+
+            $table->enum('payment_status', ['pending', 'paid', 'expired'])->default('pending');
+            $table->string('midtrans_order_id')->nullable();
+            $table->string('midtrans_transaction_id')->nullable();
+            $table->string('transaction_status')->nullable();
+            $table->string('fraud_status')->nullable();
+
+            $table->timestamp('paid_at')->nullable();
+
+            $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        });
+
+        Schema::create('checkout_session_items', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('course_checkout_session_id')->constrained('course_checkout_sessions')->onDelete('cascade');
+            $table->uuid('course_id');
+
+            $table->integer('price')->nullable();
+
+            $table->timestamps();
+
+            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
+        });
     }
 
     /**
@@ -51,6 +83,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('checkout_session_items');
+        Schema::dropIfExists('course_checkout_sessions');
         Schema::dropIfExists('course_enrollments');
     }
 };

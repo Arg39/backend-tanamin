@@ -7,16 +7,13 @@ use Midtrans\Snap;
 
 class MidtransService
 {
-    public function __construct()
+    public static function createTransaction(array $params)
     {
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized = true;
         Config::$is3ds = true;
-    }
 
-    public function createTransaction(array $params)
-    {
         return Snap::createTransaction($params);
     }
 }

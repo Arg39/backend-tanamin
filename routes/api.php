@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Course\AttributeCourseController;
 use App\Http\Controllers\Api\Course\Material\LessonCourseController;
 use App\Http\Controllers\Api\Course\Material\ModuleCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
+use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
@@ -99,7 +100,6 @@ Route::middleware('role:admin')->group(function () {
 // ───────────────────────────────
 // Instructor & admin Role
 // ───────────────────────────────
-
 Route::middleware('role:admin,instructor')->group(function () {
     // detail: overview course
     Route::get('course/{courseId}/overview', [OverviewCourseController::class, 'show']);
@@ -143,6 +143,16 @@ Route::middleware('role:instructor')->group(function () {
 Route::middleware('role:admin,instructor')->group(function () {
     Route::get('/attribute/{id}', [AttributeCourseController::class, 'index']);
 });
+
+// ───────────────────────────────
+// Student Role
+// ───────────────────────────────
+Route::middleware('role:student')->group(function () {
+    Route::post('/enrollments/buy-now', [EnrollmentController::class, 'buyNow']);
+    Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
+    Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
+});
+Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'midtransCallback']);
 
 // ───────────────────────────────
 // Instructor & Student Role
