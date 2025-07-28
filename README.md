@@ -78,6 +78,10 @@ Jika Anda ingin menerima callback dari Midtrans saat aplikasi masih berjalan sec
       https://xxxx.ngrok.io/api/midtrans/callback
       ```
     - Pastikan endpoint callback di backend Laravel sudah sesuai.
+    - Check pembayaran
+      ```
+      https://simulator.sandbox.midtrans.com/bca/va/index
+      ```
 
 5. **Catatan:**
     - Setiap kali ngrok dijalankan, URL akan berubah kecuali Anda menggunakan akun ngrok berbayar dengan reserved domain.

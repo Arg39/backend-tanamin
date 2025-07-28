@@ -29,7 +29,33 @@ class EnrollmentController extends Controller
             return response()->json(['message' => 'Kursus ini sudah dibeli.'], 400);
         }
 
-        // Buat transaksi Midtrans
+        // Cek apakah sudah ada enrollment pending untuk user dan course ini
+        $pendingEnrollment = CourseEnrollment::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->where('payment_status', 'pending')
+            ->first();
+
+        if ($pendingEnrollment) {
+            // Ambil order_id dari enrollment yang sudah ada
+            $orderId = $pendingEnrollment->midtrans_order_id;
+            // Buat ulang link Midtrans (jika perlu, atau simpan link saat pertama kali create)
+            $midtrans = MidtransService::createTransaction([
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => (int)$course->price,
+                ],
+                'customer_details' => [
+                    'first_name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ]);
+
+            return response()->json([
+                'redirect_url' => $midtrans->redirect_url,
+            ]);
+        }
+
+        // Buat transaksi Midtrans baru
         $orderId = 'ORDER-' . strtoupper(uniqid());
         $midtrans = MidtransService::createTransaction([
             'transaction_details' => [
