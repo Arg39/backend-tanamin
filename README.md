@@ -49,6 +49,46 @@ php artisan serve
 
 ---
 
+### 🔗 Menggunakan Ngrok untuk Callback Midtrans (Local Development)
+
+Jika Anda ingin menerima callback dari Midtrans saat aplikasi masih berjalan secara lokal (belum di-hosting), Anda dapat menggunakan [ngrok](https://ngrok.com/) versi > 3.17 untuk mengekspose server lokal ke internet.
+
+#### Langkah-langkah:
+
+1. **Install ngrok versi terbaru:**
+    - Download dan install dari [https://ngrok.com/download](https://ngrok.com/download).
+    - Pastikan versi ngrok Anda di atas 3.17 dengan menjalankan:
+      ```bash
+      ngrok version
+      ```
+
+2. **Jalankan server Laravel lokal:**
+    ```bash
+    php artisan serve
+    ```
+    Secara default, Laravel berjalan di `http://127.0.0.1:8000`.
+
+3. **Expose port Laravel menggunakan ngrok:**
+    ```bash
+    ngrok http 8000
+    ```
+    Ngrok akan memberikan URL publik seperti `https://xxxx.ngrok.io`.
+
+4. **Konfigurasi Midtrans:**
+    - Masukkan URL ngrok pada pengaturan callback/notification Midtrans, misal:
+      ```
+      https://xxxx.ngrok.io/api/midtrans/callback
+      ```
+    - Pastikan endpoint callback di backend Laravel sudah sesuai.
+
+5. **Catatan:**
+    - Setiap kali ngrok dijalankan, URL akan berubah kecuali Anda menggunakan akun ngrok berbayar dengan reserved domain.
+    - Pastikan firewall dan koneksi internet Anda tidak memblokir akses dari Midtrans.
+
+---
+
+---
+
 ### 🐳 Menjalankan dengan Docker dan FrankenPHP
 
 1.  **Pastikan Docker sudah terinstal** di sistem Anda. Jika belum, silakan instal Docker dari [sini](https://www.docker.com/).
