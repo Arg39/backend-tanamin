@@ -15,25 +15,34 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class OverviewCourseController extends Controller
 {
     use WysiwygTrait;
-    // getDetailCourse()
     public function show($courseId)
     {
         try {
             $course = Course::with(['category', 'instructor'])
                 ->where('id', $courseId)
                 ->first();
-
+    
             if (!$course) {
                 return new PostResource(false, 'Course not found or unauthorized access', null);
             }
-
+    
+            $discount = null;
+            if ($course->is_discount_active) {
+                if ($course->discount_type === 'percent') {
+                    $discount = $course->discount_value . ' %';
+                } elseif ($course->discount_type === 'nominal') {
+                    $discount = 'Rp. ' . number_format($course->discount_value, 0, ',', '.');
+                }
+            }
+    
             $dataInstructor = [
                 'instructor' => $course->instructor ? [
                         'id' => $course->instructor->id,
                         'full_name' => trim($course->instructor->first_name . ' ' . $course->instructor->last_name),
                     ] : null,
+                'discount' => $discount,
             ];
-
+    
             return new PostResource(true, 'Course retrieved successfully', (new CoursePostResource($course))->withExtra($dataInstructor)->resolve(request()));
         }
         catch (\Exception $e) {

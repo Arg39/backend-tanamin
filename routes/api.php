@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\OrderController;
 use App\Models\CourseAttribute;
 
@@ -74,6 +75,10 @@ Route::middleware('role:admin')->group(function () {
     Route::post('course', [AdminCourseController::class, 'store']);
     Route::get('course/{id}', [AdminCourseController::class, 'show']);
     Route::delete('course/{id}', [AdminCourseController::class, 'destroy']);
+
+    // discount
+    Route::get('discounts', [DiscountController::class, 'index']);
+    Route::post('discount', [DiscountController::class, 'store']);
     
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);

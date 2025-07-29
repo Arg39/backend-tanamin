@@ -12,6 +12,7 @@ class CourseDiscount extends Model
 
     protected $fillable = [
         'id',
+        'title',
         'type',
         'value',
         'start_at',

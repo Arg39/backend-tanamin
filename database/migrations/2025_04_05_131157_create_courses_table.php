@@ -17,12 +17,13 @@ return new class extends Migration
             $table->uuid('id_instructor');
             $table->string('title');
             $table->integer('price')->nullable();
+            $table->enum('discount_type', ['percent', 'nominal'])->nullable();
+            $table->integer('discount_value')->nullable();
+            $table->boolean('is_discount_active')->default(false);
             $table->enum('level', ['beginner', 'intermediate', 'advance'])->nullable();
             $table->string('image')->nullable();
             $table->enum('status', ['new', 'edited', 'awaiting_approval', 'published'])->default('new');
             $table->text('detail')->nullable();
-            $table->float('avg_rating')->default(0);
-            $table->integer('total_reviews')->default(0);
 
             $table->timestamps();
 

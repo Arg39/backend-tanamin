@@ -19,6 +19,9 @@ class Course extends Model
         'id_instructor',
         'title',
         'price',
+        'discount_type',
+        'discount_value',
+        'is_discount_active',
         'level',
         'image',
         'status',
@@ -35,14 +38,40 @@ class Course extends Model
         return $this->belongsTo(User::class, 'id_instructor');
     }
 
-    public function descriptions()
+    public function attributes()
     {
         return $this->hasMany(CourseAttribute::class, 'id_course');
+    }
+
+    public function descriptions()
+    {
+        return $this->hasMany(CourseAttribute::class, 'id_course')->where('type', 'description');
+    }
+
+    public function prerequisites()
+    {
+        return $this->hasMany(CourseAttribute::class, 'id_course')->where('type', 'prerequisite');
     }
 
     public function modules()
     {
         return $this->hasMany(ModuleCourse::class, 'course_id')->orderBy('order', 'asc');
+    }
+
+    // Use course_ratings for ratings
+    public function ratings()
+    {
+        return $this->hasMany(CourseRating::class, 'id_course');
+    }
+
+    public function getAvgRatingAttribute()
+    {
+        return $this->ratings()->avg('rating') ?? 0;
+    }
+
+    public function getTotalRatingsAttribute()
+    {
+        return $this->ratings()->count();
     }
 
     public function reviews()

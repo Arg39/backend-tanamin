@@ -11,16 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('course_discounts', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->enum('type', ['percent', 'nominal']);
-            $table->integer('value');
-            $table->dateTime('start_at');
-            $table->dateTime('end_at');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
         Schema::create('course_coupons', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('code')->unique();
@@ -56,6 +46,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('coupon_usages');
         Schema::dropIfExists('course_coupons');
-        Schema::dropIfExists('course_discounts');
     }
 };
