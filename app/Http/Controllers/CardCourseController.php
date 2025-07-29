@@ -14,8 +14,9 @@ class CardCourseController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 10);
-        $courses = Course::paginate($perPage);
-    
+        $courses = Course::where('status', 'published')
+            ->paginate($perPage);
+
         $now = now();
         $activeDiscount = CourseDiscount::where('is_active', true)
             ->where('start_at', '<=', $now)

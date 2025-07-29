@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Models\CourseAttribute;
 
@@ -35,6 +36,9 @@ Route::post('/orders', [OrderController::class, 'store']);
 Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 Route::get('categories', [CategoryController::class, 'index']);
 Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'midtransCallback']);
+
+// course
+Route::get('/instructor', [DashboardController::class, 'getInstructor']);
 Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
 
 // ───────────────────────────────

@@ -75,21 +75,6 @@ return new class extends Migration
 
             $table->foreign('question_id')->references('id')->on('questions')->onDelete('cascade');
         });
-
-        // Create material_attempts table
-        Schema::create('material_attempts', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->uuid('lesson_id');
-            $table->json('answers');
-            $table->integer('score');
-            $table->timestamp('started_at')->nullable();
-            $table->timestamp('finished_at')->nullable();
-            $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');
-        });
     }
 
     /**
@@ -97,7 +82,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('material_attempts');
         Schema::dropIfExists('answer_options');
         Schema::dropIfExists('questions');
         Schema::dropIfExists('quizzes');

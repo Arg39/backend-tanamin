@@ -50,6 +50,28 @@ class Course extends Model
         return $this->hasMany(CourseReview::class, 'id_course');
     }
 
+    public function getTotalMaterialsAttribute()
+    {
+        return LessonMaterial::whereIn(
+            'lesson_id',
+            LessonCourse::whereIn(
+                'module_id',
+                ModuleCourse::where('course_id', $this->id)->pluck('id')
+            )->pluck('id')
+        )->count();
+    }
+
+    public function getTotalQuizAttribute()
+    {
+        return LessonQuiz::whereIn(
+            'lesson_id',
+            LessonCourse::whereIn(
+                'module_id',
+                ModuleCourse::where('course_id', $this->id)->pluck('id')
+            )->pluck('id')
+        )->count();
+    }
+
     // filtering
     public function scopeSearch($query, $search)
     {

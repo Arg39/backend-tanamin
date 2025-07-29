@@ -16,11 +16,13 @@ class CardCourseResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'id_category' => $this->id_category,
             'image' => $this->image ? asset('storage/' . $this->image) : null,
             'title' => $this->title,
-            'instructor' => $this->instructor,
-            'total_material' => $this->total_material,
+            'instructor' => $this->instructor 
+                ? trim($this->instructor->first_name . ' ' . $this->instructor->last_name)
+                : null,
+            'total_material' => $this->getTotalMaterialsAttribute(),
+            'total_quiz' => $this->getTotalQuizAttribute(),
             'price' => $this->price,
         ];
     }

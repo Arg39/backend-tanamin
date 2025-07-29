@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\InstructorResource;
+use App\Http\Resources\PostResource;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -18,7 +21,32 @@ class DashboardController extends Controller
 
     public function getInstructor()
     {
-        // This function is intended to retrieve instructors for the dashboard.
+        try {
+            $instructors = User::where('role', 'instructor')
+                ->with('detail')
+                ->withCount(['courses as published_courses_count' => function ($query) {
+                    $query->where('status', 'published');
+                }])
+                ->orderByDesc('published_courses_count')
+                ->take(8)
+                ->get();
+
+            $data = $instructors->map(function ($instructor) {
+                return (new InstructorResource($instructor))->resolve(request());
+            });
+
+            return new PostResource(
+                true,
+                'List of instructors retrieved successfully.',
+                $data
+            );
+        } catch (\Exception $e) {
+            return new PostResource(
+                false,
+                'Failed to retrieve instructors: ' . $e->getMessage(),
+                []
+            );
+        }
     }
 
     public function getCourse()
