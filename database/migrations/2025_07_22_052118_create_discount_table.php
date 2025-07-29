@@ -38,7 +38,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('user_id');
             $table->uuid('course_id');
-            $table->uuid('coupon_id'); // <-- FIXED: was unsignedBigInteger, now uuid
+            $table->uuid('coupon_id');
             $table->timestamp('used_at')->useCurrent();
 
             $table->unique(['user_id', 'course_id', 'coupon_id']);

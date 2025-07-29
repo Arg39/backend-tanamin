@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\CardCourseController;
 use App\Http\Controllers\OrderController;
 use App\Models\CourseAttribute;
 
@@ -33,7 +34,20 @@ Route::post('logout', [AuthController::class, 'logout']);
 Route::post('/orders', [OrderController::class, 'store']);
 Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 Route::get('categories', [CategoryController::class, 'index']);
+Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'midtransCallback']);
 
+// ───────────────────────────────
+// Student Role
+// ───────────────────────────────
+Route::middleware('role:student')->group(function () {
+    // course
+    Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
+
+    // enrollment
+    Route::post('/enrollments/buy-now', [EnrollmentController::class, 'buyNow']);
+    Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
+    Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
+});
 
 // ───────────────────────────────
 // Admin Role
@@ -143,16 +157,6 @@ Route::middleware('role:instructor')->group(function () {
 Route::middleware('role:admin,instructor')->group(function () {
     Route::get('/attribute/{id}', [AttributeCourseController::class, 'index']);
 });
-
-// ───────────────────────────────
-// Student Role
-// ───────────────────────────────
-Route::middleware('role:student')->group(function () {
-    Route::post('/enrollments/buy-now', [EnrollmentController::class, 'buyNow']);
-    Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
-    Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
-});
-Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'midtransCallback']);
 
 // ───────────────────────────────
 // Instructor & Student Role

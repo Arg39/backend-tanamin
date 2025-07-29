@@ -50,11 +50,6 @@ class Course extends Model
         return $this->hasMany(CourseReview::class, 'id_course');
     }
 
-    public function discounts()
-    {
-        return $this->hasMany(CourseDiscount::class, 'course_id');
-    }
-
     // filtering
     public function scopeSearch($query, $search)
     {
