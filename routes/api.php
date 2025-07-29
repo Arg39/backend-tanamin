@@ -35,14 +35,12 @@ Route::post('/orders', [OrderController::class, 'store']);
 Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 Route::get('categories', [CategoryController::class, 'index']);
 Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'midtransCallback']);
+Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
 
 // ───────────────────────────────
 // Student Role
 // ───────────────────────────────
 Route::middleware('role:student')->group(function () {
-    // course
-    Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
-
     // enrollment
     Route::post('/enrollments/buy-now', [EnrollmentController::class, 'buyNow']);
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
