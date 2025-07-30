@@ -16,15 +16,18 @@ return new class extends Migration
             $table->uuid('id_category');
             $table->uuid('id_instructor');
             $table->string('title');
+            // detail
+            $table->string('image')->nullable();
+            $table->enum('level', ['beginner', 'intermediate', 'advance'])->nullable();
+            $table->enum('status', ['new', 'edited', 'awaiting_approval', 'published'])->default('new');
+            $table->text('detail')->nullable();
+            // price
             $table->integer('price')->nullable();
             $table->enum('discount_type', ['percent', 'nominal'])->nullable();
             $table->integer('discount_value')->nullable();
+            $table->dateTime('discount_start_at')->nullable();
+            $table->dateTime('discount_end_at')->nullable();
             $table->boolean('is_discount_active')->default(false);
-            $table->enum('level', ['beginner', 'intermediate', 'advance'])->nullable();
-            $table->string('image')->nullable();
-            $table->enum('status', ['new', 'edited', 'awaiting_approval', 'published'])->default('new');
-            $table->text('detail')->nullable();
-
             $table->timestamps();
 
             $table->foreign('id_category')->references('id')->on('categories')->onDelete('cascade');
@@ -40,18 +43,6 @@ return new class extends Migration
 
             $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
         });
-
-        Schema::create('course_reviews', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('id_user');
-            $table->uuid('id_course');
-            $table->integer('rating');
-            $table->text('review')->nullable();
-            $table->timestamps();
-
-            $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
-        });
     }
 
     /**
@@ -59,7 +50,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('course_reviews');
         Schema::dropIfExists('course_attributes');
         Schema::dropIfExists('courses');
     }

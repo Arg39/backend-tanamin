@@ -16,7 +16,6 @@ class UpdateCourseOverviewRequest extends FormRequest
         return [
             'title' => 'nullable|string|max:255',
             'level' => 'nullable|in:beginner,intermediate,advance',
-            'price' => 'nullable|numeric|min:0',
             'image' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'detail' => 'nullable|string',
             'status' => 'nullable|in:new,edited,awaiting_approval,published',

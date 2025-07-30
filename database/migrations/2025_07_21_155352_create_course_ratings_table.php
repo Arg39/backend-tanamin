@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('course_ratings', function (Blueprint $table) {
+        Schema::create('course_reviews', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('id_user');
             $table->uuid('id_course');

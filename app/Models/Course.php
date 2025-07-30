@@ -18,14 +18,16 @@ class Course extends Model
         'id_category',
         'id_instructor',
         'title',
-        'price',
-        'discount_type',
-        'discount_value',
-        'is_discount_active',
-        'level',
         'image',
-        'status',
+        'level', // ['beginner', 'intermediate', 'advance']
+        'status', // ['new', 'edited', 'awaiting_approval', 'published']
         'detail',
+        'price',
+        'discount_type', // ['percent', 'nominal']
+        'discount_value',
+        'discount_start_at',
+        'discount_end_at',
+        'is_discount_active',
     ];
 
     public function category()

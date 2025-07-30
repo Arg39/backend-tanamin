@@ -125,6 +125,7 @@ Route::middleware('role:admin,instructor')->group(function () {
     // detail: overview course
     Route::get('course/{courseId}/overview', [OverviewCourseController::class, 'show']);
     Route::match(['put', 'post'], 'course/{courseId}/overview/update', [OverviewCourseController::class, 'update']);
+    Route::match('put', 'course/{courseId}/overview/update-price', [OverviewCourseController::class, 'updatePriceAndDiscount']);
     // detail: attribute course
     Route::get('course/{courseId}/attribute', [AttributeCourseController::class, 'index']);
     Route::get('course/{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);

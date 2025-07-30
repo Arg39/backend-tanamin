@@ -18,7 +18,7 @@ class CourseReview extends Model
         'id_course',
         'id_user',
         'rating',
-        'review',
+        'comment',
     ];
 
     public function course()
