@@ -24,6 +24,10 @@ class CardCourseResource extends JsonResource
             'total_material' => $this->getTotalMaterialsAttribute(),
             'total_quiz' => $this->getTotalQuizAttribute(),
             'price' => $this->price,
+            'discount' => $this->active_discount_value,
+            'type_discount' => $this->active_discount_type,
+            'average_rating' => round($this->avg_rating, 2),
+            'total_rating' => $this->total_ratings,
         ];
     }
 }

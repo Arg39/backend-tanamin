@@ -60,25 +60,35 @@ class Course extends Model
         return $this->hasMany(ModuleCourse::class, 'course_id')->orderBy('order', 'asc');
     }
 
-    // Use course_ratings for ratings
-    public function ratings()
+    public function getActiveDiscountAttribute()
     {
-        return $this->hasMany(CourseRating::class, 'id_course');
+        return $this->is_discount_active ? true : false;
+    }
+
+    public function getActiveDiscountValueAttribute()
+    {
+        return $this->active_discount ? $this->discount_value : null;
+    }
+
+    public function getActiveDiscountTypeAttribute()
+    {
+        return $this->active_discount ? $this->discount_type : null;
+    }
+
+    // Use course_reviews for ratings
+    public function reviews()
+    {
+        return $this->hasMany(CourseReview::class, 'id_course');
     }
 
     public function getAvgRatingAttribute()
     {
-        return $this->ratings()->avg('rating') ?? 0;
+        return $this->reviews()->avg('rating') ?? 0;
     }
 
     public function getTotalRatingsAttribute()
     {
-        return $this->ratings()->count();
-    }
-
-    public function reviews()
-    {
-        return $this->hasMany(CourseReview::class, 'id_course');
+        return $this->reviews()->count();
     }
 
     public function getTotalMaterialsAttribute()

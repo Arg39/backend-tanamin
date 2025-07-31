@@ -42,6 +42,7 @@ Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'mid
 // course
 Route::get('/instructor', [DashboardController::class, 'getInstructor']);
 Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
+Route::get('/tanamin-course/{id}', [CardCourseController::class, 'show']);
 
 // ───────────────────────────────
 // Student Role

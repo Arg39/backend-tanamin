@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('level', ['beginner', 'intermediate', 'advance'])->nullable();
             $table->enum('status', ['new', 'edited', 'awaiting_approval', 'published'])->default('new');
             $table->text('detail')->nullable();
-            // price
+            // price & discount
             $table->integer('price')->nullable();
             $table->enum('discount_type', ['percent', 'nominal'])->nullable();
             $table->integer('discount_value')->nullable();
