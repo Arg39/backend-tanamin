@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\OrderController;
@@ -134,6 +135,12 @@ Route::middleware('role:admin,instructor')->group(function () {
     Route::get('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'show']);
     // detail: material course => lesson
     Route::get('course/lesson/{lessonId}', [LessonCourseController::class, 'show']);
+    // Coupon
+    Route::get('coupons', [CouponController::class, 'index']);
+    Route::post('coupon', [CouponController::class, 'store']);
+    Route::get('coupon/{id}', [CouponController::class, 'show']);
+    Route::put('coupon/{id}', [CouponController::class, 'update']);
+    Route::delete('coupon/{id}', [CouponController::class, 'destroy']);
 });
 
 // ───────────────────────────────

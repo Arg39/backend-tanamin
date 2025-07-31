@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('course_coupons', function (Blueprint $table) {
+        Schema::create('coupons', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->string('title');
             $table->string('code')->unique();
             $table->enum('type', ['percent', 'nominal']);
             $table->integer('value');
@@ -35,7 +36,7 @@ return new class extends Migration
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
-            $table->foreign('coupon_id')->references('id')->on('course_coupons')->onDelete('cascade');
+            $table->foreign('coupon_id')->references('id')->on('coupons')->onDelete('cascade');
         });
     }
 
@@ -45,6 +46,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('coupon_usages');
-        Schema::dropIfExists('course_coupons');
+        Schema::dropIfExists('coupons');
     }
 };

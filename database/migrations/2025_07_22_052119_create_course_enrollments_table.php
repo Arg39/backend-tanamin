@@ -42,7 +42,7 @@ return new class extends Migration
             // Foreign key constraints
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
-            $table->foreign('coupon_id')->references('id')->on('course_coupons')->onDelete('set null');
+            $table->foreign('coupon_id')->references('id')->on('coupons')->onDelete('set null');
         });
 
         Schema::create('course_checkout_sessions', function (Blueprint $table) {
