@@ -78,10 +78,6 @@ Route::middleware('role:admin')->group(function () {
     Route::get('course/{id}', [AdminCourseController::class, 'show']);
     Route::delete('course/{id}', [AdminCourseController::class, 'destroy']);
 
-    // discount
-    Route::get('discounts', [DiscountController::class, 'index']);
-    Route::post('discount', [DiscountController::class, 'store']);
-    
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
     Route::get('/profile/{id}', [UserProfileController::class, 'getProfileById']);
