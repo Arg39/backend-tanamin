@@ -8,6 +8,7 @@ use App\Models\CourseReview; // Changed from CourseRating
 use App\Http\Resources\TableResource;
 use App\Http\Resources\CardCourseResource;
 use App\Http\Resources\CourseResource;
+use App\Http\Resources\DetailCourseResource;
 use App\Http\Resources\PostResource;
 
 class CardCourseController extends Controller
@@ -52,16 +53,12 @@ class CardCourseController extends Controller
             );
         }
 
-        $resource = new CourseResource($course);
-
-        $data = $resource->toArray(request());
-        $data['average_rating'] = round($course->avg_rating, 2);
-        $data['total_rating'] = $course->total_ratings;
+        $resource = new DetailCourseResource($course);
 
         return new PostResource(
             true,
             'Course retrieved successfully.',
-            $data
+            $resource->toArray(request())
         );
     }
 }

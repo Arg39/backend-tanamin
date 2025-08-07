@@ -57,7 +57,7 @@ class Course extends Model
 
     public function modules()
     {
-        return $this->hasMany(ModuleCourse::class, 'course_id')->orderBy('order', 'asc');
+        return $this->hasMany(ModuleCourse::class, 'course_id', 'id');
     }
 
     public function getActiveDiscountAttribute()
@@ -75,10 +75,15 @@ class Course extends Model
         return $this->active_discount ? $this->discount_type : null;
     }
 
+    public function participants()
+    {
+        return $this->belongsToMany(User::class, 'course_participants', 'course_id', 'user_id');
+    }
+
     // Use course_reviews for ratings
     public function reviews()
     {
-        return $this->hasMany(CourseReview::class, 'id_course');
+        return $this->hasMany(CourseReview::class, 'id_course', 'id');
     }
 
     public function getAvgRatingAttribute()
