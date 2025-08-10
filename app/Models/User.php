@@ -99,4 +99,13 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Course::class, 'id_instructor', 'id');
     }
+
+    // Add accessor for full name
+    public function getFullNameAttribute()
+    {
+        if ($this->first_name || $this->last_name) {
+            return trim("{$this->first_name} {$this->last_name}");
+        }
+        return $this->name;
+    }    
 }

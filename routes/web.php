@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,4 +16,13 @@ Route::get('/phpinfo-franken', function () {
     phpinfo();
     $phpinfo = ob_get_clean();
     return response($phpinfo)->header('Content-Type', 'text/html');
+});
+
+Route::get('/test-email', function () {
+    Mail::raw('Ini email tes dari Laravel pakai Gmail SMTP.', function ($message) {
+        $message->to('pabannu@gmail.com')
+                ->subject('Tes Email Laravel SMTP');
+    });
+
+    return 'Email terkirim!';
 });

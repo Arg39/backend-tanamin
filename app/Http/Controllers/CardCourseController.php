@@ -4,12 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Course;
-use App\Models\CourseReview; // Changed from CourseRating
+use App\Models\CourseReview;
 use App\Http\Resources\TableResource;
 use App\Http\Resources\CardCourseResource;
-use App\Http\Resources\CourseResource;
-use App\Http\Resources\DetailCourseResource;
-use App\Http\Resources\PostResource;
 
 class CardCourseController extends Controller
 {
@@ -38,27 +35,6 @@ class CardCourseController extends Controller
             'List of card courses retrieved successfully.',
             $paginatedData,
             200
-        );
-    }
-
-    public function show($id)
-    {
-        $course = Course::where('id', $id)->where('status', 'published')->first();
-
-        if (!$course) {
-            return new PostResource(
-                false,
-                'Course not found.',
-                null
-            );
-        }
-
-        $resource = new DetailCourseResource($course);
-
-        return new PostResource(
-            true,
-            'Course retrieved successfully.',
-            $resource->toArray(request())
         );
     }
 }

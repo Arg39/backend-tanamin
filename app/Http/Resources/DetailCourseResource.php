@@ -12,15 +12,21 @@ class DetailCourseResource extends JsonResource
     {
         // Diskon: hanya tampil jika aktif dan dalam rentang tanggal
         $discount = null;
-        if (
-            $this->is_discount_active &&
-            $this->discount_start_at &&
-            $this->discount_end_at
-        ) {
+        if ($this->is_discount_active) {
             $now = Carbon::now();
-            $start = Carbon::parse($this->discount_start_at);
-            $end = Carbon::parse($this->discount_end_at)->endOfDay();
-            if ($now->between($start, $end)) {
+            $start = $this->discount_start_at ? Carbon::parse($this->discount_start_at) : null;
+            $end = $this->discount_end_at ? Carbon::parse($this->discount_end_at)->endOfDay() : null;
+        
+            $isActive = false;
+            if ($start && $end) {
+                $isActive = $now->between($start, $end);
+            } elseif ($start && !$end) {
+                $isActive = $now->greaterThanOrEqualTo($start);
+            } elseif (!$start && $end) {
+                $isActive = $now->lessThanOrEqualTo($end);
+            }
+        
+            if ($isActive) {
                 $discount = [
                     'type' => $this->discount_type,
                     'value' => $this->discount_value,
@@ -33,13 +39,13 @@ class DetailCourseResource extends JsonResource
             return [
                 'id' => $this->instructor->id,
                 'photo_profile' => url('storage/' . $this->instructor->photo_profile),
-                'name' => $this->instructor->name,
+                'name' => $this->instructor->full_name,
             ];
         }, function () {
             return [
                 'id' => $this->instructor->id ?? null,
                 'photo_profile' => url('storage/' . $this->instructor->photo_profile ?? null),
-                'name' => $this->instructor->name ?? null,
+                'name' => $this->instructor->full_name ?? null,
             ];
         });
 

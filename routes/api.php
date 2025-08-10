@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DetailCourseController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\OrderController;
 use App\Models\CourseAttribute;
@@ -42,7 +43,9 @@ Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'mid
 // course
 Route::get('/instructor', [DashboardController::class, 'getInstructor']);
 Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
-Route::get('/tanamin-course/{id}', [CardCourseController::class, 'show']);
+Route::get('/tanamin-course/{courseId}', [DetailCourseController::class, 'showDetail']);
+Route::get('/tanamin-courses/{courseId}/attribute', [DetailCourseController::class, 'getDetailAttribute']);
+Route::get('/tanamin-courses/{courseId}/instructor', [DetailCourseController::class, 'getDetailInstructor']);
 
 // ───────────────────────────────
 // Student Role
