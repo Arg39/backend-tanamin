@@ -15,6 +15,7 @@ class LessonMaterial extends Model
         'id',
         'lesson_id',
         'content',
+        'visible',
     ];
 
     public $incrementing = false;

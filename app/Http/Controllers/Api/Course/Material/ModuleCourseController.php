@@ -27,11 +27,16 @@ class ModuleCourseController extends Controller
                     ->orderBy('order', 'asc')
                     ->get()
                     ->map(function ($lesson) {
-                        return [
+                        $lessonArr = [
                             'id' => $lesson->id,
                             'type' => $lesson->type,
                             'title' => $lesson->title,
                         ];
+                        if ($lesson->type === 'material') {
+                            $material = $lesson->materials()->first();
+                            $lessonArr['visible'] = $material ? (bool)$material->visible : false;
+                        }
+                        return $lessonArr;
                     })
                     ->toArray();
 

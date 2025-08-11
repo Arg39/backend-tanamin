@@ -39,6 +39,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('lesson_id');
             $table->text('content');
+            $table->boolean('visible')->default(false);
             $table->timestamps();
 
             $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');

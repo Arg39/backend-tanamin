@@ -28,14 +28,13 @@ class LessonCourseController extends Controller
                 'type' => 'required|string|in:material,quiz',
                 'materialContent' => 'required_if:type,material',
                 'quizContent' => 'required_if:type,quiz|array',
+                'visible' => 'nullable|boolean',
             ]);
 
             $this->updateLessonOrder($moduleId);
 
-            // Tentukan order untuk lesson baru
             $order = LessonCourse::where('module_id', $moduleId)->count();
 
-            // Buat lesson baru
             $lessonId = (string) Str::uuid();
             $lesson = LessonCourse::create([
                 'id' => $lessonId,
@@ -46,12 +45,12 @@ class LessonCourseController extends Controller
             ]);
 
             if ($request->type === 'material') {
-                // Handle wysiwyg content
                 $content = $this->handleWysiwygUpdate('', $request->materialContent);
                 LessonMaterial::create([
                     'id' => (string) Str::uuid(),
                     'lesson_id' => $lessonId,
                     'content' => $content,
+                    'visible' => $request->has('visible') ? (bool)$request->visible : false,
                 ]);
             } else if ($request->type === 'quiz') {
                 $quiz = LessonQuiz::create([
@@ -159,6 +158,7 @@ class LessonCourseController extends Controller
             $data['content'] = $material ? [
                 'id' => $material->id,
                 'material' => $material->content,
+                'visible' => $material->visible,
             ] : null;
         } elseif ($lesson->type === 'quiz') {
             $quiz = $lesson->quiz->first();
@@ -196,6 +196,7 @@ class LessonCourseController extends Controller
                 'title' => 'required|string|max:255',
                 'materialContent' => 'required_if:type,material',
                 'quizContent' => 'required_if:type,quiz|array',
+                'visible' => 'nullable|boolean',
             ]);
 
             $lesson = LessonCourse::with(['materials', 'quiz.questions.answerOptions'])->find($lessonId);
@@ -218,6 +219,9 @@ class LessonCourseController extends Controller
                 $oldContent = $material->content ?? '';
                 $newContent = $this->handleWysiwygUpdate($oldContent, $request->materialContent);
                 $material->content = $newContent;
+                if ($request->has('visible')) {
+                    $material->visible = (bool)$request->visible;
+                }
                 $material->save();
             } elseif ($lesson->type === 'quiz') {
                 $quiz = $lesson->quiz->first();
