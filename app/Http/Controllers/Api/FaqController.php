@@ -25,6 +25,17 @@ class FaqController extends Controller
         );
     }
 
+    public function indexPublic()
+    {
+        try {
+            $faqs = Faq::orderBy('created_at', 'desc')->select('question', 'answer')->get();
+            $data = $faqs->isNotEmpty() ? $faqs : [];
+            return new PostResource(true, 'All FAQs retrieved successfully', $data);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to retrieve FAQs: ' . $e->getMessage(), []);
+        }
+    }
+
     public function store(Request $request)
     {
         try {
