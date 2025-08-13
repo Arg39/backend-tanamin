@@ -45,7 +45,9 @@ Route::get('/instructor', [DashboardController::class, 'getInstructor']);
 Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
 Route::get('/tanamin-course/{courseId}', [DetailCourseController::class, 'showDetail']);
 Route::get('/tanamin-courses/{courseId}/attribute', [DetailCourseController::class, 'getDetailAttribute']);
+Route::get('/tanamin-courses/{courseId}/material', [DetailCourseController::class, 'getMaterialPublic']);
 Route::get('/tanamin-courses/{courseId}/instructor', [DetailCourseController::class, 'getDetailInstructor']);
+Route::get('/tanamin-courses/{courseId}/other-instructor-courses', [DetailCourseController::class, 'getOtherCoursesInstructor']);
 
 // ───────────────────────────────
 // Student Role

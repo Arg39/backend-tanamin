@@ -38,13 +38,17 @@ class DetailCourseResource extends JsonResource
         $instructor = $this->whenLoaded('instructor', function () {
             return [
                 'id' => $this->instructor->id,
-                'photo_profile' => url('storage/' . $this->instructor->photo_profile),
+                'photo_profile' => $this->instructor->photo_profile 
+                    ? url('storage/' . $this->instructor->photo_profile) 
+                    : null,
                 'name' => $this->instructor->full_name,
             ];
         }, function () {
             return [
                 'id' => $this->instructor->id ?? null,
-                'photo_profile' => url('storage/' . $this->instructor->photo_profile ?? null),
+                'photo_profile' => !empty($this->instructor->photo_profile) 
+                    ? url('storage/' . $this->instructor->photo_profile) 
+                    : null,
                 'name' => $this->instructor->full_name ?? null,
             ];
         });

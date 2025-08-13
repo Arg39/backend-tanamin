@@ -21,7 +21,7 @@ class UserResource extends JsonResource
             return $path ? url('storage/' . ltrim($path, '/')) : null;
         };
 
-        return [
+        $data = [
             'id' => $this->id,
             'role' => $this->role,
             'first_name' => $this->first_name,
@@ -40,5 +40,11 @@ class UserResource extends JsonResource
                 'update_password' => $detail->update_password ?? null,
             ],
         ];
+
+        if ($this->role === 'instructor') {
+            $data['total_courses'] = $this->courses ? $this->courses->count() : 0;
+        }
+
+        return $data;
     }
 }
