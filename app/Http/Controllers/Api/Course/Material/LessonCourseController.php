@@ -178,7 +178,7 @@ class LessonCourseController extends Controller
                         'options' => $options,
                     ];
                 }
-        
+
                 $data['content'] = $content;
             } else {
                 $data['quiz'] = null;
@@ -230,7 +230,7 @@ class LessonCourseController extends Controller
                 }
 
                 $existingQuestions = $quiz->questions->keyBy('id');
-                $requestQuestions = collect($request->quizContent)->keyBy(function($q) {
+                $requestQuestions = collect($request->quizContent)->keyBy(function ($q) {
                     return $q['id'] ?? null;
                 });
 

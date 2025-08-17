@@ -16,7 +16,7 @@ class DetailCourseResource extends JsonResource
             $now = Carbon::now();
             $start = $this->discount_start_at ? Carbon::parse($this->discount_start_at) : null;
             $end = $this->discount_end_at ? Carbon::parse($this->discount_end_at)->endOfDay() : null;
-        
+
             $isActive = false;
             if ($start && $end) {
                 $isActive = $now->between($start, $end);
@@ -25,7 +25,7 @@ class DetailCourseResource extends JsonResource
             } elseif (!$start && $end) {
                 $isActive = $now->lessThanOrEqualTo($end);
             }
-        
+
             if ($isActive) {
                 $discount = [
                     'type' => $this->discount_type,
@@ -38,16 +38,16 @@ class DetailCourseResource extends JsonResource
         $instructor = $this->whenLoaded('instructor', function () {
             return [
                 'id' => $this->instructor->id,
-                'photo_profile' => $this->instructor->photo_profile 
-                    ? url('storage/' . $this->instructor->photo_profile) 
+                'photo_profile' => $this->instructor->photo_profile
+                    ? url('storage/' . $this->instructor->photo_profile)
                     : null,
                 'name' => $this->instructor->full_name,
             ];
         }, function () {
             return [
                 'id' => $this->instructor->id ?? null,
-                'photo_profile' => !empty($this->instructor->photo_profile) 
-                    ? url('storage/' . $this->instructor->photo_profile) 
+                'photo_profile' => !empty($this->instructor->photo_profile)
+                    ? url('storage/' . $this->instructor->photo_profile)
                     : null,
                 'name' => $this->instructor->full_name ?? null,
             ];
@@ -67,7 +67,7 @@ class DetailCourseResource extends JsonResource
         });
 
         // Hitung participants (jumlah user yang mengambil course)
-        $participants = method_exists($this, 'participants') 
+        $participants = method_exists($this, 'participants')
             ? $this->participants()->count()
             : (property_exists($this, 'participants') ? $this->participants : 0);
 
@@ -83,7 +83,7 @@ class DetailCourseResource extends JsonResource
         $totalQuizzes = \App\Models\LessonQuiz::whereIn('lesson_id', $lessonIds)->count();
 
         // Format updated_at
-        $updatedAt = $this->updated_at 
+        $updatedAt = $this->updated_at
             ? Carbon::parse($this->updated_at)->locale('id')->isoFormat('D MMMM Y')
             : null;
 

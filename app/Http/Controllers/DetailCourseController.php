@@ -50,7 +50,7 @@ class DetailCourseController extends Controller
     {
         try {
             $attributes = CourseAttribute::where('id_course', $courseId)->get();
-    
+
             if ($attributes->isEmpty()) {
                 return new PostResource(
                     false,
@@ -58,12 +58,12 @@ class DetailCourseController extends Controller
                     null
                 );
             }
-    
+
             $grouped = [];
             foreach ($attributes as $attr) {
                 $grouped[$attr->type][] = $attr->content;
             }
-    
+
             return new PostResource(
                 true,
                 'Course attributes retrieved successfully.',
@@ -84,15 +84,17 @@ class DetailCourseController extends Controller
             $moduleIds = ModuleCourse::where('course_id', $courseId)->pluck('id');
             if ($moduleIds->isEmpty()) {
                 return new PostResource(
-                    true, 'No modules found for this course.', null
+                    true,
+                    'No modules found for this course.',
+                    null
                 );
             }
-    
+
             $lessons = LessonCourse::whereIn('module_id', $moduleIds)->get(['id', 'title']);
             if ($lessons->isEmpty()) {
                 return new PostResource(true, 'No lessons found for this course.', null);
             }
-    
+
             $result = [];
             foreach ($lessons as $lesson) {
                 $materials = LessonMaterial::where('lesson_id', $lesson->id)
@@ -106,7 +108,7 @@ class DetailCourseController extends Controller
                     ];
                 }
             }
-    
+
             return new PostResource(
                 true,
                 'Visible materials retrieved successfully.',
@@ -125,7 +127,7 @@ class DetailCourseController extends Controller
     {
         try {
             $course = Course::where('id', $courseId)->where('status', 'published')->first();
-    
+
             if (!$course) {
                 return new PostResource(
                     false,
@@ -133,9 +135,9 @@ class DetailCourseController extends Controller
                     null
                 );
             }
-    
+
             $instructor = $course->instructor;
-    
+
             if (!$instructor) {
                 return new PostResource(
                     false,
@@ -143,7 +145,7 @@ class DetailCourseController extends Controller
                     null
                 );
             }
-    
+
             return new PostResource(
                 true,
                 'Profil pengguna berhasil diambil.',
@@ -162,26 +164,26 @@ class DetailCourseController extends Controller
     {
         try {
             $course = Course::where('id', $courseId)->where('status', 'published')->first();
-    
+
             if (!$course) {
                 return new PostResource(true, 'Course not found.', null);
             }
-    
+
             $instructorId = $course->id_instructor;
-    
+
             $courses = Course::where('id_instructor', $instructorId)
                 ->where('status', 'published')
                 ->where('id', '!=', $courseId)
                 ->inRandomOrder()
                 ->limit(8)
                 ->get();
-    
+
             if ($courses->isEmpty()) {
                 return new PostResource(true, 'No other courses found for this instructor.', null);
             }
-    
+
             $resource = CardCourseResource::collection($courses)->resolve(request());
-    
+
             return new PostResource(true, 'Other courses retrieved successfully.', $resource);
         } catch (\Exception $e) {
             return new PostResource(false, 'An error occurred: ' . $e->getMessage(), null);

@@ -15,7 +15,7 @@ class CompanyProfileDetailResource extends JsonResource
         $this->statistics = $data['statistics'];
         parent::__construct($data);
     }
-    
+
     public function toArray($request)
     {
         return [

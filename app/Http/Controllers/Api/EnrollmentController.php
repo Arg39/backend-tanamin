@@ -151,7 +151,6 @@ class EnrollmentController extends Controller
 
             Log::warning('Order ID not found: ' . $orderId);
             return response()->json(['message' => 'Not Found'], 404);
-
         } catch (\Exception $e) {
             Log::error('Midtrans callback error: ' . $e->getMessage());
             return response()->json(['message' => 'Error'], 500);

@@ -87,34 +87,34 @@ class CategoryController extends Controller
         if ($user->role !== 'admin') {
             return new PostResource(false, 'Unauthorized', null);
         }
-    
+
         $category = Category::find($id);
-    
+
         if (!$category) {
             return new PostResource(false, 'Category not found', null);
         }
-    
+
         // Validasi input
         $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-    
+
         // Update file jika ada
         if ($request->hasFile('image')) {
             // Hapus gambar lama jika ada
             if ($category->image) {
                 Storage::disk('public')->delete($category->image);
             }
-    
+
             $imagePath = $request->file('image')->store('categories', 'public');
             $category->image = $imagePath;
         }
-    
+
         // Update nama kategori
         $category->name = $request->input('name');
         $category->save();
-    
+
         return new PostResource(true, 'Category updated successfully', $category);
     }
 

@@ -14,16 +14,16 @@ class ImageController extends Controller
             'width' => 'nullable|integer|min:50|max:2000',
             'height' => 'nullable|integer|min:50|max:2000',
         ]);
-    
+
         $fullPath = $path . '/' . $filename;
-    
+
         if (!Storage::exists($fullPath)) {
             return response()->json(['message' => 'Image not found'], 404);
         }
-    
+
         $image = Storage::get($fullPath);
         $mimeType = Storage::mimeType($fullPath);
-    
+
         return response($image, 200)->header('Content-Type', $mimeType);
     }
 

@@ -20,7 +20,7 @@ class UserProfileController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-    
+
         $input = $request->all();
         if (isset($input['social_media'])) {
             if (is_string($input['social_media']) && !empty($input['social_media'])) {
@@ -30,7 +30,7 @@ class UserProfileController extends Controller
                 $input['social_media'] = [];
             }
         }
-    
+
         $validator = Validator::make($input, [
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
@@ -43,13 +43,13 @@ class UserProfileController extends Controller
             'photo_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'photo_cover' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4096',
         ]);
-    
+
         if ($validator->fails()) {
             return (new PostResource(false, 'Validation errors', $validator->errors()))
                 ->response()
                 ->setStatusCode(422);
         }
-    
+
         if ($request->hasFile('photo_profile')) {
             if ($user->photo_profile && Storage::disk('public')->exists($user->photo_profile)) {
                 Storage::disk('public')->delete($user->photo_profile);
@@ -57,12 +57,12 @@ class UserProfileController extends Controller
             $photoProfilePath = $request->file('photo_profile')->store('profile_photos', 'public');
             $user->photo_profile = $photoProfilePath;
         }
-    
+
         $user->fill(array_intersect_key($input, array_flip(['first_name', 'last_name', 'email', 'username', 'telephone'])));
         $user->save();
-    
+
         $detailData = array_intersect_key($input, array_flip(['expertise', 'about', 'social_media']));
-    
+
         if ($request->hasFile('photo_cover')) {
             $detail = $user->detail;
             if ($detail && $detail->photo_cover && Storage::disk('public')->exists($detail->photo_cover)) {
@@ -71,16 +71,16 @@ class UserProfileController extends Controller
             $photoCoverPath = $request->file('photo_cover')->store('cover_photos', 'public');
             $detailData['photo_cover'] = $photoCoverPath;
         }
-    
+
         if (!empty($detailData)) {
             $user->detail()->updateOrCreate(
                 ['id_user' => $user->id],
                 $detailData
             );
         }
-    
+
         $user->load('detail');
-    
+
         return (new PostResource(true, 'Profile updated successfully', $user))
             ->response()
             ->setStatusCode(200);
@@ -133,7 +133,7 @@ class UserProfileController extends Controller
             ->setStatusCode(200);
     }
 
-        /**
+    /**
      * Get user profile and details by id (for admin).
      */
     public function getProfileById($id)
@@ -156,17 +156,17 @@ class UserProfileController extends Controller
         $query = User::where('role', 'instructor');
         $filterable = ['first_name', 'last_name', 'email'];
         $searchable = ['first_name', 'last_name', 'email'];
-    
+
         if ($request->filled('name')) {
             $name = $request->input('name');
             $query->where(function ($q) use ($name) {
                 $q->where('first_name', 'like', "%{$name}%")
-                  ->orWhere('last_name', 'like', "%{$name}%");
+                    ->orWhere('last_name', 'like', "%{$name}%");
             });
         }
-    
+
         $paginated = $this->filterQuery($query, $request, $filterable, $searchable);
-    
+
         return (new TableResource(true, 'Instructors retrieved successfully', ['data' => $paginated]))
             ->response()
             ->setStatusCode(200);
@@ -183,7 +183,7 @@ class UserProfileController extends Controller
                 $name = $request->input('name');
                 $query->where(function ($q) use ($name) {
                     $q->where('first_name', 'like', "%{$name}%")
-                    ->orWhere('last_name', 'like', "%{$name}%");
+                        ->orWhere('last_name', 'like', "%{$name}%");
                 });
             }
 
@@ -203,14 +203,14 @@ class UserProfileController extends Controller
     {
         try {
             $instructors = User::where('role', 'instructor')
-            ->select('id', 'first_name', 'last_name')
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => trim($user->first_name . ' ' . $user->last_name),
-                ];
-            });
+                ->select('id', 'first_name', 'last_name')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => trim($user->first_name . ' ' . $user->last_name),
+                    ];
+                });
 
             if ($instructors->isEmpty()) {
                 return new PostResource(false, 'No instructor found', []);

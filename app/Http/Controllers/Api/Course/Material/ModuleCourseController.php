@@ -133,7 +133,7 @@ class ModuleCourseController extends Controller
             $modules = ModuleCourse::where('course_id', $movedModule->course_id)
                 ->orderBy('order', 'asc')
                 ->get()
-                ->filter(fn ($mod) => $mod->id !== $movedModule->id)
+                ->filter(fn($mod) => $mod->id !== $movedModule->id)
                 ->values()
                 ->all();
 

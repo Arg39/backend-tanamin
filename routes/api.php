@@ -70,14 +70,14 @@ Route::middleware('role:admin')->group(function () {
 
     // get image
     Route::get('image/{path}/{filename}', [ImageController::class, 'getImage'])->where('path', '.*');
-    
+
     // category
     Route::post('category', [CategoryController::class, 'store']);
     Route::get('category/{id}', [CategoryController::class, 'getCategoryById']);
     Route::match(['put', 'post'], 'category/{id}', [CategoryController::class, 'update']);
     Route::delete('category/{id}', [CategoryController::class, 'destroy']);
     Route::get('categories-select', [CategoryController::class, 'getCategoriesForSelect']);
-    
+
     // course
     Route::get('courses', [AdminCourseController::class, 'index']);
     Route::post('course', [AdminCourseController::class, 'store']);
@@ -113,7 +113,7 @@ Route::middleware('role:admin')->group(function () {
     Route::get('/faqs', [FaqController::class, 'index']);
     Route::get('/faq/{id}', [FaqController::class, 'show']);
     Route::post('/faq', [FaqController::class, 'store']);
-    Route::put ('/faq/{id}', [FaqController::class, 'update']);
+    Route::put('/faq/{id}', [FaqController::class, 'update']);
     Route::delete('/faq/{id}', [FaqController::class, 'destroy']);
 
     // certificate
@@ -188,7 +188,6 @@ Route::middleware('role:instructor,student')->group(function () {
 // ───────────────────────────────
 // All Role
 // ───────────────────────────────
-Route::middleware('role:admin,instructor,student')->group(function () {
-});
+Route::middleware('role:admin,instructor,student')->group(function () {});
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);

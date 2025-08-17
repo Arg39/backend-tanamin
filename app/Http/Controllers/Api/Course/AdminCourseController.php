@@ -27,23 +27,26 @@ class AdminCourseController extends Controller
         try {
             $query = Course::with(['category:id,name', 'instructor:id,first_name,last_name'])
                 ->select(['id', 'id_category', 'id_instructor', 'title', 'price', 'level', 'image', 'status', 'detail', 'created_at', 'updated_at']);
-    
+
             if ($request->filled('search')) {
                 $query->where('title', 'like', '%' . $request->input('search') . '%');
             }
-    
+
             if ($request->filled('category')) {
                 $query->where('id_category', $request->input('category'));
             }
-    
+
             if ($request->filled('instructor')) {
                 $query->where('id_instructor', $request->input('instructor'));
             }
-    
+
             $courses = $this->filterQuery($query, $request, [
-                'date', 'id_instructor', 'level', 'status'
+                'date',
+                'id_instructor',
+                'level',
+                'status'
             ]);
-    
+
             return new TableResource(true, 'Courses retrieved successfully', [
                 'data' => CourseResource::collection($courses),
             ]);

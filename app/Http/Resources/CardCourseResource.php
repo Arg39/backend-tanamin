@@ -18,7 +18,7 @@ class CardCourseResource extends JsonResource
             'id' => $this->id,
             'image' => $this->image ? asset('storage/' . $this->image) : null,
             'title' => $this->title,
-            'instructor' => $this->instructor 
+            'instructor' => $this->instructor
                 ? trim($this->instructor->first_name . ' ' . $this->instructor->last_name)
                 : null,
             'total_material' => $this->getTotalMaterialsAttribute(),

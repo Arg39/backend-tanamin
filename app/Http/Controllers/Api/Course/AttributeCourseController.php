@@ -31,9 +31,17 @@ class AttributeCourseController extends Controller
                 );
             });
 
-            return new PostResource(true, 'Data berhasil diambil.', $grouped);
+            return new PostResource(
+                true,
+                'Data berhasil diambil.',
+                $grouped
+            );
         } catch (\Exception $e) {
-            return new PostResource(false, 'Gagal menampilkan atribut kursus: ' . $e->getMessage(), null);
+            return new PostResource(
+                false,
+                'Gagal menampilkan atribut kursus: ' . $e->getMessage(),
+                null
+            );
         }
     }
 
@@ -57,10 +65,14 @@ class AttributeCourseController extends Controller
                 'type' => $attribute->type,
             ];
 
-            return new PostResource(true, 'Atribut kursus berhasil ditambahkan.', (new AttributeResource($attribute))->withExtra($typeData)->resolve(request()));
+            return new PostResource(
+                true,
+                'Atribut kursus berhasil ditambahkan.',
+                (new AttributeResource($attribute))->withExtra($typeData)->resolve(request())
+            );
         } catch (\Exception $e) {
             return new PostResource(false, 'Gagal membuat atribut kursus: ' . $e->getMessage(), null);
-        }  
+        }
     }
 
     // show course attribute by ID
@@ -70,14 +82,22 @@ class AttributeCourseController extends Controller
             $attribute = CourseAttribute::where('id', $attributeId)
                 ->where('id_course', $courseId)
                 ->firstOrFail();
-            
+
             $typeData = [
                 'type' => $attribute->type,
             ];
 
-            return new PostResource(true, 'Atribut kursus berhasil ditemukan.', (new AttributeResource($attribute))->withExtra($typeData)->resolve(request()));
+            return new PostResource(
+                true,
+                'Atribut kursus berhasil ditemukan.',
+                (new AttributeResource($attribute))->withExtra($typeData)->resolve(request())
+            );
         } catch (\Exception $e) {
-            return new PostResource(false, 'Gagal menampilkan atribut kursus: ' . $e->getMessage(), null);
+            return new PostResource(
+                false,
+                'Gagal menampilkan atribut kursus: ' . $e->getMessage(),
+                null
+            );
         }
     }
 
@@ -89,19 +109,27 @@ class AttributeCourseController extends Controller
                 'type' => 'required|string|in:description,prerequisite',
                 'content' => 'required|string',
             ]);
-    
+
             $attribute = CourseAttribute::where('id', $attributeId)
                 ->where('id_course', $courseId)
                 ->firstOrFail();
-    
+
             $attribute->update([
                 'type' => $validated['type'],
                 'content' => $validated['content'],
             ]);
-    
-            return new PostResource(true, 'Atribut kursus berhasil diperbarui.', (new AttributeResource($attribute))->resolve(request()));
+
+            return new PostResource(
+                true,
+                'Atribut kursus berhasil diperbarui.',
+                (new AttributeResource($attribute))->resolve(request())
+            );
         } catch (\Exception $e) {
-            return new PostResource(false, 'Gagal memperbarui atribut kursus: ' . $e->getMessage(), null);
+            return new PostResource(
+                false,
+                'Gagal memperbarui atribut kursus: ' . $e->getMessage(),
+                null
+            );
         }
     }
 
@@ -115,9 +143,17 @@ class AttributeCourseController extends Controller
 
             $attribute->delete();
 
-            return new PostResource(true, 'Atribut kursus berhasil dihapus.', null);
+            return new PostResource(
+                true,
+                'Atribut kursus berhasil dihapus.',
+                null
+            );
         } catch (\Exception $e) {
-            return new PostResource(false, 'Gagal menghapus atribut kursus: ' . $e->getMessage(), null);
-        }    
+            return new PostResource(
+                false,
+                'Gagal menghapus atribut kursus: ' . $e->getMessage(),
+                null
+            );
+        }
     }
 }

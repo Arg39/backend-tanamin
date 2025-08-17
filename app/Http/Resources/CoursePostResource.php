@@ -19,9 +19,18 @@ class CoursePostResource extends JsonResource
     {
         if (!$date) return null;
         $months = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
         ];
         $dt = \Carbon\Carbon::parse($date);
         $month = $months[(int)$dt->format('m')];
@@ -57,7 +66,7 @@ class CoursePostResource extends JsonResource
             // Ensure price doesn't go below zero
             $discounted_price = max($discounted_price, 0);
         }
-    
+
         return [
             'id' => $this->id,
             'id_category' => $this->id_category,
