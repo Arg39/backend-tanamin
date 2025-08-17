@@ -28,7 +28,7 @@ class DashboardController extends Controller
                     $query->where('status', 'published');
                 }])
                 ->orderByDesc('published_courses_count')
-                ->take(8)
+                ->limit(8) // limit to 8 instructors
                 ->get();
 
             $data = $instructors->map(function ($instructor) {

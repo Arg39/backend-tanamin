@@ -133,9 +133,6 @@ class UserProfileController extends Controller
             ->setStatusCode(200);
     }
 
-    /**
-     * Get user profile and details by id (for admin).
-     */
     public function getProfileById($id)
     {
         $user = User::with('detail')->find($id);
@@ -153,23 +150,56 @@ class UserProfileController extends Controller
 
     public function getInstructors(Request $request)
     {
-        $query = User::where('role', 'instructor');
-        $filterable = ['first_name', 'last_name', 'email'];
-        $searchable = ['first_name', 'last_name', 'email'];
+        try {
+            $query = User::where('role', 'instructor')->with('categoriesInstructor');
+            $filterable = ['first_name', 'last_name', 'email'];
+            $searchable = ['first_name', 'last_name', 'email'];
 
-        if ($request->filled('name')) {
-            $name = $request->input('name');
-            $query->where(function ($q) use ($name) {
-                $q->where('first_name', 'like', "%{$name}%")
-                    ->orWhere('last_name', 'like', "%{$name}%");
+            if ($request->filled('name')) {
+                $name = $request->input('name');
+                $query->where(function ($q) use ($name) {
+                    $q->where('first_name', 'like', "%{$name}%")
+                        ->orWhere('last_name', 'like', "%{$name}%");
+                });
+            }
+
+            $sortBy = $request->input('sortBy');
+            $sortOrder = $request->input('sortOrder', 'asc');
+            if ($sortBy) {
+                if (strtolower($sortBy) === 'nama' || strtolower($sortBy) === 'full_name') {
+                    $query->orderBy('first_name', $sortOrder)->orderBy('last_name', $sortOrder);
+                } elseif (in_array($sortBy, $filterable)) {
+                    $query->orderBy($sortBy, $sortOrder);
+                }
+            }
+
+            $paginated = $this->filterQuery($query, $request, $filterable, $searchable);
+
+            $items = collect(method_exists($paginated, 'items') ? $paginated->items() : $paginated);
+
+            $items->transform(function ($user) {
+                return [
+                    'id'   => $user->id,
+                    'full_name'   => $user->full_name,
+                    'email'       => $user->email,
+                    'status'      => $user->status,
+                    'category'    => $user->categoriesInstructor->pluck('name')->first(),
+                    'created_at'  => $user->created_at,
+                ];
             });
+
+            if (method_exists($paginated, 'setCollection')) {
+                $paginated->setCollection($items);
+            }
+
+            return (new TableResource(true, 'Instructors retrieved successfully', ['data' => $paginated]))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new TableResource(false, 'Failed to retrieve instructors: ' . $e->getMessage(), []))
+                ->response()
+                ->setStatusCode(500);
         }
-
-        $paginated = $this->filterQuery($query, $request, $filterable, $searchable);
-
-        return (new TableResource(true, 'Instructors retrieved successfully', ['data' => $paginated]))
-            ->response()
-            ->setStatusCode(200);
     }
 
     public function getStudents(Request $request)
@@ -199,10 +229,19 @@ class UserProfileController extends Controller
         }
     }
 
-    public function getInstructorForSelect()
+    public function getInstructorForSelect(Request $request)
     {
         try {
-            $instructors = User::where('role', 'instructor')
+            $query = User::where('role', 'instructor');
+
+            if ($request->filled('id_category')) {
+                $idCategory = $request->input('id_category');
+                $query->whereHas('categoriesInstructor', function ($q) use ($idCategory) {
+                    $q->where('categories.id', $idCategory);
+                });
+            }
+
+            $instructors = $query
                 ->select('id', 'first_name', 'last_name')
                 ->get()
                 ->map(function ($user) {
@@ -213,14 +252,125 @@ class UserProfileController extends Controller
                 });
 
             if ($instructors->isEmpty()) {
-                return new PostResource(false, 'No instructor found', []);
+                return (new PostResource(false, 'No instructor found', []))
+                    ->response()
+                    ->setStatusCode(200);
             }
 
             return (new PostResource(true, 'Instructor retrieved successfully', $instructors))
                 ->response()
                 ->setStatusCode(200);
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to retrieve instructor: ' . $e->getMessage(), null);
+            return (new PostResource(false, 'Failed to retrieve instructor: ' . $e->getMessage(), null))
+                ->response()
+                ->setStatusCode(500);
+        }
+    }
+
+    public function getInstructorListByCategory(Request $request)
+    {
+        try {
+            $categoryId = $request->input('category_id');
+            $more = $request->input('more');
+            $limit = 4; // Number of instructors per "page"
+
+            // If category_id and more are present, return only the next instructors for that category
+            if ($categoryId && $more) {
+                $category = \App\Models\Category::find($categoryId);
+                if (!$category) {
+                    return (new PostResource(false, 'Category not found.', null))
+                        ->response()
+                        ->setStatusCode(404);
+                }
+
+                // Calculate offset
+                $offset = $limit * intval($more);
+
+                // Get instructors for this category, skipping previous ones
+                $instructors = User::where('role', 'instructor')
+                    ->whereHas('categoriesInstructor', function ($q) use ($category) {
+                        $q->where('categories.id', $category->id);
+                    })
+                    ->with('detail')
+                    ->skip($offset)
+                    ->take($limit)
+                    ->get();
+
+                // Prepare user data
+                $userData = $instructors->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->full_name,
+                        'course_held' => $user->courses()->count(),
+                        'photo_profile' => $user->photo_profile,
+                        'expertise' => optional($user->detail)->expertise,
+                    ];
+                })->values();
+
+                // Check if there are more instructors after this batch
+                $totalInstructors = User::where('role', 'instructor')
+                    ->whereHas('categoriesInstructor', function ($q) use ($category) {
+                        $q->where('categories.id', $category->id);
+                    })
+                    ->count();
+
+                $hasMore = ($offset + $limit) < $totalInstructors;
+
+                $result = [
+                    'user' => $userData,
+                    'has_more' => $hasMore,
+                ];
+
+                return (new PostResource(true, 'List of instructors retrieved successfully.', [$result]))
+                    ->response()
+                    ->setStatusCode(200);
+            }
+
+            // Default: return grouped by category, first 4 instructors per category
+            $categories = \App\Models\Category::all();
+            $result = [];
+
+            foreach ($categories as $category) {
+                // Get instructors for this category (limit 5 to check if more than 4)
+                $instructors = User::where('role', 'instructor')
+                    ->whereHas('categoriesInstructor', function ($q) use ($category) {
+                        $q->where('categories.id', $category->id);
+                    })
+                    ->with('detail')
+                    ->take($limit + 1)
+                    ->get();
+
+                // Prepare user data (max 4)
+                $userData = $instructors->take($limit)->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->full_name,
+                        'course_held' => $user->courses()->count(),
+                        'photo_profile' => $user->photo_profile,
+                        'expertise' => optional($user->detail)->expertise,
+                    ];
+                })->values();
+
+                // Check if there are more than 4 instructors
+                $hasMore = $instructors->count() > $limit;
+
+                $result[] = [
+                    'category' => [
+                        'title' => $category->name,
+                        'id' => $category->id,
+                    ],
+                    'user' => $userData,
+                    'has_more' => $hasMore,
+                ];
+            }
+
+            return (new PostResource(true, 'List of instructors retrieved successfully.', $result))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new PostResource(false, 'Failed to retrieve instructor list by category: ' . $e->getMessage(), null))
+                ->response()
+                ->setStatusCode(500);
         }
     }
 

@@ -24,18 +24,5 @@ class UsersTableSeeder extends Seeder
             'status' => 'active',
             'photo_profile' => null,
         ]);
-        User::create([
-            'id' => (string) Str::uuid(),
-            'role' => 'instructor',
-            'first_name' => 'Instructor',
-            'last_name' => 'User',
-            'username' => 'instructor',
-            'email' => 'instructor@coruse.co',
-            'telephone' => '08123456789',
-            'password' => Hash::make('abc123'),
-            'token' => null,
-            'status' => 'active',
-            'photo_profile' => null,
-        ]);
     }
 }

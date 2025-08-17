@@ -9,7 +9,7 @@ class UserDetail extends Model
 {
     use HasFactory;
 
-    protected $table = 'user_detail';
+    protected $table = 'user_details';
 
     // Set primary key to 'id_user'
     protected $primaryKey = 'id_user';

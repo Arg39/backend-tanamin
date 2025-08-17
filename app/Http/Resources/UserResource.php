@@ -32,6 +32,7 @@ class UserResource extends JsonResource
             'status' => $this->status,
             'photo_profile' => $storageUrl($this->photo_profile),
             'created_at' => $this->created_at,
+            'category_instructor' => $this->role === 'instructor' ? $this->categoriesInstructor->pluck('name')->first() : null,
             'detail' => [
                 'expertise' => $detail->expertise ?? null,
                 'about' => $detail->about ?? null,

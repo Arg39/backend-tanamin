@@ -27,7 +27,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('user_detail', function (Blueprint $table) {
+        Schema::create('user_details', function (Blueprint $table) {
             $table->uuid('id_user')->primary(); // shared primary key from users.id
             $table->string('expertise')->nullable();
             $table->text('about')->nullable();

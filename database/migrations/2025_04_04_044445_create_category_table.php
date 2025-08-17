@@ -17,6 +17,17 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('instructor_category', function (Blueprint $table) {
+            $table->uuid('instructor_id');
+            $table->uuid('category_id');
+            $table->timestamps();
+
+            $table->primary(['instructor_id', 'category_id']);
+
+            $table->foreign('instructor_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+        });
     }
 
     /**
@@ -24,6 +35,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('instructor_category');
         Schema::dropIfExists('categories');
     }
 };

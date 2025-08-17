@@ -12,7 +12,7 @@ class CardCourseController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 12);
         $courses = Course::where('status', 'published')
             ->paginate($perPage);
 

@@ -26,10 +26,22 @@ class AdminCourseController extends Controller
     {
         try {
             $query = Course::with(['category:id,name', 'instructor:id,first_name,last_name'])
-                ->select(['id', 'id_category', 'id_instructor', 'title', 'price', 'level', 'image', 'status', 'detail', 'created_at', 'updated_at']);
+                ->select([
+                    'id',
+                    'id_category',
+                    'id_instructor',
+                    'title',
+                    'price',
+                    'level',
+                    'image',
+                    'status',
+                    'detail',
+                    'created_at',
+                    'updated_at'
+                ]);
 
             if ($request->filled('search')) {
-                $query->where('title', 'like', '%' . $request->input('search') . '%');
+                $query->search($request->input('search'));
             }
 
             if ($request->filled('category')) {
@@ -55,7 +67,6 @@ class AdminCourseController extends Controller
                 ->response()->setStatusCode(500);
         }
     }
-
 
     // Store a new course to instructor
     public function store(StoreCourseRequest $request)

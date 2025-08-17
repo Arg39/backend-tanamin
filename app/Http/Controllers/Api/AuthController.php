@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
+use App\Models\Category;
+use App\Models\InstructorCategory;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\UserDetail;
@@ -64,52 +66,68 @@ class AuthController extends Controller
             ->setStatusCode(200);
     }
 
-    /**
-     * Register an admin user.
-     */
     public function registerInstructor(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|string|in:admin,instructor',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'username' => 'required|string|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:6|confirmed',
+                'role' => 'required|string|in:admin,instructor',
+                'id_category' => 'required|uuid',
+            ]);
 
-        if ($validator->fails()) {
-            return (new PostResource(false, 'Validation errors', $validator->errors()))
+            if ($validator->fails()) {
+                return (new PostResource(false, 'Validation errors', $validator->errors()))
+                    ->response()
+                    ->setStatusCode(422);
+            }
+
+            $category = Category::find($request->id_category);
+            if (!$category) {
+                return (new PostResource(false, 'Category not found', null))
+                    ->response()
+                    ->setStatusCode(404);
+            }
+
+            // Split name
+            $nameParts = explode(' ', $request->name, 2);
+            $firstName = $nameParts[0];
+            $lastName = $nameParts[1] ?? '';
+
+            $user = User::create([
+                'id' => \Illuminate\Support\Str::uuid()->toString(),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+            ]);
+
+            UserDetail::create([
+                'id_user' => $user->id,
+                'expertise' => null,
+                'about' => null,
+                'social_media' => null,
+                'photo_cover' => null,
+                'update_password' => false,
+            ]);
+
+            InstructorCategory::create([
+                'instructor_id' => $user->id,
+                'category_id' => $request->id_category,
+            ]);
+
+            return (new PostResource(true, 'Admin/Instructor registered successfully', null))
                 ->response()
-                ->setStatusCode(422);
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new PostResource(false, 'Failed to register instructor', ['error' => $e->getMessage()]))
+                ->response()
+                ->setStatusCode(500);
         }
-
-        // Split name
-        $nameParts = explode(' ', $request->name, 2);
-        $firstName = $nameParts[0];
-        $lastName = $nameParts[1] ?? '';
-
-        $user = User::create([
-            'id' => \Illuminate\Support\Str::uuid()->toString(),
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
-
-        UserDetail::create([
-            'id_user' => $user->id,
-            'expertise' => null,
-            'about' => null,
-            'social_media' => null,
-            'photo_cover' => null,
-            'update_password' => false,
-        ]);
-
-        return (new PostResource(true, 'Admin/Instructor registered successfully', null))
-            ->response()
-            ->setStatusCode(200);
     }
 
     public function login(Request $request)

@@ -100,6 +100,17 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Course::class, 'id_instructor', 'id');
     }
 
+    public function categoriesInstructor()
+    {
+        return $this->belongsToMany(
+            Category::class,
+            'instructor_category',
+            'instructor_id',
+            'category_id'
+        );
+    }
+
+
     // Add accessor for full name
     public function getFullNameAttribute()
     {
@@ -107,5 +118,5 @@ class User extends Authenticatable implements JWTSubject
             return trim("{$this->first_name} {$this->last_name}");
         }
         return $this->name;
-    }    
+    }
 }

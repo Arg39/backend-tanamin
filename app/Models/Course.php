@@ -19,11 +19,11 @@ class Course extends Model
         'id_instructor',
         'title',
         'image',
-        'level', // ['beginner', 'intermediate', 'advance']
-        'status', // ['new', 'edited', 'awaiting_approval', 'published']
+        'level',
+        'status',
         'detail',
         'price',
-        'discount_type', // ['percent', 'nominal']
+        'discount_type',
         'discount_value',
         'discount_start_at',
         'discount_end_at',
@@ -80,7 +80,6 @@ class Course extends Model
         return $this->belongsToMany(User::class, 'course_participants', 'course_id', 'user_id');
     }
 
-    // Use course_reviews for ratings
     public function reviews()
     {
         return $this->hasMany(CourseReview::class, 'id_course', 'id');
@@ -118,10 +117,15 @@ class Course extends Model
         )->count();
     }
 
-    // filtering
+    // 🔎 Flexible search (pecah kata agar lebih cocok)
     public function scopeSearch($query, $search)
     {
-        return $query->where('title', 'like', '%' . $search . '%');
+        $terms = preg_split('/\s+/', trim($search)); // pecah berdasarkan spasi
+        return $query->where(function ($q) use ($terms) {
+            foreach ($terms as $term) {
+                $q->where('title', 'like', '%' . $term . '%');
+            }
+        });
     }
 
     public function scopeCategory($query, $categoryId)
