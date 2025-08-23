@@ -49,6 +49,8 @@ Route::get('/tanamin-courses/{courseId}/material', [DetailCourseController::clas
 Route::get('/tanamin-courses/{courseId}/instructor', [DetailCourseController::class, 'getDetailInstructor']);
 Route::get('/tanamin-courses/{courseId}/other-instructor-courses', [DetailCourseController::class, 'getOtherCoursesInstructor']);
 Route::get('/tanamin-courses/instructor-list', [UserProfileController::class, 'getInstructorListByCategory']);
+Route::get('/profile/{id}', [UserProfileController::class, 'getProfileById']);
+Route::get('/tanamin-courses/instructor-courses/{courseId}', [DetailCourseController::class, 'getCoursesFromInstructorId']);
 
 // faq
 Route::get('/faq-tanamin', [FaqController::class, 'indexPublic']);
@@ -89,7 +91,6 @@ Route::middleware('role:admin')->group(function () {
 
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);
-    Route::get('/profile/{id}', [UserProfileController::class, 'getProfileById']);
     Route::patch('/profile/{id}', [UserProfileController::class, 'updateStatus']);
     Route::delete('/profile/{id}', [UserProfileController::class, 'destroy']);
 

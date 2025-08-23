@@ -43,6 +43,15 @@ return new class extends Migration
             $table->unsignedInteger('order')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('company_contacts', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->longText('telephone');
+            $table->longText('email');
+            $table->longText('address');
+            $table->json('social_media')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**

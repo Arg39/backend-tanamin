@@ -160,6 +160,27 @@ class DetailCourseController extends Controller
         }
     }
 
+    public function getCoursesFromInstructorId($instructorId)
+    {
+        try {
+            $courses = Course::where('id_instructor', $instructorId)
+                ->where('status', 'published')
+                ->inRandomOrder()
+                ->limit(8)
+                ->get();
+
+            if ($courses->isEmpty()) {
+                return new PostResource(true, 'No courses found for this instructor.', null);
+            }
+
+            $resource = CardCourseResource::collection($courses)->resolve(request());
+
+            return new PostResource(true, 'Courses retrieved successfully.', $resource);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'An error occurred: ' . $e->getMessage(), null);
+        }
+    }
+
     public function getOtherCoursesInstructor($courseId)
     {
         try {

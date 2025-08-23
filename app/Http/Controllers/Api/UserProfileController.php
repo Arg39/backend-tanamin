@@ -296,15 +296,9 @@ class UserProfileController extends Controller
                     ->take($limit)
                     ->get();
 
-                // Prepare user data
+                // Prepare user data using InstructorResource
                 $userData = $instructors->map(function ($user) {
-                    return [
-                        'id' => $user->id,
-                        'name' => $user->full_name,
-                        'course_held' => $user->courses()->count(),
-                        'photo_profile' => $user->photo_profile,
-                        'expertise' => optional($user->detail)->expertise,
-                    ];
+                    return (new \App\Http\Resources\InstructorResource($user))->resolve(request());
                 })->values();
 
                 // Check if there are more instructors after this batch
@@ -340,15 +334,9 @@ class UserProfileController extends Controller
                     ->take($limit + 1)
                     ->get();
 
-                // Prepare user data (max 4)
+                // Prepare user data (max 4) using InstructorResource
                 $userData = $instructors->take($limit)->map(function ($user) {
-                    return [
-                        'id' => $user->id,
-                        'name' => $user->full_name,
-                        'course_held' => $user->courses()->count(),
-                        'photo_profile' => $user->photo_profile,
-                        'expertise' => optional($user->detail)->expertise,
-                    ];
+                    return (new \App\Http\Resources\InstructorResource($user))->resolve(request());
                 })->values();
 
                 // Check if there are more than 4 instructors
