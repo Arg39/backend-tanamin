@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\Company\CompanyActivityController;
+use App\Http\Controllers\Api\Company\CompanyContactController;
 use App\Http\Controllers\Api\Company\CompanyPartnershipController;
 use App\Http\Controllers\Api\Company\CompanyProfileController;
+use App\Http\Controllers\Api\Company\MessageController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
@@ -31,6 +33,8 @@ use App\Models\CourseAttribute;
 // ───────────────────────────────
 // Public Routes
 // ───────────────────────────────
+
+// authenticate
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
@@ -54,6 +58,13 @@ Route::get('/tanamin-courses/instructor-courses/{courseId}', [DetailCourseContro
 
 // faq
 Route::get('/faq-tanamin', [FaqController::class, 'indexPublic']);
+
+// about company
+Route::get('/company/contact', [CompanyContactController::class, 'detailCompanyContact']);
+Route::get('/company/profile', [CompanyProfileController::class, 'detailCompanyProfile']);
+
+// contact
+Route::post('/message/add', [MessageController::class, 'store']);
 
 // ───────────────────────────────
 // Student Role
@@ -98,8 +109,9 @@ Route::middleware('role:admin')->group(function () {
     Route::get('students', [UserProfileController::class, 'getStudents']);
 
     // company profile
-    Route::get('/company/profile', [CompanyProfileController::class, 'detailCompanyProfile']);
     Route::post('/company/profile', [CompanyProfileController::class, 'storeOrUpdateCompanyProfile']);
+    // company contact
+    Route::post('/company/contact', [CompanyContactController::class, 'storeOrUpdateCompanyContact']);
     // company activity
     Route::get('/company/activities', [CompanyActivityController::class, 'indexCompanyActivity']);
     Route::get('/company/activity/{id}', [CompanyActivityController::class, 'showCompanyActivity']);
