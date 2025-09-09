@@ -23,6 +23,23 @@ class Coupon extends Model
         'used_count',
     ];
 
+    protected $casts = [
+        'start_at' => 'datetime',
+        'end_at' => 'datetime',
+        'is_active' => 'boolean',
+    ];
+
+    // Mutator untuk end_at agar selalu di-set ke jam 23:59:59 jika hanya tanggal
+    public function setEndAtAttribute($value)
+    {
+        $dt = is_string($value) ? \Carbon\Carbon::parse($value) : $value;
+        // Jika waktu jam 00:00:00, set ke 23:59:59
+        if ($dt->hour === 0 && $dt->minute === 0 && $dt->second === 0) {
+            $dt->setTime(23, 59, 59);
+        }
+        $this->attributes['end_at'] = $dt;
+    }
+
     protected static function boot()
     {
         parent::boot();

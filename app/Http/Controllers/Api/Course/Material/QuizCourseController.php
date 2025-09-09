@@ -7,5 +7,8 @@ use Illuminate\Http\Request;
 
 class QuizCourseController extends Controller
 {
-    //
+    public function showQuiz($request, $quizId)
+    {
+        // Logic to fetch a specific quiz by its ID
+    }
 }

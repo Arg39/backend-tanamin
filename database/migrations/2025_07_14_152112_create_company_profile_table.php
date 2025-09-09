@@ -52,6 +52,15 @@ return new class extends Migration
             $table->json('social_media')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('contact_us_messages', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('name');
+            $table->string('email');
+            $table->string('subject');
+            $table->longText('message');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -59,6 +68,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('contact_us_messages');
         Schema::dropIfExists('company_contacts');
         Schema::dropIfExists('company_activities');
         Schema::dropIfExists('company_statistics');

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('course_enrollments', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
 
             // Foreign keys
             $table->uuid('user_id');
@@ -25,10 +25,10 @@ return new class extends Migration
             $table->enum('payment_status', ['pending', 'paid', 'expired'])->default('pending');
 
             // Info Midtrans
-            $table->string('midtrans_order_id')->nullable();
+            $table->string('midtrans_order_id')->nullable()->unique();
             $table->string('midtrans_transaction_id')->nullable();
-            $table->string('transaction_status')->nullable();
-            $table->string('fraud_status')->nullable();
+            $table->enum('transaction_status', ['capture', 'settlement', 'pending', 'deny', 'expire', 'cancel'])->nullable();
+            $table->enum('fraud_status', ['accept', 'challenge', 'deny'])->nullable();
 
             // Status akses kursus
             $table->enum('access_status', ['active', 'completed', 'cancelled'])->default('active');
@@ -36,6 +36,7 @@ return new class extends Migration
             // Waktu penting
             $table->timestamp('enrolled_at')->nullable();
             $table->timestamp('expired_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
 
             $table->timestamps();
 
@@ -46,16 +47,16 @@ return new class extends Migration
         });
 
         Schema::create('course_checkout_sessions', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
 
             $table->uuid('user_id');
             $table->integer('total_price')->nullable();
 
             $table->enum('payment_status', ['pending', 'paid', 'expired'])->default('pending');
-            $table->string('midtrans_order_id')->nullable();
+            $table->string('midtrans_order_id')->nullable()->unique();
             $table->string('midtrans_transaction_id')->nullable();
-            $table->string('transaction_status')->nullable();
-            $table->string('fraud_status')->nullable();
+            $table->enum('transaction_status', ['capture', 'settlement', 'pending', 'deny', 'expire', 'cancel'])->nullable();
+            $table->enum('fraud_status', ['accept', 'challenge', 'deny'])->nullable();
 
             $table->timestamp('paid_at')->nullable();
 
@@ -65,14 +66,15 @@ return new class extends Migration
         });
 
         Schema::create('checkout_session_items', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
 
-            $table->foreignId('course_checkout_session_id')->constrained('course_checkout_sessions')->onDelete('cascade');
+            $table->uuid('course_checkout_session_id');
             $table->uuid('course_id');
-
             $table->integer('price')->nullable();
 
             $table->timestamps();
+
+            $table->foreign('course_checkout_session_id')->references('id')->on('course_checkout_sessions')->onDelete('cascade');
 
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });

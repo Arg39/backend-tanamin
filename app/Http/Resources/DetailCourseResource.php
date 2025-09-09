@@ -24,6 +24,8 @@ class DetailCourseResource extends JsonResource
                 $isActive = $now->greaterThanOrEqualTo($start);
             } elseif (!$start && $end) {
                 $isActive = $now->lessThanOrEqualTo($end);
+            } elseif (!$start && !$end) {
+                $isActive = true;
             }
 
             if ($isActive) {

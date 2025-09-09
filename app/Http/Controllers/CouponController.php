@@ -7,6 +7,11 @@ use App\Models\Coupon;
 use App\Http\Resources\TableResource;
 use App\Http\Resources\CouponResource;
 use App\Http\Resources\PostResource;
+use App\Models\CouponUsage;
+use App\Models\Course;
+use Carbon\Carbon;
+use Tymon\JWTAuth\Contracts\Providers\JWT;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CouponController extends Controller
 {
@@ -15,7 +20,6 @@ class CouponController extends Controller
         $perPage = $request->get('per_page', 10);
         $coupons = Coupon::query()->paginate($perPage);
 
-        // Wrap each item with CouponResource
         $coupons->getCollection()->transform(function ($coupon) use ($request) {
             return (new CouponResource($coupon))->resolve($request);
         });
@@ -87,5 +91,64 @@ class CouponController extends Controller
         $coupon->delete();
 
         return new PostResource(true, 'Coupon deleted', null);
+    }
+
+    public function useCoupon(Request $request, $courseId)
+    {
+        try {
+            $userId = JWTAuth::user()->id;
+
+            $course = Course::find($courseId);
+            if (!$course) {
+                return new PostResource(false, 'Course not found', null);
+            }
+
+            $validated = $request->validate([
+                'coupon_code' => 'required|string|exists:coupons,code',
+            ]);
+
+            // find coupon by code
+            $coupon = Coupon::where('code', $validated['coupon_code'])->first();
+
+            if (!$coupon) {
+                return new PostResource(false, 'Coupon not found', null);
+            }
+
+            if (!$coupon->is_active) {
+                return new PostResource(false, 'Coupon is not active', null);
+            }
+
+            if (!is_null($coupon->max_usage) && $coupon->used_count >= $coupon->max_usage) {
+                return new PostResource(false, 'Coupon usage limit reached', null);
+            }
+
+            // Pakai timezone Kalimantan (WITA)
+            $now = Carbon::now('Asia/Makassar');
+            $startAt = $coupon->start_at->timezone('Asia/Makassar')->startOfDay();
+            $endAt   = $coupon->end_at->timezone('Asia/Makassar')->endOfDay();
+
+            if (!$now->between($startAt, $endAt)) {
+                return new PostResource(false, 'Coupon is not valid at this time', null);
+            }
+
+            if (CouponUsage::hasUserUsedCoupon($userId, $courseId, $coupon->id)) {
+                return new PostResource(false, 'You have already used this coupon', null);
+            }
+
+            try {
+                CouponUsage::create([
+                    'user_id' => $userId,
+                    'course_id' => $courseId,
+                    'coupon_id' => $coupon->id,
+                    'used_at' => now(),
+                ]);
+
+                return new PostResource(true, 'Coupon applied successfully', null);
+            } catch (\Exception $e) {
+                return new PostResource(false, 'Failed to record coupon usage: ' . $e->getMessage(), null);
+            }
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Error validating coupon: ' . $e->getMessage(), null);
+        }
     }
 }

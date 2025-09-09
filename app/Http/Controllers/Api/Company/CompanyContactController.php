@@ -24,7 +24,17 @@ class CompanyContactController extends Controller
                     $contact
                 );
             } else {
-                return new PostResource(false, 'Company contact not found', null);
+                $defaultContact = [
+                    'telephone'    => null,
+                    'email'        => null,
+                    'address'      => null,
+                    'social_media' => null,
+                ];
+                return new PostResource(
+                    false,
+                    'Company contact has not been added yet',
+                    $defaultContact
+                );
             }
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to retrieve company contact: ' . $e->getMessage(), null);

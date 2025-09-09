@@ -21,12 +21,13 @@ class CouponResource extends JsonResource
 
         // Get users who have used this coupon
         $usersUsed = CouponUsage::where('coupon_id', $this->id)
-            ->with('user:id,name')
+            ->with('user:id,username,first_name,last_name')
             ->get()
             ->map(function ($usage) {
                 return [
                     'id' => $usage->user->id,
-                    'name' => $usage->user->name,
+                    'username' => $usage->user->username,
+                    'full_name' => $usage->user->full_name,
                 ];
             });
 

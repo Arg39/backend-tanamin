@@ -7,11 +7,14 @@ use App\Http\Resources\DetailCourseResource;
 use App\Http\Resources\InstructorResource;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
+use App\Models\Coupon;
+use App\Models\CouponUsage;
 use App\Models\Course;
 use App\Models\CourseAttribute;
 use App\Models\LessonCourse;
 use App\Models\LessonMaterial;
 use App\Models\ModuleCourse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Exception;
 
@@ -31,11 +34,46 @@ class DetailCourseController extends Controller
             }
 
             $resource = new DetailCourseResource($course);
+            $data = $resource->toArray(request());
+
+            $couponInfo = ['coupon' => false];
+
+            $user = auth('api')->user();
+            if ($user) {
+                $coupon_usage = CouponUsage::where('user_id', $user->id)
+                    ->where('course_id', $courseId)
+                    ->first();
+
+                if ($coupon_usage) {
+                    $now = Carbon::now('Asia/Makassar');
+                    $coupon = Coupon::where('id', $coupon_usage->coupon_id)
+                        ->where('is_active', 1)
+                        ->where('start_at', '<=', $now)
+                        ->where('end_at', '>=', $now)
+                        ->orderBy('value', 'desc')
+                        ->first();
+
+                    if ($coupon) {
+                        $couponInfo = [
+                            'available' => true,
+                            'type' => $coupon->type,
+                            'coupon_id' => $coupon->id,
+                            'discount' => $coupon->value,
+                        ];
+                    }
+                } else {
+                    $couponInfo = [
+                        'course' => false,
+                    ];
+                }
+            }
+
+            $data['coupon'] = $couponInfo;
 
             return new PostResource(
                 true,
                 'Course retrieved successfully.',
-                $resource->toArray(request())
+                $data
             );
         } catch (Exception $e) {
             return new PostResource(

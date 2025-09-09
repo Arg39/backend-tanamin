@@ -142,4 +142,9 @@ class Course extends Model
     {
         return $query->whereBetween('created_at', [$start . ' 00:00:00', $end . ' 23:59:59']);
     }
+
+    public function couponUsages()
+    {
+        return $this->hasMany(CouponUsage::class, 'course_id', 'id');
+    }
 }

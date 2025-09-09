@@ -10,6 +10,7 @@ class CouponUsage extends Model
     protected $table = 'coupon_usages';
     public $incrementing = false;
     protected $keyType = 'string';
+    public $timestamps = false;
 
     protected $fillable = [
         'user_id',
@@ -66,12 +67,11 @@ class CouponUsage extends Model
         return $query->whereBetween('used_at', [$start . ' 00:00:00', $end . ' 23:59:59']);
     }
 
-    // Check if user has used a coupon for a course
     public static function hasUserUsedCoupon($userId, $courseId, $couponId)
     {
-        return self::where('user_id', $userId)
-            ->where('course_id', $courseId)
-            ->where('coupon_id', $couponId)
+        return self::where('user_id', (string)$userId)
+            ->where('course_id', (string)$courseId)
+            ->where('coupon_id', (string)$couponId)
             ->exists();
     }
 }

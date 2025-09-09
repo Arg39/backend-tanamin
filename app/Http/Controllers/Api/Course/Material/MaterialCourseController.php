@@ -12,4 +12,9 @@ class MaterialCourseController extends Controller
     {
         // Logic to fetch materials for the specified course and module
     }
+
+    public function showMaterial($request, $materialId)
+    {
+        // Logic to fetch a specific material by its ID
+    }
 }

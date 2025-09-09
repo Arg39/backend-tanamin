@@ -8,6 +8,7 @@ use App\Http\Resources\PostResource;
 use App\Models\ModuleCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ModuleCourseController extends Controller
 {
@@ -51,6 +52,15 @@ class ModuleCourseController extends Controller
         } catch (\Exception $e) {
             return new \App\Http\Resources\PostResource(false, 'Failed to fetch modules', $e->getMessage());
         }
+    }
+
+    public function indexForStudent($courseId)
+    {
+        $user = JWTAuth::user();
+        if ($user && $user->role === 'student') {
+            return $this->index($courseId);
+        }
+        return new PostResource(false, 'Forbidden: Only students can access this resource', null, 403);
     }
 
     // get module by id

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CertificateController;
 use App\Http\Controllers\Api\Company\CompanyActivityController;
 use App\Http\Controllers\Api\Company\CompanyContactController;
+use App\Http\Controllers\Api\Company\CompanyContactUsController;
 use App\Http\Controllers\Api\Company\CompanyPartnershipController;
 use App\Http\Controllers\Api\Company\CompanyProfileController;
 use App\Http\Controllers\Api\Company\MessageController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
+use App\Http\Controllers\Api\Material\QuizCourseController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
 use App\Http\Controllers\CouponController;
@@ -65,6 +67,8 @@ Route::get('/company/profile', [CompanyProfileController::class, 'detailCompanyP
 
 // contact
 Route::post('/message/add', [MessageController::class, 'store']);
+// contact us
+Route::post('/company/message', [CompanyContactUsController::class, 'store']);
 
 // ───────────────────────────────
 // Student Role
@@ -74,6 +78,10 @@ Route::middleware('role:student')->group(function () {
     Route::post('/enrollments/buy-now', [EnrollmentController::class, 'buyNow']);
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
     Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
+    Route::get('/tanamin-course/{courseId}/modules', [ModuleCourseController::class, 'indexForStudent']);
+    Route::get('/tanamin-course/material/{materialId}', [MaterialCourseController::class, 'showMaterial']);
+    Route::get('/tanamin-course/quiz/{quizId}', [QuizCourseController::class, 'showQuiz']);
+    Route::post('/tanamin-course/useCoupon/{courseId}', [CouponController::class, 'useCoupon']);
 });
 
 // ───────────────────────────────
@@ -131,6 +139,9 @@ Route::middleware('role:admin')->group(function () {
     Route::post('/faq', [FaqController::class, 'store']);
     Route::put('/faq/{id}', [FaqController::class, 'update']);
     Route::delete('/faq/{id}', [FaqController::class, 'destroy']);
+
+    // message
+    Route::get('/company/messages', [CompanyContactUsController::class, 'index']);
 
     // certificate
     Route::middleware('disable.octane')->group(function () {
