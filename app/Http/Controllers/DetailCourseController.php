@@ -91,7 +91,7 @@ class DetailCourseController extends Controller
 
             if ($attributes->isEmpty()) {
                 return new PostResource(
-                    false,
+                    true,
                     'No attributes found for this course.',
                     null
                 );

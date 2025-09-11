@@ -77,7 +77,7 @@ Route::post('/company/message', [CompanyContactUsController::class, 'store']);
 // ───────────────────────────────
 Route::middleware('role:student')->group(function () {
     // enrollment
-    Route::post('/enrollments/buy-now', [EnrollmentController::class, 'buyNow']);
+    Route::post('/enrollments/buy-now/{courseId}', [EnrollmentController::class, 'buyNow']);
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
     Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
     Route::get('/tanamin-course/{courseId}/modules', [ModuleCourseController::class, 'indexForStudent']);

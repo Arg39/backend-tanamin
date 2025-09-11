@@ -13,8 +13,15 @@ class CardCourseController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 12);
-        $courses = Course::where('status', 'published')
-            ->paginate($perPage);
+        $search = $request->get('search');
+
+        $query = Course::where('status', 'published');
+
+        if ($search) {
+            $query->search($search);
+        }
+
+        $courses = $query->paginate($perPage);
 
         $items = $courses->getCollection()->map(function ($course) {
             $data = (new CardCourseResource($course))->resolve(request());
