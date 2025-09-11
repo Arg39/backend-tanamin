@@ -39,21 +39,21 @@ class CompanyProfileController extends Controller
     {
         try {
             $validated = $request->validate([
-                'about' => 'required|string',
-                'vision' => 'required|string',
-                'mission' => 'required|array|min:1',
-                'mission.*' => 'required|string',
-                'statistics' => 'required|array|min:1',
-                'statistics.*.title' => 'required|string',
-                'statistics.*.value' => 'required',
+                'about' => 'nullable|string',
+                'vision' => 'nullable|string',
+                'mission' => 'nullable|array|min:1',
+                'mission.*' => 'nullable|string',
+                'statistics' => 'nullable|array|min:1',
+                'statistics.*.title' => 'nullable|string',
+                'statistics.*.value' => 'nullable',
                 'statistics.*.unit' => 'nullable|string',
             ]);
 
             $profile = CompanyProfile::first();
             $profileData = [
-                'about' => $validated['about'],
-                'vision' => $validated['vision'],
-                'mission' => $validated['mission'],
+                'about' => $validated['about'] ?? null,
+                'vision' => $validated['vision'] ?? null,
+                'mission' => $validated['mission'] ?? [],
             ];
 
             if ($profile) {
@@ -62,13 +62,25 @@ class CompanyProfileController extends Controller
                 $profile = CompanyProfile::create($profileData);
             }
 
-            CompanyStatistics::truncate();
-            foreach ($validated['statistics'] as $stat) {
-                CompanyStatistics::create([
-                    'title' => $stat['title'],
-                    'value' => $stat['value'],
-                    'unit' => $stat['unit'] ?? null,
-                ]);
+            if (isset($validated['statistics'])) {
+                CompanyStatistics::truncate();
+                foreach ($validated['statistics'] as $stat) {
+                    // Ubah string kosong menjadi null
+                    $title = isset($stat['title']) && $stat['title'] !== '' ? $stat['title'] : null;
+                    $value = isset($stat['value']) && $stat['value'] !== '' ? (int)$stat['value'] : null;
+                    $unit = isset($stat['unit']) && $stat['unit'] !== '' ? $stat['unit'] : null;
+
+                    // Jika semua field kosong, skip
+                    if (is_null($title) && is_null($value) && is_null($unit)) {
+                        continue;
+                    }
+
+                    CompanyStatistics::create([
+                        'title' => $title,
+                        'value' => $value,
+                        'unit' => $unit,
+                    ]);
+                }
             }
 
             $statistics = CompanyStatistics::all();
@@ -83,8 +95,8 @@ class CompanyProfileController extends Controller
             );
         } catch (ValidationException $e) {
             return new PostResource(false, $e->getMessage(), null);
-        } catch (\Exception) {
-            return new PostResource(false, 'Failed to save company profile', null);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to save company profile: ' . $e->getMessage(), null);
         }
     }
 }

@@ -64,6 +64,8 @@ Route::get('/faq-tanamin', [FaqController::class, 'indexPublic']);
 // about company
 Route::get('/company/contact', [CompanyContactController::class, 'detailCompanyContact']);
 Route::get('/company/profile', [CompanyProfileController::class, 'detailCompanyProfile']);
+Route::get('/company/activities', [CompanyActivityController::class, 'indexCompanyActivity']);
+Route::get('/company/partnerships', [CompanyPartnershipController::class, 'indexCompanyPartnership']);
 
 // contact
 Route::post('/message/add', [MessageController::class, 'store']);
@@ -121,13 +123,11 @@ Route::middleware('role:admin')->group(function () {
     // company contact
     Route::post('/company/contact', [CompanyContactController::class, 'storeOrUpdateCompanyContact']);
     // company activity
-    Route::get('/company/activities', [CompanyActivityController::class, 'indexCompanyActivity']);
     Route::get('/company/activity/{id}', [CompanyActivityController::class, 'showCompanyActivity']);
     Route::post('/company/activity', [CompanyActivityController::class, 'storeCompanyActivity']);
     Route::match(['put', 'post'], '/company/activity/{id}', [CompanyActivityController::class, 'updateCompanyActivity']);
     Route::delete('/company/activity/{id}', [CompanyActivityController::class, 'destroyCompanyActivity']);
     // company partnership
-    Route::get('/company/partnerships', [CompanyPartnershipController::class, 'indexCompanyPartnership']);
     Route::get('/company/partnership/{id}', [CompanyPartnershipController::class, 'showCompanyPartnership']);
     Route::post('/company/partnership', [CompanyPartnershipController::class, 'storeCompanyPartnership']);
     Route::match(['put', 'post'], '/company/partnership/{id}', [CompanyPartnershipController::class, 'updateCompanyPartnership']);

@@ -33,4 +33,12 @@ class CompanyActivity extends Model
             }
         });
     }
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return url('storage/' . ltrim($this->image, '/'));
+        }
+        return null;
+    }
 }

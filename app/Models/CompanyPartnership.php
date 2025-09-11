@@ -28,4 +28,12 @@ class CompanyPartnership extends Model
             }
         });
     }
+
+    public function getLogoUrlAttribute()
+    {
+        if ($this->logo) {
+            return url('storage/' . ltrim($this->logo, '/'));
+        }
+        return null;
+    }
 }

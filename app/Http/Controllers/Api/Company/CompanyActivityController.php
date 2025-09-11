@@ -10,25 +10,50 @@ use Illuminate\Http\Request;
 use App\Models\CompanyActivity;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CompanyActivityController extends Controller
 {
     public function indexCompanyActivity(Request $request)
     {
         try {
-            $perPage = $request->get('per_page', 10);
-            $activities = CompanyActivity::orderBy('order')->paginate($perPage);
+            $user = null;
+            try {
+                $user = JWTAuth::parseToken()->authenticate();
+            } catch (\Exception $e) {
+                // Not logged in, $user remains null
+            }
 
-            $resourceCollection = CompanyActivityResource::collection($activities);
+            if ($user && $user->role === 'admin') {
+                $perPage = $request->get('per_page', 10);
+                $activities = CompanyActivity::orderBy('order')->paginate($perPage);
 
-            return new TableResource(
-                true,
-                'Company activities retrieved successfully',
-                ['data' => $resourceCollection],
-                200
-            );
+                $resourceCollection = CompanyActivityResource::collection($activities);
+
+                return new TableResource(
+                    true,
+                    'Company activities retrieved successfully',
+                    ['data' => $resourceCollection],
+                    200
+                );
+            } else {
+                // Not logged in, return all images as array
+                $activities = CompanyActivity::orderBy('order')->get();
+                $images = $activities->map(function ($activity) {
+                    return [
+                        'src' => $activity->image_url,
+                        'alt' => $activity->title,
+                    ];
+                })->toArray();
+
+                return new PostResource(
+                    true,
+                    'Company activity images retrieved successfully',
+                    $images
+                );
+            }
         } catch (\Exception $e) {
-            return new TableResource(false, 'Failed to retrieve company activities: ' . $e->getMessage(), null, 500);
+            return new PostResource(false, 'Failed to retrieve company activities: ' . $e->getMessage(), null, 500);
         }
     }
 

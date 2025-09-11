@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('company_profiles', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->longText('about');
-            $table->longText('vision');
-            $table->json('mission');
+            $table->longText('about')->nullable();
+            $table->longText('vision')->nullable();
+            $table->json('mission')->nullable();
             $table->timestamps();
         });
 
         Schema::create('company_partnerships', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('partner_name');
+            $table->string('partner_name')->nullable();
             $table->string('logo')->nullable();
             $table->string('website_url')->nullable();
             $table->timestamps();
@@ -29,15 +29,15 @@ return new class extends Migration
 
         Schema::create('company_statistics', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('title');
-            $table->unsignedInteger('value');
+            $table->string('title')->nullable();
+            $table->unsignedInteger('value')->nullable();
             $table->string('unit')->nullable();
             $table->timestamps();
         });
 
         Schema::create('company_activities', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('image');
+            $table->string('image')->nullable();
             $table->string('title')->nullable();
             $table->text('description')->nullable();
             $table->unsignedInteger('order')->nullable();
@@ -46,19 +46,19 @@ return new class extends Migration
 
         Schema::create('company_contacts', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->longText('telephone');
-            $table->longText('email');
-            $table->longText('address');
+            $table->longText('telephone')->nullable();
+            $table->longText('email')->nullable();
+            $table->longText('address')->nullable();
             $table->json('social_media')->nullable();
             $table->timestamps();
         });
 
         Schema::create('contact_us_messages', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('email');
-            $table->string('subject');
-            $table->longText('message');
+            $table->string('name')->nullable();
+            $table->string('email')->nullable();
+            $table->string('subject')->nullable();
+            $table->longText('message')->nullable();
             $table->timestamps();
         });
     }
