@@ -23,7 +23,7 @@ use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
-use App\Http\Controllers\Api\Material\QuizCourseController;
+use App\Http\Controllers\Api\Course\Material\QuizCourseController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
 use App\Http\Controllers\CouponController;
@@ -82,8 +82,10 @@ Route::middleware('role:student')->group(function () {
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
     Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
     Route::get('/tanamin-course/{courseId}/modules', [ModuleCourseController::class, 'indexForStudent']);
-    Route::get('/tanamin-course/lesson/{lessonId}', [LessonCourseController::class, 'show']);
+    Route::get('/tanamin-course/lesson/{lessonId}/material', [LessonCourseController::class, 'show']);
+    Route::get('/tanamin-course/lesson/{lessonId}/quiz', [QuizCourseController::class, 'showQuiz']);
     Route::post('/tanamin-course/useCoupon/{courseId}', [CouponController::class, 'useCoupon']);
+    Route::post('tanamin-course/lesson/{lessonId}/quiz/answer', [QuizCourseController::class, 'submitAnswers']);
     Route::post('/tanamin-course/lesson/progress', [LessonProgressCourseController::class, 'storeProgressLesson']);
 });
 

@@ -35,6 +35,7 @@ return new class extends Migration
             $table->timestamp('finished_at')->nullable();
             $table->timestamps();
 
+            $table->unique(['user_id', 'lesson_id']);
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('lesson_id')->references('id')->on('lessons')->onDelete('cascade');
         });
