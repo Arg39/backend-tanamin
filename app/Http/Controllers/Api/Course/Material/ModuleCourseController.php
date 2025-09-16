@@ -17,18 +17,25 @@ class ModuleCourseController extends Controller
     public function index($courseId)
     {
         try {
-            // Ambil semua module untuk course terkait, urutkan berdasarkan order
+            $user = JWTAuth::user();
+            $completedLessonIds = [];
+            if ($user) {
+                $completedLessonIds = \App\Models\LessonProgress::where('user_id', $user->id)
+                    ->whereNotNull('completed_at')
+                    ->pluck('lesson_id')
+                    ->toArray();
+            }
+
             $modules = \App\Models\ModuleCourse::where('course_id', $courseId)
                 ->orderBy('order', 'asc')
                 ->get();
 
-            // Bentuk array hasil sesuai format yang diminta
             $result = [];
             foreach ($modules as $module) {
                 $lessons = $module->lessons()
                     ->orderBy('order', 'asc')
                     ->get()
-                    ->map(function ($lesson) {
+                    ->map(function ($lesson) use ($completedLessonIds) {
                         $lessonArr = [
                             'id' => $lesson->id,
                             'type' => $lesson->type,
@@ -38,6 +45,7 @@ class ModuleCourseController extends Controller
                             $material = $lesson->materials()->first();
                             $lessonArr['visible'] = $material ? (bool)$material->visible : false;
                         }
+                        $lessonArr['completed'] = in_array($lesson->id, $completedLessonIds);
                         return $lessonArr;
                     })
                     ->toArray();
@@ -83,7 +91,44 @@ class ModuleCourseController extends Controller
                 return new PostResource(false, 'Forbidden: Access denied for this course', null, 403);
             }
 
-            return $this->index($courseId);
+            // Fetch completed lesson IDs for this user
+            $completedLessonIds = \App\Models\LessonProgress::where('user_id', $user->id)
+                ->whereNotNull('completed_at')
+                ->pluck('lesson_id')
+                ->toArray();
+
+            $modules = \App\Models\ModuleCourse::where('course_id', $courseId)
+                ->orderBy('order', 'asc')
+                ->get();
+
+            $result = [];
+            foreach ($modules as $module) {
+                $lessons = $module->lessons()
+                    ->orderBy('order', 'asc')
+                    ->get()
+                    ->map(function ($lesson) use ($completedLessonIds) {
+                        $lessonArr = [
+                            'id' => $lesson->id,
+                            'type' => $lesson->type,
+                            'title' => $lesson->title,
+                        ];
+                        if ($lesson->type === 'material') {
+                            $material = $lesson->materials()->first();
+                            $lessonArr['visible'] = $material ? (bool)$material->visible : false;
+                        }
+                        $lessonArr['completed'] = in_array($lesson->id, $completedLessonIds);
+                        return $lessonArr;
+                    })
+                    ->toArray();
+
+                $result[] = [
+                    'id' => $module->id,
+                    'title' => $module->title,
+                    'lessons' => $lessons,
+                ];
+            }
+
+            return new PostResource(true, 'Modules fetched successfully', $result);
         } catch (\Exception $e) {
             return new PostResource(false, 'Failed to fetch modules for student', $e->getMessage(), 500);
         }

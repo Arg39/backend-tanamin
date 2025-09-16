@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
 use App\Http\Controllers\Api\Course\AttributeCourseController;
 use App\Http\Controllers\Api\Course\Material\LessonCourseController;
+use App\Http\Controllers\Api\Course\Material\LessonProgressCourseController;
 use App\Http\Controllers\Api\Course\Material\ModuleCourseController;
 use App\Http\Controllers\Api\Course\OverviewCourseController;
 use App\Http\Controllers\Api\EnrollmentController;
@@ -83,6 +84,7 @@ Route::middleware('role:student')->group(function () {
     Route::get('/tanamin-course/{courseId}/modules', [ModuleCourseController::class, 'indexForStudent']);
     Route::get('/tanamin-course/lesson/{lessonId}', [LessonCourseController::class, 'show']);
     Route::post('/tanamin-course/useCoupon/{courseId}', [CouponController::class, 'useCoupon']);
+    Route::post('/tanamin-course/lesson/progress', [LessonProgressCourseController::class, 'storeProgressLesson']);
 });
 
 // ───────────────────────────────
