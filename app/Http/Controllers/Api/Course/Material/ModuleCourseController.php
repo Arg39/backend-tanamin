@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Course\Material;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ModuleCourseResource;
 use App\Http\Resources\PostResource;
+use App\Models\CourseEnrollment;
 use App\Models\ModuleCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -56,11 +57,36 @@ class ModuleCourseController extends Controller
 
     public function indexForStudent($courseId)
     {
-        $user = JWTAuth::user();
-        if ($user && $user->role === 'student') {
+        try {
+            $user = JWTAuth::user();
+            if (!$user) {
+                return new PostResource(false, 'Forbidden: User not authenticated', null, 403);
+            }
+
+            if ($user->role !== 'student') {
+                return new PostResource(false, 'Forbidden: Only students can access this resource', null, 403);
+            }
+
+            $enrollment = CourseEnrollment::where('user_id', $user->id)
+                ->where('course_id', $courseId)
+                ->first();
+
+            if (!$enrollment) {
+                return new PostResource(false, 'Forbidden: Enrollment not found', null, 403);
+            }
+
+            $hasAccess = $enrollment->payment_status === 'paid'
+                && $enrollment->fraud_status === 'accept'
+                && $enrollment->access_status === 'active';
+
+            if (!$hasAccess) {
+                return new PostResource(false, 'Forbidden: Access denied for this course', null, 403);
+            }
+
             return $this->index($courseId);
+        } catch (\Exception $e) {
+            return new PostResource(false, 'Failed to fetch modules for student', $e->getMessage(), 500);
         }
-        return new PostResource(false, 'Forbidden: Only students can access this resource', null, 403);
     }
 
     // get module by id

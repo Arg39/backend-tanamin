@@ -36,17 +36,32 @@ class DetailCourseController extends Controller
             $resource = new DetailCourseResource($course);
             $data = $resource->toArray(request());
 
-            $couponInfo = ['coupon' => false];
-
+            $access = false;
             $user = auth('api')->user();
             if ($user) {
-                $coupon_usage = CouponUsage::where('user_id', $user->id)
+                // Cek enrollment
+                $enrollment = \App\Models\CourseEnrollment::where('user_id', $user->id)
+                    ->where('course_id', $courseId)
+                    ->orderByDesc('created_at')
+                    ->first();
+
+                if ($enrollment && $enrollment->payment_status === 'paid'  && $enrollment->fraud_status === 'accept' && $enrollment->access_status === 'active') {
+                    $access = true;
+                    unset($data['price']);
+                }
+            }
+            $data['access'] = $access;
+
+            // Coupon logic tetap
+            $couponInfo = ['coupon' => false];
+            if ($user) {
+                $coupon_usage = \App\Models\CouponUsage::where('user_id', $user->id)
                     ->where('course_id', $courseId)
                     ->first();
 
                 if ($coupon_usage) {
-                    $now = Carbon::now('Asia/Makassar');
-                    $coupon = Coupon::where('id', $coupon_usage->coupon_id)
+                    $now = \Carbon\Carbon::now('Asia/Makassar');
+                    $coupon = \App\Models\Coupon::where('id', $coupon_usage->coupon_id)
                         ->where('is_active', 1)
                         ->where('start_at', '<=', $now)
                         ->where('end_at', '>=', $now)
@@ -67,7 +82,6 @@ class DetailCourseController extends Controller
                     ];
                 }
             }
-
             $data['coupon'] = $couponInfo;
 
             return new PostResource(

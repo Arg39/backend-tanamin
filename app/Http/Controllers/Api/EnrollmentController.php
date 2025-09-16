@@ -197,59 +197,91 @@ class EnrollmentController extends Controller
 
             if (empty($data['order_id'])) {
                 Log::warning('Callback received without order_id.');
-                return (new PostResource(false, 'order_id missing', null))->response()->setStatusCode(400);
+                return response()->json(['status' => false, 'message' => 'order_id missing'], 200);
             }
 
-            $orderId = $data['order_id'];
-            $status = $data['transaction_status'] ?? null;
-            $fraud = $data['fraud_status'] ?? null;
+            $orderId       = $data['order_id'];
+            $status        = $data['transaction_status'] ?? null;
+            $fraud         = $data['fraud_status'] ?? null;
             $transactionId = $data['transaction_id'] ?? null;
 
             Log::info('Parsed notification', [
-                'order_id' => $orderId,
-                'status' => $status,
-                'fraud' => $fraud,
+                'order_id'       => $orderId,
+                'status'         => $status,
+                'fraud'          => $fraud,
                 'transaction_id' => $transactionId,
             ]);
 
             $enrollment = CourseEnrollment::where('midtrans_order_id', $orderId)->first();
-            if ($enrollment) {
-                $updateData = [
-                    'payment_status' => $status === 'settlement' ? 'paid' : ($status === 'expire' ? 'expired' : 'pending'),
-                    'transaction_status' => $status,
-                    'fraud_status' => $fraud,
-                    'midtrans_transaction_id' => $transactionId,
-                ];
-
-                if ($status === 'settlement') {
-                    $updateData['enrolled_at'] = now();
-                    $updateData['paid_at'] = now();
-
-                    // Jika ada coupon, catat penggunaan coupon
-                    if ($enrollment->coupon_id) {
-                        CouponUsage::firstOrCreate([
-                            'user_id' => $enrollment->user_id,
-                            'course_id' => $enrollment->course_id,
-                            'coupon_id' => $enrollment->coupon_id,
-                        ], [
-                            'used_at' => now(),
-                        ]);
-
-                        // Tambah used_count di coupon
-                        Coupon::where('id', $enrollment->coupon_id)->increment('used_count');
-                    }
-                }
-
-                $enrollment->update($updateData);
-
-                return new PostResource(true, 'OK', null);
+            if (!$enrollment) {
+                Log::warning('Order ID not found: ' . $orderId);
+                return response()->json(['status' => false, 'message' => 'Not Found'], 200);
             }
 
-            Log::warning('Order ID not found: ' . $orderId);
-            return (new PostResource(false, 'Not Found', null))->response()->setStatusCode(404);
+            // Default
+            $paymentStatus = 'pending';
+
+            switch ($status) {
+                case 'settlement':
+                    $paymentStatus = 'paid';
+                    break;
+
+                case 'capture': // kartu kredit
+                    if ($fraud === 'accept') {
+                        $paymentStatus = 'paid';
+                    } elseif ($fraud === 'challenge') {
+                        $paymentStatus = 'pending';
+                    } else { // deny
+                        $paymentStatus = 'expired';
+                    }
+                    break;
+
+                case 'cancel':
+                case 'deny':
+                case 'expire':
+                    $paymentStatus = 'expired';
+                    break;
+
+                default:
+                    $paymentStatus = 'pending';
+            }
+
+            $updateData = [
+                'payment_status'        => $paymentStatus,
+                'transaction_status'    => $status,
+                'fraud_status'          => $fraud,
+                'midtrans_transaction_id' => $transactionId,
+            ];
+
+            if ($paymentStatus === 'paid') {
+                $updateData['enrolled_at']   = now();
+                $updateData['paid_at']       = now();
+                $updateData['access_status'] = 'active';
+
+                // Jika ada coupon, catat penggunaan coupon
+                if ($enrollment->coupon_id) {
+                    CouponUsage::firstOrCreate(
+                        [
+                            'user_id'   => $enrollment->user_id,
+                            'course_id' => $enrollment->course_id,
+                            'coupon_id' => $enrollment->coupon_id,
+                        ],
+                        [
+                            'used_at' => now(),
+                        ]
+                    );
+
+                    Coupon::where('id', $enrollment->coupon_id)->increment('used_count');
+                }
+            }
+
+            $enrollment->update($updateData);
+
+            return response()->json(['status' => true, 'message' => 'OK'], 200);
         } catch (\Exception $e) {
             Log::error('Midtrans callback error: ' . $e->getMessage());
-            return (new PostResource(false, 'Error', null))->response()->setStatusCode(500);
+            // Tetap return 200 supaya Midtrans tidak retry terus
+            return response()->json(['status' => false, 'message' => 'Error'], 200);
         }
     }
 }

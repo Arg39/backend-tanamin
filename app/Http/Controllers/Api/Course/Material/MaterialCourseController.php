@@ -4,17 +4,23 @@ namespace App\Http\Controllers\Api\Material;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\LessonMaterial;
+use App\Http\Resources\PostResource;
 
 class MaterialCourseController extends Controller
 {
-    // get all materials for a course
-    public function index(Request $request, $courseId, $moduleId)
+    public function showMaterial($materialId)
     {
-        // Logic to fetch materials for the specified course and module
-    }
+        $material = LessonMaterial::find($materialId);
 
-    public function showMaterial($request, $materialId)
-    {
-        // Logic to fetch a specific material by its ID
+        if (!$material) {
+            return new PostResource(false, 'Material not found', null);
+        }
+
+        $data = [
+            'content' => $material->content,
+        ];
+
+        return new PostResource(true, 'Material fetched successfully', $data);
     }
 }

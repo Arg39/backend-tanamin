@@ -81,8 +81,7 @@ Route::middleware('role:student')->group(function () {
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
     Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
     Route::get('/tanamin-course/{courseId}/modules', [ModuleCourseController::class, 'indexForStudent']);
-    Route::get('/tanamin-course/material/{materialId}', [MaterialCourseController::class, 'showMaterial']);
-    Route::get('/tanamin-course/quiz/{quizId}', [QuizCourseController::class, 'showQuiz']);
+    Route::get('/tanamin-course/lesson/{lessonId}', [LessonCourseController::class, 'show']);
     Route::post('/tanamin-course/useCoupon/{courseId}', [CouponController::class, 'useCoupon']);
 });
 
