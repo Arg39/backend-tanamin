@@ -87,6 +87,11 @@ Route::middleware('role:student')->group(function () {
     Route::post('/tanamin-course/useCoupon/{courseId}', [CouponController::class, 'useCoupon']);
     Route::post('tanamin-course/lesson/{lessonId}/quiz/answer', [QuizCourseController::class, 'submitAnswers']);
     Route::post('/tanamin-course/lesson/progress', [LessonProgressCourseController::class, 'storeProgressLesson']);
+    Route::get('/tanamin-course/certificate/{courseId}', [CertificateController::class, 'getInformationCertificate']);
+    // certificate
+    Route::middleware('disable.octane')->group(function () {
+        Route::get('certificates/{courseId}/pdf', [CertificateController::class, 'generatePdf']);
+    });
 });
 
 // ───────────────────────────────
@@ -145,11 +150,6 @@ Route::middleware('role:admin')->group(function () {
 
     // message
     Route::get('/company/messages', [CompanyContactUsController::class, 'index']);
-
-    // certificate
-    Route::middleware('disable.octane')->group(function () {
-        Route::get('certificates/{id}/pdf', [CertificateController::class, 'generatePdf']);
-    });
 });
 
 // ───────────────────────────────

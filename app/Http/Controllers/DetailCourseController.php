@@ -45,7 +45,7 @@ class DetailCourseController extends Controller
                     ->orderByDesc('created_at')
                     ->first();
 
-                if ($enrollment && $enrollment->payment_status === 'paid'  && $enrollment->fraud_status === 'accept' && $enrollment->access_status === 'active') {
+                if ($enrollment && $enrollment->payment_status === 'paid'  && $enrollment->access_status === 'active') {
                     $access = true;
                     unset($data['price']);
                 }

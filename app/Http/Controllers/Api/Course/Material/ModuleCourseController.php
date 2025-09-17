@@ -84,7 +84,6 @@ class ModuleCourseController extends Controller
             }
 
             $hasAccess = $enrollment->payment_status === 'paid'
-                && $enrollment->fraud_status === 'accept'
                 && $enrollment->access_status === 'active';
 
             if (!$hasAccess) {

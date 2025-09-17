@@ -16,10 +16,12 @@ return new class extends Migration
             $table->uuid('user_id');
             $table->uuid('course_id');
             $table->string('certificate_code')->unique();
+            $table->enum('rank', ['gold', 'silver', 'bronze'])->nullable();
             $table->timestamp('issued_at')->nullable();
             $table->timestamps();
 
             // Define foreign key constraint
+            $table->unique(['user_id', 'course_id']);
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
