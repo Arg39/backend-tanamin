@@ -10,12 +10,15 @@ use App\Models\LessonCourse;
 use App\Models\LessonProgress;
 use App\Models\ModuleCourse;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 
 class CertificateController extends Controller
 {
@@ -69,51 +72,26 @@ class CertificateController extends Controller
         }
     }
 
-    public function generatePdf($courseId)
+    public function generatePdf($certificateCode)
     {
         try {
-            $user = JWTAuth::user();
-
-            // 1. Validate course existence
-            $course = Course::findOrFail($courseId);
-
-            // 2. Check if certificate already exists
-            $certificate = Certificate::where('user_id', $user->id)
-                ->where('course_id', $courseId)
-                ->first();
-
+            $certificate = Certificate::where('certificate_code', $certificateCode)->first();
             if (!$certificate) {
-                // 3. Generate unique certificate code
-                $certificateCode = 'TC-' . strtoupper(Str::random(3)) . '-' . strtoupper(Str::random(10));
-                $issuedAt = now();
-
-                // 4. Create certificate record
-                $certificate = Certificate::create([
-                    'user_id' => $user->id,
-                    'course_id' => $courseId,
-                    'certificate_code' => $certificateCode,
-                    'issued_at' => $issuedAt,
-                ]);
-            } else {
-                $certificateCode = $certificate->certificate_code;
-                $issuedAt = $certificate->issued_at;
+                return response("Certificate not found.", 404);
             }
 
-            // 5. Generate QR code
-            $qrCodeUrl = env('APP_URL') . "/api/certificates/{$certificateCode}/pdf";
-            $logoPath = public_path('images/logo.png');
-            if (!file_exists($logoPath)) {
-                throw new \Exception("Logo file not found at: {$logoPath}");
-            }
-            $qrTempPath = storage_path('app/qr_temp.png');
-            QrCode::format('png')
-                ->size(400)
-                ->margin(2)
-                ->merge($logoPath, 0.2, true)
-                ->generate($qrCodeUrl, $qrTempPath);
-            $qrCodeBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($qrTempPath));
+            $user = $certificate->user;
+            $course = $certificate->course;
 
-            // 6. Prepare PDF view data
+            $qrCodeUrl = env('APP_FE_URL') . "/certificate/verify/{$certificateCode}";
+
+            $qr = QrCode::create($qrCodeUrl)
+                ->setSize(160)
+                ->setMargin(4);
+            $writer = new PngWriter();
+            $qrResult = $writer->write($qr);
+            $qrCodeBase64 = "data:image/png;base64," . base64_encode($qrResult->getString());
+
             Pdf::setOptions([
                 'font_dir' => public_path('fonts/'),
                 'font_cache' => storage_path('fonts/'),
@@ -122,24 +100,26 @@ class CertificateController extends Controller
                 'isRemoteEnabled' => true,
             ]);
 
-            $instructor = $course->instructor ? "{$course->instructor->first_name} {$course->instructor->last_name}" : '-';
+            $instructor = $course->instructor ? $course->instructor->full_name : '-';
+
+            $issuedAt = $certificate->issued_at
+                ? (is_a($certificate->issued_at, Carbon::class)
+                    ? $certificate->issued_at->format('Y-m-d')
+                    : Carbon::parse($certificate->issued_at)->format('Y-m-d'))
+                : now()->format('Y-m-d');
 
             $viewData = [
-                'user' => "{$user->first_name} {$user->last_name}",
+                'user' => $user->full_name,
                 'course' => $course->title,
                 'instructor' => $instructor,
-                'issued_at' => $issuedAt ? $issuedAt->format('Y-m-d') : now()->format('Y-m-d'),
+                'issued_at' => $issuedAt,
                 'certificate_code' => $certificateCode,
-                'qr_code' => $qrCodeBase64,
-                'bg_image' => asset('images/certificate-bg.png'),
+                'qr_code_base64' => $qrCodeBase64,
             ];
 
-            file_put_contents(storage_path('app/pdf_debug.html'), view('certificate', $viewData)->render());
-
             $pdf = Pdf::loadView('certificate', $viewData)->setPaper('a4', 'landscape');
-            $filename = 'certificate_' . Str::slug($viewData['user'], ' ') . '.pdf';
+            $filename = 'certificate_' . Str::slug($viewData['user'], '_') . '.pdf';
 
-            // 7. Return PDF
             return $pdf->download($filename);
         } catch (Exception $e) {
             Log::error($e->getMessage());

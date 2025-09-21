@@ -90,7 +90,7 @@ Route::middleware('role:student')->group(function () {
     Route::get('/tanamin-course/certificate/{courseId}', [CertificateController::class, 'getInformationCertificate']);
     // certificate
     Route::middleware('disable.octane')->group(function () {
-        Route::get('certificates/{courseId}/pdf', [CertificateController::class, 'generatePdf']);
+        Route::get('certificates/{certificateCode}/pdf', [CertificateController::class, 'generatePdf']);
     });
 });
 
