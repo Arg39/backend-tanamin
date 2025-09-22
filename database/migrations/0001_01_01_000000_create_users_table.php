@@ -28,7 +28,7 @@ return new class extends Migration
         });
 
         Schema::create('user_details', function (Blueprint $table) {
-            $table->uuid('id_user')->primary(); // shared primary key from users.id
+            $table->uuid('user_id')->primary(); // shared primary key from users.id
             $table->string('expertise')->nullable();
             $table->text('about')->nullable();
             $table->boolean('update_password')->default(false);
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->json('social_media')->nullable();
             $table->timestamps();
 
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

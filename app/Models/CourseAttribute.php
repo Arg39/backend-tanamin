@@ -12,13 +12,13 @@ class CourseAttribute extends Model
 
     protected $fillable = [
         'id',
-        'id_course',
+        'course_id',
         'type',
         'content',
     ];
 
     public function course()
     {
-        return $this->belongsTo(Course::class, 'id_course');
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }

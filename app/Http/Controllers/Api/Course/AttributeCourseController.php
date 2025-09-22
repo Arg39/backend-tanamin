@@ -19,7 +19,7 @@ class AttributeCourseController extends Controller
                 return response()->json(['error' => 'Course ID is required'], 400);
             }
             // Ambil dan urutkan berdasarkan type lalu created_at ASC
-            $courseAttributes = CourseAttribute::where('id_course', $id)
+            $courseAttributes = CourseAttribute::where('course_id', $id)
                 ->orderBy('type')
                 ->orderBy('created_at', 'asc')
                 ->get();
@@ -57,7 +57,7 @@ class AttributeCourseController extends Controller
             $attributeId = (string) Str::uuid();
             $attribute = CourseAttribute::create([
                 'id' => $attributeId,
-                'id_course' => $courseId,
+                'course_id' => $courseId,
                 'type' => $validated['type'],
                 'content' => $validated['content'],
             ]);
@@ -80,7 +80,7 @@ class AttributeCourseController extends Controller
     {
         try {
             $attribute = CourseAttribute::where('id', $attributeId)
-                ->where('id_course', $courseId)
+                ->where('course_id', $courseId)
                 ->firstOrFail();
 
             $typeData = [
@@ -111,7 +111,7 @@ class AttributeCourseController extends Controller
             ]);
 
             $attribute = CourseAttribute::where('id', $attributeId)
-                ->where('id_course', $courseId)
+                ->where('course_id', $courseId)
                 ->firstOrFail();
 
             $attribute->update([
@@ -138,7 +138,7 @@ class AttributeCourseController extends Controller
     {
         try {
             $attribute = CourseAttribute::where('id', $attributeId)
-                ->where('id_course', $courseId)
+                ->where('course_id', $courseId)
                 ->firstOrFail();
 
             $attribute->delete();

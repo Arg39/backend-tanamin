@@ -15,8 +15,8 @@ class Course extends Model
 
     protected $fillable = [
         'id',
-        'id_category',
-        'id_instructor',
+        'category_id',
+        'instructor_id',
         'title',
         'image',
         'level',
@@ -32,27 +32,27 @@ class Course extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'id_category');
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function instructor()
     {
-        return $this->belongsTo(User::class, 'id_instructor');
+        return $this->belongsTo(User::class, 'instructor_id');
     }
 
     public function attributes()
     {
-        return $this->hasMany(CourseAttribute::class, 'id_course');
+        return $this->hasMany(CourseAttribute::class, 'course_id');
     }
 
     public function descriptions()
     {
-        return $this->hasMany(CourseAttribute::class, 'id_course')->where('type', 'description');
+        return $this->hasMany(CourseAttribute::class, 'course_id')->where('type', 'description');
     }
 
     public function prerequisites()
     {
-        return $this->hasMany(CourseAttribute::class, 'id_course')->where('type', 'prerequisite');
+        return $this->hasMany(CourseAttribute::class, 'course_id')->where('type', 'prerequisite');
     }
 
     public function modules()
@@ -82,7 +82,7 @@ class Course extends Model
 
     public function reviews()
     {
-        return $this->hasMany(CourseReview::class, 'id_course', 'id');
+        return $this->hasMany(CourseReview::class, 'course_id', 'id');
     }
 
     public function getAvgRatingAttribute()
@@ -130,12 +130,12 @@ class Course extends Model
 
     public function scopeCategory($query, $categoryId)
     {
-        return $query->where('id_category', $categoryId);
+        return $query->where('category_id', $categoryId);
     }
 
     public function scopeInstructor($query, $instructorId)
     {
-        return $query->where('id_instructor', $instructorId);
+        return $query->where('instructor_id', $instructorId);
     }
 
     public function scopeDateRange($query, $start, $end)

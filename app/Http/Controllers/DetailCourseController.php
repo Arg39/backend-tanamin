@@ -101,7 +101,7 @@ class DetailCourseController extends Controller
     public function getDetailAttribute($courseId)
     {
         try {
-            $attributes = CourseAttribute::where('id_course', $courseId)->get();
+            $attributes = CourseAttribute::where('course_id', $courseId)->get();
 
             if ($attributes->isEmpty()) {
                 return new PostResource(
@@ -215,7 +215,7 @@ class DetailCourseController extends Controller
     public function getCoursesFromInstructorId($instructorId)
     {
         try {
-            $courses = Course::where('id_instructor', $instructorId)
+            $courses = Course::where('instructor_id', $instructorId)
                 ->where('status', 'published')
                 ->inRandomOrder()
                 ->limit(8)
@@ -242,9 +242,9 @@ class DetailCourseController extends Controller
                 return new PostResource(true, 'Course not found.', null);
             }
 
-            $instructorId = $course->id_instructor;
+            $instructorId = $course->instructor_id;
 
-            $courses = Course::where('id_instructor', $instructorId)
+            $courses = Course::where('instructor_id', $instructorId)
                 ->where('status', 'published')
                 ->where('id', '!=', $courseId)
                 ->inRandomOrder()

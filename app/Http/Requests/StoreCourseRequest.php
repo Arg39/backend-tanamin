@@ -15,8 +15,8 @@ class StoreCourseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_category' => 'required|exists:categories,id',
-            'id_instructor' => 'required|exists:users,id',
+            'category_id' => 'required|exists:categories,id',
+            'instructor_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'price' => 'nullable|numeric|min:0',
             'level' => 'nullable|in:beginner,intermediate,advance',

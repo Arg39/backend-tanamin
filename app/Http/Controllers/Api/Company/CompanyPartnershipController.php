@@ -28,6 +28,10 @@ class CompanyPartnershipController extends Controller
                 $perPage = $request->get('per_page', 10);
                 $partnerships = CompanyPartnership::orderBy('partner_name')->paginate($perPage);
 
+                if ($partnerships->count() === 0) {
+                    return new PostResource(false, 'No company partnerships found', null);
+                }
+
                 $resourceCollection = CompanyPartnershipResource::collection($partnerships);
 
                 return new TableResource(
@@ -37,8 +41,10 @@ class CompanyPartnershipController extends Controller
                     200
                 );
             } else {
-                // Not logged in, return all logo, name, and website as array
                 $partnerships = CompanyPartnership::orderBy('partner_name')->get();
+                if ($partnerships->count() === 0) {
+                    return new PostResource(false, 'No company partnerships found', null);
+                }
                 $data = $partnerships->map(function ($partnership) {
                     return [
                         'logo' => $partnership->logo_url,

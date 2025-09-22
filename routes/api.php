@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\Course\Material\QuizCourseController;
+use App\Http\Controllers\Api\Course\ReviewCourseController;
+use App\Http\Controllers\Api\IncomeController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
 use App\Http\Controllers\CouponController;
@@ -50,6 +52,7 @@ Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'mid
 // course
 Route::get('/instructor', [DashboardController::class, 'getInstructor']);
 Route::get('/tanamin-courses', [CardCourseController::class, 'index']);
+Route::get('/tanamin-courses/best', [CardCourseController::class, 'getBestCourses']);
 Route::get('/tanamin-course/{courseId}', [DetailCourseController::class, 'showDetail']);
 Route::get('/tanamin-courses/{courseId}/attribute', [DetailCourseController::class, 'getDetailAttribute']);
 Route::get('/tanamin-courses/{courseId}/material', [DetailCourseController::class, 'getMaterialPublic']);
@@ -58,6 +61,8 @@ Route::get('/tanamin-courses/{courseId}/other-instructor-courses', [DetailCourse
 Route::get('/tanamin-courses/instructor-list', [UserProfileController::class, 'getInstructorListByCategory']);
 Route::get('/profile/{id}', [UserProfileController::class, 'getProfileById']);
 Route::get('/tanamin-courses/instructor-courses/{courseId}', [DetailCourseController::class, 'getCoursesFromInstructorId']);
+// verify certificate
+Route::get('/certificates/verify/{certificateCode}', [CertificateController::class, 'verifyCertificateCode']);
 
 // faq
 Route::get('/faq-tanamin', [FaqController::class, 'indexPublic']);
@@ -88,10 +93,15 @@ Route::middleware('role:student')->group(function () {
     Route::post('tanamin-course/lesson/{lessonId}/quiz/answer', [QuizCourseController::class, 'submitAnswers']);
     Route::post('/tanamin-course/lesson/progress', [LessonProgressCourseController::class, 'storeProgressLesson']);
     Route::get('/tanamin-course/certificate/{courseId}', [CertificateController::class, 'getInformationCertificate']);
+
     // certificate
     Route::middleware('disable.octane')->group(function () {
         Route::get('certificates/{certificateCode}/pdf', [CertificateController::class, 'generatePdf']);
     });
+
+    // review course
+    Route::post('/tanamin-course/{courseId}/review', [ReviewCourseController::class, 'makeReviewCourse']);
+    Route::get('/tanamin-course/{courseId}/reviews', [ReviewCourseController::class, 'viewReviewCourse']);
 });
 
 // ───────────────────────────────
@@ -117,6 +127,12 @@ Route::middleware('role:admin')->group(function () {
     Route::post('course', [AdminCourseController::class, 'store']);
     Route::get('course/{id}', [AdminCourseController::class, 'show']);
     Route::delete('course/{id}', [AdminCourseController::class, 'destroy']);
+
+    // transaction
+    Route::get('transactions', [EnrollmentController::class, 'latestTransactions']);
+
+    // income
+    Route::get('dailyIncome', [IncomeController::class, 'dailyIncome']);
 
     // instructor
     Route::get('instructors', [UserProfileController::class, 'getInstructors']);

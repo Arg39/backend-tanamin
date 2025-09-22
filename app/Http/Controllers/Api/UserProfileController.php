@@ -74,7 +74,7 @@ class UserProfileController extends Controller
 
         if (!empty($detailData)) {
             $user->detail()->updateOrCreate(
-                ['id_user' => $user->id],
+                ['user_id' => $user->id],
                 $detailData
             );
         }
@@ -234,8 +234,8 @@ class UserProfileController extends Controller
         try {
             $query = User::where('role', 'instructor');
 
-            if ($request->filled('id_category')) {
-                $idCategory = $request->input('id_category');
+            if ($request->filled('category_id')) {
+                $idCategory = $request->input('category_id');
                 $query->whereHas('categoriesInstructor', function ($q) use ($idCategory) {
                     $q->where('categories.id', $idCategory);
                 });

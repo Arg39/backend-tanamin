@@ -7,13 +7,13 @@ use Illuminate\Http\Request;
 use App\Http\Resources\PostResource;
 use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\CourseEnrollment;
 use App\Models\LessonCourse;
 use App\Models\LessonProgress;
 use App\Models\ModuleCourse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +38,7 @@ class CertificateController extends Controller
             $allCompleted = $progress->count() === $lessons->count();
 
             if (!$allCompleted) {
-                return new PostResource(false, "You haven't completed all lessons in this course.", null);
+                return new PostResource(false, "Anda belum menyelesaikan semua pelajaran pada kursus ini.", null);
             } else {
                 $certificate = Certificate::where('user_id', $user->id)
                     ->where('course_id', $course->id)
@@ -48,7 +48,7 @@ class CertificateController extends Controller
                     $certificateData = $certificate->toArray();
                     $certificateData['user_name'] = "{$user->first_name} {$user->last_name}";
                     $certificateData['course_title'] = $course->title;
-                    return new PostResource(true, "Certificate exists.", $certificateData);
+                    return new PostResource(true, "Sertifikat sudah tersedia.", $certificateData);
                 } else {
                     $certificateCode = 'TC-' . strtoupper(Str::random(3)) . '-' . strtoupper(Str::random(10));
                     $issuedAt = now();
@@ -60,14 +60,22 @@ class CertificateController extends Controller
                         'issued_at' => $issuedAt,
                     ]);
 
+                    $enrollment = CourseEnrollment::where('user_id', $user->id)
+                        ->where('course_id', $course->id)
+                        ->first();
+                    if ($enrollment) {
+                        $enrollment->access_status = 'completed';
+                        $enrollment->save();
+                    }
+
                     $certificateData = $certificate->toArray();
                     $certificateData['user_fullname'] = "{$user->first_name} {$user->last_name}";
                     $certificateData['course_title'] = $course->title;
-                    return new PostResource(true, "Certificate created.", $certificateData);
+
+                    return new PostResource(true, "Sertifikat berhasil dibuat.", $certificateData);
                 }
             }
         } catch (Exception $e) {
-            Log::error($e->getMessage());
             return response("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
@@ -77,13 +85,13 @@ class CertificateController extends Controller
         try {
             $certificate = Certificate::where('certificate_code', $certificateCode)->first();
             if (!$certificate) {
-                return response("Certificate not found.", 404);
+                return response("Sertifikat tidak ditemukan.", 404);
             }
 
             $user = $certificate->user;
             $course = $certificate->course;
 
-            $qrCodeUrl = env('APP_FE_URL') . "/certificate/verify/{$certificateCode}";
+            $qrCodeUrl = env('APP_FE_URL') . "/verifikasi/sertifikat-kursus/{$certificateCode}";
 
             $qr = QrCode::create($qrCodeUrl)
                 ->setSize(160)
@@ -122,7 +130,36 @@ class CertificateController extends Controller
 
             return $pdf->download($filename);
         } catch (Exception $e) {
-            Log::error($e->getMessage());
+            return response("Internal Server Error: " . $e->getMessage(), 500);
+        }
+    }
+
+    public function verifyCertificateCode($certificateCode)
+    {
+        try {
+            $certificate = Certificate::where('certificate_code', $certificateCode)->first();
+
+            if (!$certificate) {
+                return new PostResource(false, "Kode sertifikat tidak ditemukan.", null);
+            }
+
+            $user = $certificate->user;
+            $course = $certificate->course;
+
+            // Format issued_at to Indonesian date format
+            $issuedAt = $certificate->issued_at
+                ? \Carbon\Carbon::parse($certificate->issued_at)->locale('id')->translatedFormat('d F Y')
+                : null;
+
+            $certificateData = [
+                'certificate_code' => $certificate->certificate_code,
+                'user_fullname' => $user ? "{$user->first_name} {$user->last_name}" : null,
+                'course_title' => $course ? $course->title : null,
+                'issued_at' => $issuedAt,
+            ];
+
+            return new PostResource(true, "Kode sertifikat valid.", $certificateData);
+        } catch (Exception $e) {
             return response("Internal Server Error: " . $e->getMessage(), 500);
         }
     }

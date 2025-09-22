@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ErrorResource;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\Coupon;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\TableResource;
+use Carbon\Carbon;
 
 class EnrollmentController extends Controller
 {
@@ -21,7 +24,6 @@ class EnrollmentController extends Controller
             $user = $request->user();
             $course = Course::findOrFail($courseId);
 
-            // Cek apakah sudah pernah dibeli
             $alreadyEnrolled = CourseEnrollment::where('user_id', $user->id)
                 ->where('course_id', $course->id)
                 ->where('payment_status', 'paid')
@@ -31,21 +33,17 @@ class EnrollmentController extends Controller
                 return (new PostResource(false, 'Kursus ini sudah dibeli.', null))->response()->setStatusCode(400);
             }
 
-            // Hitung harga awal
             $basePrice = $course->price ?? 0;
 
-            // ✅ Cek diskon aktif (lebih fleksibel)
             $isDiscountActive = false;
             if ($course->is_discount_active) {
                 if ($course->discount_start_at && $course->discount_end_at) {
                     $isDiscountActive = now()->between($course->discount_start_at, $course->discount_end_at);
                 } else {
-                    // Kalau tanggal kosong tapi is_discount_active = true → tetap aktif
                     $isDiscountActive = true;
                 }
             }
 
-            // Hitung diskon
             $discount = 0;
             if ($isDiscountActive) {
                 if ($course->discount_type === 'percent') {
@@ -57,7 +55,6 @@ class EnrollmentController extends Controller
 
             $priceAfterDiscount = max(0, $basePrice - $discount);
 
-            // Cek coupon usage dari user untuk course ini
             $couponUsage = \App\Models\CouponUsage::where('user_id', $user->id)
                 ->where('course_id', $course->id)
                 ->first();
@@ -74,12 +71,10 @@ class EnrollmentController extends Controller
                     ->first();
 
                 if ($coupon) {
-                    // Cek usage limit
                     if ($coupon->max_usage !== null && $coupon->used_count >= $coupon->max_usage) {
                         return (new PostResource(false, 'Kupon sudah mencapai batas penggunaan.', null))->response()->setStatusCode(400);
                     }
 
-                    // Hitung diskon kupon
                     if ($coupon->type === 'percent') {
                         $couponDiscount = intval($priceAfterDiscount * $coupon->value / 100);
                     } else {
@@ -91,7 +86,6 @@ class EnrollmentController extends Controller
 
             $finalPrice = max(0, $priceAfterDiscount - $couponDiscount);
 
-            // Jika kursus gratis (setelah diskon dan/atau kupon)
             if ($finalPrice <= 0) {
                 $enrollment = CourseEnrollment::create([
                     'id' => (string) Str::uuid(),
@@ -106,7 +100,6 @@ class EnrollmentController extends Controller
                     'paid_at' => now(),
                 ]);
 
-                // Jika ada coupon, catat penggunaan coupon (hanya jika belum pernah)
                 if ($couponId && !$couponUsage) {
                     \App\Models\CouponUsage::firstOrCreate([
                         'user_id' => $user->id,
@@ -123,7 +116,6 @@ class EnrollmentController extends Controller
                 ]);
             }
 
-            // Cek apakah sudah ada enrollment pending untuk user dan course ini
             $pendingEnrollment = CourseEnrollment::where('user_id', $user->id)
                 ->where('course_id', $course->id)
                 ->where('payment_status', 'pending')
@@ -132,7 +124,6 @@ class EnrollmentController extends Controller
             if ($pendingEnrollment) {
                 $orderId = $pendingEnrollment->midtrans_order_id;
 
-                // Update harga/coupon jika ada perubahan
                 $pendingEnrollment->update([
                     'price' => $finalPrice,
                     'coupon_id' => $couponId,
@@ -154,7 +145,6 @@ class EnrollmentController extends Controller
                 ]);
             }
 
-            // Buat transaksi Midtrans baru
             $orderId = 'ORDER-' . strtoupper(Str::uuid());
             $midtrans = MidtransService::createTransaction([
                 'transaction_details' => [
@@ -218,7 +208,6 @@ class EnrollmentController extends Controller
                 return response()->json(['status' => false, 'message' => 'Not Found'], 200);
             }
 
-            // Default
             $paymentStatus = 'pending';
 
             switch ($status) {
@@ -226,12 +215,12 @@ class EnrollmentController extends Controller
                     $paymentStatus = 'paid';
                     break;
 
-                case 'capture': // kartu kredit
+                case 'capture':
                     if ($fraud === 'accept') {
                         $paymentStatus = 'paid';
                     } elseif ($fraud === 'challenge') {
                         $paymentStatus = 'pending';
-                    } else { // deny
+                    } else {
                         $paymentStatus = 'expired';
                     }
                     break;
@@ -258,7 +247,6 @@ class EnrollmentController extends Controller
                 $updateData['paid_at']       = now();
                 $updateData['access_status'] = 'active';
 
-                // Jika ada coupon, catat penggunaan coupon
                 if ($enrollment->coupon_id) {
                     CouponUsage::firstOrCreate(
                         [
@@ -280,8 +268,73 @@ class EnrollmentController extends Controller
             return response()->json(['status' => true, 'message' => 'OK'], 200);
         } catch (\Exception $e) {
             Log::error('Midtrans callback error: ' . $e->getMessage());
-            // Tetap return 200 supaya Midtrans tidak retry terus
             return response()->json(['status' => false, 'message' => 'Error'], 200);
+        }
+    }
+
+    public function latestTransactions(Request $request)
+    {
+        try {
+            $allowedSortBy = ['enrolled_at', 'payment_status', 'access_status'];
+            $sortBy = $request->get('sortBy', 'enrolled_at');
+            $sortOrder = strtolower($request->get('sortOrder', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+            if (!in_array($sortBy, $allowedSortBy)) {
+                $sortBy = 'enrolled_at';
+            }
+
+            $perPage = (int) $request->get('perPage', 10);
+            $page = (int) $request->get('page', 1);
+
+            $userSearch = $request->get('user');
+
+            $query = CourseEnrollment::with([
+                'user:id,first_name,last_name',
+                'course:id,title'
+            ])->select([
+                'id',
+                'user_id',
+                'course_id',
+                'enrolled_at',
+                'payment_status',
+                'access_status',
+                'price'
+            ]);
+
+            if ($userSearch) {
+                $query->whereHas('user', function ($q) use ($userSearch) {
+                    $searchTerm = '%' . strtolower($userSearch) . '%';
+                    $q->whereRaw("LOWER(CONCAT(COALESCE(first_name,''),' ',COALESCE(last_name,''))) LIKE ?", [$searchTerm])
+                        ->orWhereRaw("LOWER(first_name) LIKE ?", [$searchTerm])
+                        ->orWhereRaw("LOWER(last_name) LIKE ?", [$searchTerm]);
+                });
+            }
+
+            $query->orderBy($sortBy, $sortOrder);
+
+            $enrollments = $query->paginate($perPage, ['*'], 'page', $page);
+
+            Carbon::setLocale('id');
+
+            $enrollments->getCollection()->transform(function ($enrollment) {
+                return [
+                    'id' => $enrollment->id,
+                    'user' => $enrollment->user ? ($enrollment->user->full_name ?? trim($enrollment->user->first_name . ' ' . $enrollment->user->last_name)) : null,
+                    'course' => $enrollment->course ? $enrollment->course->title : null,
+                    'enrolled_at' => $enrollment->enrolled_at ? Carbon::parse($enrollment->enrolled_at)->translatedFormat('d F Y') : null,
+                    'payment_status' => $enrollment->payment_status,
+                    'access_status' => $enrollment->access_status,
+                    'price' => $enrollment->price,
+                ];
+            });
+
+            return new TableResource(true, 'Latest transactions retrieved successfully', [
+                'data' => $enrollments,
+            ], 200);
+        } catch (\Exception $e) {
+            return (new ErrorResource(['message' => 'Failed to retrieve transactions: ' . $e->getMessage()]))
+                ->response()
+                ->setStatusCode(500);
         }
     }
 }

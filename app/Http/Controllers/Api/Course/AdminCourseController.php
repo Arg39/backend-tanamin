@@ -28,8 +28,8 @@ class AdminCourseController extends Controller
             $query = Course::with(['category:id,name', 'instructor:id,first_name,last_name'])
                 ->select([
                     'id',
-                    'id_category',
-                    'id_instructor',
+                    'category_id',
+                    'instructor_id',
                     'title',
                     'price',
                     'level',
@@ -45,16 +45,16 @@ class AdminCourseController extends Controller
             }
 
             if ($request->filled('category')) {
-                $query->where('id_category', $request->input('category'));
+                $query->where('category_id', $request->input('category'));
             }
 
             if ($request->filled('instructor')) {
-                $query->where('id_instructor', $request->input('instructor'));
+                $query->where('instructor_id', $request->input('instructor'));
             }
 
             $courses = $this->filterQuery($query, $request, [
                 'date',
-                'id_instructor',
+                'instructor_id',
                 'level',
                 'status'
             ]);
@@ -76,8 +76,8 @@ class AdminCourseController extends Controller
 
             $course = Course::create([
                 'id' => $courseId,
-                'id_category' => $request->id_category,
-                'id_instructor' => $request->id_instructor,
+                'category_id' => $request->category_id,
+                'instructor_id' => $request->instructor_id,
                 'title' => $request->title,
                 'price' => $request->price,
                 'level' => $request->level,

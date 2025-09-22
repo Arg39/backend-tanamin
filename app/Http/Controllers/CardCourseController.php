@@ -7,6 +7,8 @@ use App\Models\Course;
 use App\Models\CourseReview;
 use App\Http\Resources\TableResource;
 use App\Http\Resources\CardCourseResource;
+use App\Models\CourseEnrollment;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CardCourseController extends Controller
 {
@@ -27,8 +29,8 @@ class CardCourseController extends Controller
             $data = (new CardCourseResource($course))->resolve(request());
 
             // Use CourseReview for ratings
-            $data['average_rating'] = round(CourseReview::where('id_course', $course->id)->avg('rating') ?? 0, 2);
-            $data['total_rating'] = CourseReview::where('id_course', $course->id)->count();
+            $data['average_rating'] = round(CourseReview::where('course_id', $course->id)->avg('rating') ?? 0, 2);
+            $data['total_rating'] = CourseReview::where('course_id', $course->id)->count();
 
             return $data;
         });
@@ -41,6 +43,61 @@ class CardCourseController extends Controller
             true,
             'List of card courses retrieved successfully.',
             $paginatedData,
+            200
+        );
+    }
+
+    public function getBestCourses(Request $request)
+    {
+        $perPage = $request->get('per_page', 10);
+        $page = $request->get('page', 1);
+
+        // Step 1: Get top 10 course_ids by enrollment count
+        $topCourseIds = CourseEnrollment::select('course_id')
+            ->groupBy('course_id')
+            ->orderByRaw('COUNT(*) DESC')
+            ->limit(10)
+            ->pluck('course_id')
+            ->toArray();
+
+        // Step 2: If less than 10, fill with random published courses
+        $needed = 10 - count($topCourseIds);
+        if ($needed > 0) {
+            $randomCourseIds = Course::where('status', 'published')
+                ->whereNotIn('id', $topCourseIds)
+                ->inRandomOrder()
+                ->limit($needed)
+                ->pluck('id')
+                ->toArray();
+            $topCourseIds = array_merge($topCourseIds, $randomCourseIds);
+        }
+
+        // Step 3: Fetch courses
+        $courses = Course::whereIn('id', $topCourseIds)
+            ->where('status', 'published')
+            ->get();
+
+        // Step 4: Map to resource
+        $items = $courses->map(function ($course) {
+            $data = (new CardCourseResource($course))->resolve(request());
+            $data['average_rating'] = round($course->reviews()->avg('rating') ?? 0, 2);
+            $data['total_rating'] = $course->reviews()->count();
+            return $data;
+        })->values()->all();
+
+        // Step 4.5: Paginate manually
+        $total = count($items);
+        $pagedItems = array_slice($items, ($page - 1) * $perPage, $perPage);
+        $paginator = new LengthAwarePaginator($pagedItems, $total, $perPage, $page, [
+            'path' => $request->url(),
+            'query' => $request->query(),
+        ]);
+
+        // Step 5: Return TableResource
+        return new TableResource(
+            true,
+            'List of best courses retrieved successfully.',
+            ['data' => $paginator],
             200
         );
     }

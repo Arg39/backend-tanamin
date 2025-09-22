@@ -69,8 +69,8 @@ class CoursePostResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'id_category' => $this->id_category,
-            'id_instructor' => $this->id_instructor,
+            'category_id' => $this->category_id,
+            'instructor_id' => $this->instructor_id,
             'title' => $this->title,
             'price' => $this->price,
             'discount_type' => $this->discount_type,
@@ -87,7 +87,7 @@ class CoursePostResource extends JsonResource
             'updated_at' => $this->formatIndonesianDate($this->updated_at),
             'category' => optional($this->category)->only(['id', 'name']),
             'instructor' => $this->instructor ? [
-                'id' => $this->id_instructor,
+                'id' => $this->instructor_id,
                 'name' => trim($this->instructor->first_name . ' ' . $this->instructor->last_name),
             ] : null,
         ];

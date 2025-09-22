@@ -25,8 +25,8 @@ class InstructorCourseController extends Controller
 
         try {
             $query = Course::with(['category:id,name'])
-                ->select(['id', 'id_category', 'id_instructor', 'title', 'status', 'created_at', 'updated_at'])
-                ->where('id_instructor', $user->id);
+                ->select(['id', 'category_id', 'instructor_id', 'title', 'status', 'created_at', 'updated_at'])
+                ->where('instructor_id', $user->id);
 
             $courses = $this->filterQuery(
                 $query,

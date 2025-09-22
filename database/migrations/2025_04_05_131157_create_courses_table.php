@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('courses', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('id_category');
-            $table->uuid('id_instructor');
+            $table->uuid('category_id');
+            $table->uuid('instructor_id');
             $table->string('title');
             // detail
             $table->string('image')->nullable();
@@ -30,18 +30,18 @@ return new class extends Migration
             $table->boolean('is_discount_active')->default(false);
             $table->timestamps();
 
-            $table->foreign('id_category')->references('id')->on('categories')->onDelete('cascade');
-            $table->foreign('id_instructor')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreign('instructor_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         Schema::create('course_attributes', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('id_course');
+            $table->uuid('course_id');
             $table->enum('type', ['description', 'prerequisite']);
             $table->text('content');
             $table->timestamps();
 
-            $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
+            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
     }
 

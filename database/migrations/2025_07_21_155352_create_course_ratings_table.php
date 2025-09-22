@@ -10,16 +10,16 @@ return new class extends Migration
     {
         Schema::create('course_reviews', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('id_user');
-            $table->uuid('id_course');
+            $table->uuid('user_id');
+            $table->uuid('course_id');
             $table->unsignedTinyInteger('rating');
             $table->string('comment', 1000)->nullable();
             $table->timestamps();
 
-            $table->unique(['id_user', 'id_course']);
+            $table->unique(['user_id', 'course_id']);
 
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('id_course')->references('id')->on('courses')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
     }
 

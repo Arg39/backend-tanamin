@@ -49,7 +49,7 @@ class AuthController extends Controller
         ]);
 
         UserDetail::create([
-            'id_user' => $user->id,
+            'user_id' => $user->id,
             'expertise' => null,
             'about' => null,
             'social_media' => null,
@@ -75,7 +75,7 @@ class AuthController extends Controller
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:6|confirmed',
                 'role' => 'required|string|in:admin,instructor',
-                'id_category' => 'required|uuid',
+                'category_id' => 'required|uuid',
             ]);
 
             if ($validator->fails()) {
@@ -84,7 +84,7 @@ class AuthController extends Controller
                     ->setStatusCode(422);
             }
 
-            $category = Category::find($request->id_category);
+            $category = Category::find($request->category_id);
             if (!$category) {
                 return (new PostResource(false, 'Category not found', null))
                     ->response()
@@ -107,7 +107,7 @@ class AuthController extends Controller
             ]);
 
             UserDetail::create([
-                'id_user' => $user->id,
+                'user_id' => $user->id,
                 'expertise' => null,
                 'about' => null,
                 'social_media' => null,
@@ -117,7 +117,7 @@ class AuthController extends Controller
 
             InstructorCategory::create([
                 'instructor_id' => $user->id,
-                'category_id' => $request->id_category,
+                'category_id' => $request->category_id,
             ]);
 
             return (new PostResource(true, 'Admin/Instructor registered successfully', null))

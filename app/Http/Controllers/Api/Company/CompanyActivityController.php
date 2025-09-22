@@ -28,6 +28,10 @@ class CompanyActivityController extends Controller
                 $perPage = $request->get('per_page', 10);
                 $activities = CompanyActivity::orderBy('order')->paginate($perPage);
 
+                if ($activities->count() === 0) {
+                    return new PostResource(false, 'No company activities found', null);
+                }
+
                 $resourceCollection = CompanyActivityResource::collection($activities);
 
                 return new TableResource(
@@ -37,8 +41,10 @@ class CompanyActivityController extends Controller
                     200
                 );
             } else {
-                // Not logged in, return all images as array
                 $activities = CompanyActivity::orderBy('order')->get();
+                if ($activities->count() === 0) {
+                    return new PostResource(false, 'No company activities found', null);
+                }
                 $images = $activities->map(function ($activity) {
                     return [
                         'src' => $activity->image_url,

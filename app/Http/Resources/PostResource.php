@@ -53,8 +53,8 @@ class PostResource extends JsonResource
 
         $data = parent::toArray($request);
 
-        if (isset($data['detail']) && isset($data['detail']['id_user'])) {
-            unset($data['detail']['id_user']);
+        if (isset($data['detail']) && isset($data['detail']['user_id'])) {
+            unset($data['detail']['user_id']);
         }
 
         return [

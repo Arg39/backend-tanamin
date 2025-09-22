@@ -11,8 +11,8 @@ class UserDetail extends Model
 
     protected $table = 'user_details';
 
-    // Set primary key to 'id_user'
-    protected $primaryKey = 'id_user';
+    // Set primary key to 'user_id'
+    protected $primaryKey = 'user_id';
 
     // Disable auto-incrementing since we're using UUID
     public $incrementing = false;
@@ -21,7 +21,7 @@ class UserDetail extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id_user',
+        'user_id',
         'expertise',
         'about',
         'social_media',
