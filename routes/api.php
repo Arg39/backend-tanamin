@@ -4,7 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CertificateController;
+use App\Http\Controllers\Api\Course\CertificateController;
 use App\Http\Controllers\Api\Company\CompanyActivityController;
 use App\Http\Controllers\Api\Company\CompanyContactController;
 use App\Http\Controllers\Api\Company\CompanyContactUsController;

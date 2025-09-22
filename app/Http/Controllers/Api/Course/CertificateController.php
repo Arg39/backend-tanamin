@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Course;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Http\Resources\PostResource;
 use App\Models\Certificate;
 use App\Models\Course;
@@ -16,7 +17,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
