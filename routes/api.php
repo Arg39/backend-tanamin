@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
 use App\Http\Controllers\Api\Course\AttributeCourseController;
+use App\Http\Controllers\Api\Course\FilteringCardController;
 use App\Http\Controllers\Api\Course\Material\LessonCourseController;
 use App\Http\Controllers\Api\Course\Material\LessonProgressCourseController;
 use App\Http\Controllers\Api\Course\Material\ModuleCourseController;
@@ -59,8 +60,9 @@ Route::get('/tanamin-courses/{courseId}/material', [DetailCourseController::clas
 Route::get('/tanamin-courses/{courseId}/instructor', [DetailCourseController::class, 'getDetailInstructor']);
 Route::get('/tanamin-courses/{courseId}/other-instructor-courses', [DetailCourseController::class, 'getOtherCoursesInstructor']);
 Route::get('/tanamin-courses/instructor-list', [UserProfileController::class, 'getInstructorListByCategory']);
-Route::get('/profile/{id}', [UserProfileController::class, 'getProfileById']);
 Route::get('/tanamin-courses/instructor-courses/{courseId}', [DetailCourseController::class, 'getCoursesFromInstructorId']);
+Route::get('/tanamin-courses/filtering', [FilteringCardController::class, 'getFilteringCard']);
+Route::get('/profile/{id}', [UserProfileController::class, 'getProfileById']);
 // verify certificate
 Route::get('/certificates/verify/{certificateCode}', [CertificateController::class, 'verifyCertificateCode']);
 
