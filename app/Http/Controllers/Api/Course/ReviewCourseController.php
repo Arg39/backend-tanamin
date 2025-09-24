@@ -76,4 +76,22 @@ class ReviewCourseController extends Controller
 
         return new PostResource(true, 'Reviews fetched successfully', $filteredReviews);
     }
+
+    public function getRatingsCourse($courseId)
+    {
+        $course = Course::find($courseId);
+        if (!$course) {
+            return new PostResource(false, 'Course not found', null);
+        }
+
+        $averageRating = $course->avg_rating;
+        $detailRating = $course->getDetailRatings();
+
+        $data = [
+            'rating' => round($averageRating, 1),
+            'detail_rating' => $detailRating,
+        ];
+
+        return new PostResource(true, 'Ratings fetched successfully', $data);
+    }
 }

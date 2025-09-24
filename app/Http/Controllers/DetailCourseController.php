@@ -11,6 +11,7 @@ use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Course;
 use App\Models\CourseAttribute;
+use App\Models\CourseEnrollment;
 use App\Models\LessonCourse;
 use App\Models\LessonMaterial;
 use App\Models\ModuleCourse;
@@ -36,11 +37,17 @@ class DetailCourseController extends Controller
             $resource = new DetailCourseResource($course);
             $data = $resource->toArray(request());
 
+            $totalStudent = CourseEnrollment::where('course_id', $courseId)
+                ->where('payment_status', 'paid')
+                ->where('access_status', 'active')
+                ->count();
+            $data['students_count'] = $totalStudent;
+
             $access = false;
             $user = auth('api')->user();
             if ($user) {
                 // Cek enrollment
-                $enrollment = \App\Models\CourseEnrollment::where('user_id', $user->id)
+                $enrollment = CourseEnrollment::where('user_id', $user->id)
                     ->where('course_id', $courseId)
                     ->orderByDesc('created_at')
                     ->first();
@@ -55,13 +62,13 @@ class DetailCourseController extends Controller
             // Coupon logic tetap
             $couponInfo = ['coupon' => false];
             if ($user) {
-                $coupon_usage = \App\Models\CouponUsage::where('user_id', $user->id)
+                $coupon_usage = CouponUsage::where('user_id', $user->id)
                     ->where('course_id', $courseId)
                     ->first();
 
                 if ($coupon_usage) {
-                    $now = \Carbon\Carbon::now('Asia/Makassar');
-                    $coupon = \App\Models\Coupon::where('id', $coupon_usage->coupon_id)
+                    $now = Carbon::now('Asia/Makassar');
+                    $coupon = Coupon::where('id', $coupon_usage->coupon_id)
                         ->where('is_active', 1)
                         ->where('start_at', '<=', $now)
                         ->where('end_at', '>=', $now)

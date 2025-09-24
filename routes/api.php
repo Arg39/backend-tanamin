@@ -58,6 +58,7 @@ Route::get('/tanamin-course/{courseId}', [DetailCourseController::class, 'showDe
 Route::get('/tanamin-courses/{courseId}/attribute', [DetailCourseController::class, 'getDetailAttribute']);
 Route::get('/tanamin-courses/{courseId}/material', [DetailCourseController::class, 'getMaterialPublic']);
 Route::get('/tanamin-courses/{courseId}/instructor', [DetailCourseController::class, 'getDetailInstructor']);
+Route::get('/tanamin-courses/{courseId}/ratings', [ReviewCourseController::class, 'getRatingsCourse']);
 Route::get('/tanamin-courses/{courseId}/other-instructor-courses', [DetailCourseController::class, 'getOtherCoursesInstructor']);
 Route::get('/tanamin-courses/instructor-list', [UserProfileController::class, 'getInstructorListByCategory']);
 Route::get('/tanamin-courses/instructor-courses/{courseId}', [DetailCourseController::class, 'getCoursesFromInstructorId']);

@@ -101,7 +101,7 @@ class DetailCourseResource extends JsonResource
             'detail' => $this->detail,
             'participants' => $participants,
             'rating' => [
-                'average' => round($averageRating, 2),
+                'average' => round((float)$averageRating, 2),
                 'total' => $totalRatings,
             ],
             'total_materials' => $totalMaterials,

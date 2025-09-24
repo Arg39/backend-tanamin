@@ -147,4 +147,22 @@ class Course extends Model
     {
         return $this->hasMany(CouponUsage::class, 'course_id', 'id');
     }
+
+    public function getDetailRatings()
+    {
+        $ratings = $this->reviews()
+            ->selectRaw('rating, COUNT(*) as total')
+            ->groupBy('rating')
+            ->pluck('total', 'rating')
+            ->toArray();
+
+        $detail = [];
+        for ($i = 5; $i >= 1; $i--) {
+            $detail[] = [
+                'rating' => $i,
+                'total' => isset($ratings[$i]) ? (int)$ratings[$i] : 0,
+            ];
+        }
+        return $detail;
+    }
 }
