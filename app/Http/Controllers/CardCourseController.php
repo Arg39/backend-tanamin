@@ -24,6 +24,16 @@ class CardCourseController extends Controller
 
         $query = Course::where('status', 'published');
 
+        $user = auth('api')->user();
+        $ownedCourseIds = [];
+        if ($user) {
+            $ownedCourseIds = CourseEnrollment::where('user_id', $user->id)
+                ->where('payment_status', 'paid')
+                ->pluck('course_id')
+                ->toArray();
+            // No longer exclude owned courses
+        }
+
         // Search
         if ($search) {
             $query->search($search);
@@ -66,10 +76,11 @@ class CardCourseController extends Controller
 
         $courses = $query->paginate($perPage);
 
-        $items = $courses->getCollection()->map(function ($course) {
+        $items = $courses->getCollection()->map(function ($course) use ($ownedCourseIds) {
             $data = (new CardCourseResource($course))->resolve(request());
             $data['average_rating'] = round($course->reviews()->avg('rating') ?? 0, 2);
             $data['total_rating'] = $course->reviews()->count();
+            $data['owned'] = in_array($course->id, $ownedCourseIds);
             return $data;
         });
 
