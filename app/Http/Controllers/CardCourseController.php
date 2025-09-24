@@ -16,22 +16,60 @@ class CardCourseController extends Controller
     {
         $perPage = $request->get('per_page', 12);
         $search = $request->get('search');
+        $categories = $request->get('categories', []);
+        $instructors = $request->get('instructor', []);
+        $ratings = $request->get('ratings', []);
+        $price = $request->get('price', 'all');
+        $level = $request->get('level', 'all');
 
         $query = Course::where('status', 'published');
 
+        // Search
         if ($search) {
             $query->search($search);
+        }
+
+        // Categories filter
+        if (!empty($categories)) {
+            $query->whereIn('category_id', $categories);
+        }
+
+        // Instructor filter
+        if (!empty($instructors)) {
+            $query->whereIn('instructor_id', $instructors);
+        }
+
+        // Level filter
+        if ($level && $level !== 'all') {
+            $query->where('level', $level);
+        }
+
+        // Price filter
+        if ($price && $price !== 'all') {
+            if ($price === 'free') {
+                $query->where(function ($q) {
+                    $q->where('price', 0)->orWhereNull('price');
+                });
+            } elseif ($price === 'paid') {
+                $query->where('price', '>', 0);
+            }
+        }
+
+        // Ratings filter (average rating)
+        if (!empty($ratings)) {
+            $query->whereHas('reviews', function ($q) use ($ratings) {
+                $q->select('course_id')
+                    ->groupBy('course_id')
+                    ->havingRaw('ROUND(AVG(rating)) IN (' . implode(',', array_map('intval', $ratings)) . ')');
+            });
         }
 
         $courses = $query->paginate($perPage);
 
         $items = $courses->getCollection()->map(function ($course) {
             $data = (new CardCourseResource($course))->resolve(request());
-
-            // Use CourseReview for ratings
-            $data['average_rating'] = round(CourseReview::where('course_id', $course->id)->avg('rating') ?? 0, 2);
-            $data['total_rating'] = CourseReview::where('course_id', $course->id)->count();
-
+            $data['average_rating'] = round($course->reviews()->avg('rating') ?? 0, 2);
+            $data['total_rating'] = $course->reviews()->count();
             return $data;
         });
 
