@@ -8,17 +8,17 @@ COPY --chown=www-data:www-data composer.json composer.lock /app/
 # Install dependencies & extensions
 RUN apt update && apt upgrade -y && apt install -y iputils-ping \
     curl zip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libonig-dev \
-    libmagickwand-dev libmagickcore-dev imagemagick git unzip \
+    git unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install zip pcntl gd pdo_mysql mbstring bcmath \
-    && pecl install imagick \
-    && docker-php-ext-enable imagick
+    && docker-php-ext-install zip pcntl gd pdo_mysql mbstring bcmath
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Copy the entire application
 COPY --chown=www-data:www-data . /app
+
+RUN apt install -y libcurl4-openssl-dev && docker-php-ext-install sockets
 
 # Install Laravel Octane and dependencies
 RUN composer install --optimize-autoloader --no-dev && \
