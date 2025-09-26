@@ -12,14 +12,9 @@ RUN apt update && apt install -y \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
-    libmagickwand-dev \
-    libmagickcore-dev \
-    imagemagick \
     default-mysql-client \
     && docker-php-ext-configure gd --with-jpeg \
-    && docker-php-ext-install zip gd pdo_mysql \
-    && pecl install imagick \
-    && docker-php-ext-enable zip gd pdo_mysql imagick
+    && docker-php-ext-install zip gd pdo_mysql
 
 RUN echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memlimit.ini
 RUN echo "max_execution_time=120" > /usr/local/etc/php/conf.d/execution_time.ini

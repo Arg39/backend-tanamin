@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   laravel-franken:
     container_name: laravel-franken
@@ -13,3 +11,6 @@ services:
       - .env
     volumes:
       - .:/app
+      - ./.env:/app/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
