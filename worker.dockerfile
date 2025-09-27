@@ -1,36 +1,24 @@
-FROM php:8.3-cli
+FROM dunglas/frankenphp:latest
+
+# Install dependencies & PHP extensions
+RUN apt-get update && apt-get install -y \
+    git unzip curl \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev default-mysql-client \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pcntl pdo pdo_mysql mbstring \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy composer.json and composer.lock first to leverage Docker cache
-COPY --chown=www-data:www-data composer.json composer.lock /app/
+COPY . /app
 
-# Install dependencies & extensions
-RUN apt update && apt upgrade -y && apt install -y iputils-ping \
-    curl zip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libonig-dev \
-    git unzip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install zip pcntl gd pdo_mysql mbstring bcmath
+RUN composer clear-cache
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-interaction
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Copy the entire application
-COPY --chown=www-data:www-data . /app
-
-RUN apt install -y libcurl4-openssl-dev && docker-php-ext-install sockets
-
-# Install Laravel Octane and dependencies
-RUN composer install --optimize-autoloader --no-dev && \
-    composer require laravel/octane && \
-    php artisan octane:install --server=frankenphp
-
-# Increase PHP memory limit to 512M
-RUN echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memory-limit.ini
-
-# Ensure permissions for development
 RUN chown -R www-data:www-data /app
 
-EXPOSE 8000
+EXPOSE 80
 
-CMD php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000
+CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80"]

@@ -1,16 +1,15 @@
 services:
   laravel-franken:
     container_name: laravel-franken
-    image: image_laravel_franken
     build:
-      dockerfile: worker.dockerfile
       context: .
+      dockerfile: worker.dockerfile
     ports:
-      - 8001:8000
-    env_file:
-      - .env
+      - "8001:80"
     volumes:
       - .:/app
       - ./.env:/app/.env
+    environment:
+      MAX_REQUESTS: 500
     extra_hosts:
       - "host.docker.internal:host-gateway"
