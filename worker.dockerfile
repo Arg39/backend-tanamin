@@ -17,6 +17,9 @@ COPY . /app
 RUN composer clear-cache
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-interaction
 
+# Run storage:link after composer install
+RUN php artisan storage:link
+
 RUN chown -R www-data:www-data /app
 
 EXPOSE 80

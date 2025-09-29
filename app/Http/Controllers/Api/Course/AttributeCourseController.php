@@ -18,13 +18,11 @@ class AttributeCourseController extends Controller
             if (!$id) {
                 return response()->json(['error' => 'Course ID is required'], 400);
             }
-            // Ambil dan urutkan berdasarkan type lalu created_at ASC
             $courseAttributes = CourseAttribute::where('course_id', $id)
                 ->orderBy('type')
                 ->orderBy('created_at', 'asc')
                 ->get();
 
-            // Group by type, urutkan dalam group berdasarkan created_at ASC
             $grouped = $courseAttributes->groupBy('type')->map(function ($items) {
                 return AttributeResource::collection(
                     $items->sortBy('created_at')->values()
@@ -45,115 +43,46 @@ class AttributeCourseController extends Controller
         }
     }
 
-    // add course attribute by type
-    public function store(Request $request, $courseId)
+    public function storeOrUpdateAttribute(Request $request, $courseId)
     {
         try {
             $validated = $request->validate([
-                'type' => 'required|string|in:description,prerequisite',
-                'content' => 'required|string',
+                'attributes' => 'array',
+                'prerequisites' => 'array',
+                'benefits' => 'array', // perbaiki dari 'benefit' ke 'benefits'
             ]);
 
-            $attributeId = (string) Str::uuid();
-            $attribute = CourseAttribute::create([
-                'id' => $attributeId,
-                'course_id' => $courseId,
-                'type' => $validated['type'],
-                'content' => $validated['content'],
-            ]);
-            $typeData = [
-                'type' => $attribute->type,
+            $types = [
+                'description' => $validated['attributes'] ?? [],
+                'prerequisite' => $validated['prerequisites'] ?? [],
+                'benefit' => $validated['benefits'] ?? [], // perbaiki dari 'benefit'
             ];
 
-            return new PostResource(
-                true,
-                'Atribut kursus berhasil ditambahkan.',
-                (new AttributeResource($attribute))->withExtra($typeData)->resolve(request())
-            );
-        } catch (\Exception $e) {
-            return new PostResource(false, 'Gagal membuat atribut kursus: ' . $e->getMessage(), null);
-        }
-    }
+            $result = [];
 
-    // show course attribute by ID
-    public function show($courseId, $attributeId)
-    {
-        try {
-            $attribute = CourseAttribute::where('id', $attributeId)
-                ->where('course_id', $courseId)
-                ->firstOrFail();
-
-            $typeData = [
-                'type' => $attribute->type,
-            ];
+            foreach ($types as $type => $content) {
+                if (!empty($content)) {
+                    $attribute = CourseAttribute::updateOrCreate(
+                        [
+                            'course_id' => $courseId,
+                            'type' => $type,
+                        ],
+                        [
+                            'id' => CourseAttribute::where('course_id', $courseId)->where('type', $type)->value('id') ?? (string) Str::uuid(),
+                            'content' => $content,
+                        ]
+                    );
+                    $result[$type] = new AttributeResource($attribute);
+                }
+            }
 
             return new PostResource(
                 true,
-                'Atribut kursus berhasil ditemukan.',
-                (new AttributeResource($attribute))->withExtra($typeData)->resolve(request())
+                'Atribut kursus berhasil disimpan/diperbarui.',
+                $result
             );
         } catch (\Exception $e) {
-            return new PostResource(
-                false,
-                'Gagal menampilkan atribut kursus: ' . $e->getMessage(),
-                null
-            );
-        }
-    }
-
-    // update course attribute by ID
-    public function update(Request $request, $courseId, $attributeId)
-    {
-        try {
-            $validated = $request->validate([
-                'type' => 'required|string|in:description,prerequisite',
-                'content' => 'required|string',
-            ]);
-
-            $attribute = CourseAttribute::where('id', $attributeId)
-                ->where('course_id', $courseId)
-                ->firstOrFail();
-
-            $attribute->update([
-                'type' => $validated['type'],
-                'content' => $validated['content'],
-            ]);
-
-            return new PostResource(
-                true,
-                'Atribut kursus berhasil diperbarui.',
-                (new AttributeResource($attribute))->resolve(request())
-            );
-        } catch (\Exception $e) {
-            return new PostResource(
-                false,
-                'Gagal memperbarui atribut kursus: ' . $e->getMessage(),
-                null
-            );
-        }
-    }
-
-    // delete course attribute by ID
-    public function destroy($courseId, $attributeId)
-    {
-        try {
-            $attribute = CourseAttribute::where('id', $attributeId)
-                ->where('course_id', $courseId)
-                ->firstOrFail();
-
-            $attribute->delete();
-
-            return new PostResource(
-                true,
-                'Atribut kursus berhasil dihapus.',
-                null
-            );
-        } catch (\Exception $e) {
-            return new PostResource(
-                false,
-                'Gagal menghapus atribut kursus: ' . $e->getMessage(),
-                null
-            );
+            return new PostResource(false, 'Gagal menyimpan atribut kursus: ' . $e->getMessage(), null);
         }
     }
 }

@@ -17,6 +17,10 @@ class CourseAttribute extends Model
         'content',
     ];
 
+    protected $casts = [
+        'content' => 'array',
+    ];
+
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id');

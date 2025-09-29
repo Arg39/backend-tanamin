@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CheckoutCourseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Course\CertificateController;
@@ -86,6 +87,7 @@ Route::post('/company/message', [CompanyContactUsController::class, 'store']);
 // ───────────────────────────────
 Route::middleware('role:student')->group(function () {
     // enrollment
+    Route::get('/checkout/buy-now/{courseId}', [EnrollmentController::class, 'checkoutBuyNowContent']);
     Route::post('/enrollments/buy-now/{courseId}', [EnrollmentController::class, 'buyNow']);
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
     Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
@@ -181,7 +183,6 @@ Route::middleware('role:admin,instructor')->group(function () {
     Route::match('put', 'course/{courseId}/overview/update-price', [OverviewCourseController::class, 'updatePriceAndDiscount']);
     // detail: attribute course
     Route::get('course/{courseId}/attribute', [AttributeCourseController::class, 'index']);
-    Route::get('course/{courseId}/attribute/{attributeId}/view', [AttributeCourseController::class, 'show']);
     // detail: module course
     Route::get('course/{courseId}/modules', [ModuleCourseController::class, 'index']);
     Route::get('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'show']);
@@ -203,9 +204,7 @@ Route::middleware('role:instructor')->group(function () {
     Route::get('/instructor/courses', [InstructorCourseController::class, 'index']);
     // instructor course
     // detail: attribute course
-    Route::post('course/{courseId}/attribute', [AttributeCourseController::class, 'store']);
-    Route::put('course/{courseId}/attribute/{attributeId}/update', [AttributeCourseController::class, 'update']);
-    Route::delete('course/{courseId}/attribute/{attributeId}/delete', [AttributeCourseController::class, 'destroy']);
+    Route::post('course/{courseId}/attribute', [CheckoutCourseController::class, 'storeOrUpdateAttribute']);
     // detail: module course
     Route::post('course/{courseId}/module', [ModuleCourseController::class, 'store']);
     Route::patch('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'update']);
@@ -216,13 +215,6 @@ Route::middleware('role:instructor')->group(function () {
     Route::patch('course/lesson/updateOrder', [LessonCourseController::class, 'updateByOrder']);
     Route::put('course/lesson/{lessonId}', [LessonCourseController::class, 'update']);
     Route::delete('course/lesson/{lessonId}', [LessonCourseController::class, 'destroy']);
-});
-
-// ───────────────────────────────
-// Admin & Instructor Role
-// ───────────────────────────────
-Route::middleware('role:admin,instructor')->group(function () {
-    Route::get('/attribute/{id}', [AttributeCourseController::class, 'index']);
 });
 
 // ───────────────────────────────

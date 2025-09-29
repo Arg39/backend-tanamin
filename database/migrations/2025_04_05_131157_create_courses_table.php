@@ -37,8 +37,8 @@ return new class extends Migration
         Schema::create('course_attributes', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('course_id');
-            $table->enum('type', ['description', 'prerequisite']);
-            $table->text('content');
+            $table->enum('type', ['description', 'prerequisite', 'benefit']);
+            $table->json('content');
             $table->timestamps();
 
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');

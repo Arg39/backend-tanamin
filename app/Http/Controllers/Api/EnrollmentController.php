@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\TableResource;
+use App\Models\CourseAttribute;
 use Carbon\Carbon;
 
 class EnrollmentController extends Controller
