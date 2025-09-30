@@ -201,8 +201,6 @@ class LessonCourseController extends Controller
 
             $lesson = LessonCourse::with(['materials', 'quiz.questions.answerOptions'])->find($lessonId);
 
-            // dd($request->all()); // Remove debug
-
             if (!$lesson) {
                 return new PostResource(false, 'Lesson not found', null);
             }

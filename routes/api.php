@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\Course\Material\QuizCourseController;
 use App\Http\Controllers\Api\Course\ReviewCourseController;
 use App\Http\Controllers\Api\IncomeController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\CardCourseController;
 use App\Http\Controllers\CouponController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\DetailCourseController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\OrderController;
 use App\Models\CourseAttribute;
+use App\Models\Notification;
 
 // ───────────────────────────────
 // Public Routes
@@ -229,6 +231,10 @@ Route::middleware('role:instructor,student')->group(function () {
 // ───────────────────────────────
 // All Role
 // ───────────────────────────────
-Route::middleware('role:admin,instructor,student')->group(function () {});
+Route::middleware('role:admin,instructor,student')->group(function () {
+    Route::get('/unread-messages-count', [NotificationController::class, 'getUnreadCountNotifications']);
+    Route::get('/notifications', [NotificationController::class, 'indexNotifications']);
+    Route::post('/notifications/{notificationId}/mark-as-read', [NotificationController::class, 'markAsReadNotification']);
+});
 
 Route::middleware('auth:api')->post('/image', [ImageController::class, 'postImage']);

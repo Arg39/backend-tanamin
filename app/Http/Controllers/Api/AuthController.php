@@ -12,6 +12,7 @@ use App\Models\UserDetail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -33,37 +34,55 @@ class AuthController extends Controller
                 ->setStatusCode(422);
         }
 
-        // Split the name into first_name and last_name
-        $nameParts = explode(' ', $request->name, 2);
-        $firstName = $nameParts[0];
-        $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
+        try {
+            // Split the name into first_name and last_name
+            $nameParts = explode(' ', $request->name, 2);
+            $firstName = $nameParts[0];
+            $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
 
-        $user = User::create([
-            'id' => \Illuminate\Support\Str::uuid()->toString(),
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'student',
-        ]);
+            $user = User::create([
+                'id' => \Illuminate\Support\Str::uuid()->toString(),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'student',
+            ]);
 
-        UserDetail::create([
-            'user_id' => $user->id,
-            'expertise' => null,
-            'about' => null,
-            'social_media' => null,
-            'photo_cover' => null,
-            'update_password' => false,
-        ]);
+            UserDetail::create([
+                'user_id' => $user->id,
+                'expertise' => null,
+                'about' => null,
+                'social_media' => null,
+                'photo_cover' => null,
+                'update_password' => false,
+            ]);
 
-        // Generate and save the token
-        $token = JWTAuth::fromUser($user);
-        $user->update(['token' => $token]);
+            // Generate and save the token
+            $token = JWTAuth::fromUser($user);
+            $user->update(['token' => $token]);
 
-        return (new PostResource(true, 'User registered successfully', ['token' => $token]))
-            ->response()
-            ->setStatusCode(200);
+            try {
+                $notificationController = new NotificationController();
+                $notificationController->makeNotification(
+                    $user->id,
+                    'Registrasi Berhasil',
+                    'Selamat datang di aplikasi kami!'
+                );
+            } catch (\Exception $e) {
+                // Log error jika gagal membuat notifikasi, tapi tetap lanjutkan proses registrasi
+                \Log::error('Gagal membuat notifikasi registrasi: ' . $e->getMessage());
+            }
+
+            return (new PostResource(true, 'User registered successfully', ['token' => $token]))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new PostResource(false, 'Failed to register user', ['error' => $e->getMessage()]))
+                ->response()
+                ->setStatusCode(500);
+        }
     }
 
     public function registerInstructor(Request $request)

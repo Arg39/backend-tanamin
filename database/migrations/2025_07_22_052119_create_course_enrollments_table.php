@@ -38,6 +38,7 @@ return new class extends Migration
             $table->timestamp('expired_at')->nullable();
             $table->timestamp('paid_at')->nullable();
 
+            $table->unique(['user_id', 'course_id']);
             $table->timestamps();
 
             // Foreign key constraints
