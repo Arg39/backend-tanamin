@@ -25,6 +25,7 @@ class EnrollmentController extends Controller
             $user = $request->user();
             $course = Course::findOrFail($courseId);
 
+            // Cek kalau user sudah pernah beli
             $alreadyEnrolled = CourseEnrollment::where('user_id', $user->id)
                 ->where('course_id', $course->id)
                 ->where('payment_status', 'paid')
@@ -34,29 +35,28 @@ class EnrollmentController extends Controller
                 return (new PostResource(false, 'Kursus ini sudah dibeli.', null))->response()->setStatusCode(400);
             }
 
+            // --- Hitung harga dasar & diskon ---
             $basePrice = $course->price ?? 0;
-
-            $isDiscountActive = false;
-            if ($course->is_discount_active) {
-                if ($course->discount_start_at && $course->discount_end_at) {
-                    $isDiscountActive = now()->between($course->discount_start_at, $course->discount_end_at);
-                } else {
-                    $isDiscountActive = true;
-                }
-            }
-
             $discount = 0;
-            if ($isDiscountActive) {
-                if ($course->discount_type === 'percent') {
-                    $discount = intval($basePrice * $course->discount_value / 100);
-                } elseif ($course->discount_type === 'nominal') {
-                    $discount = $course->discount_value;
+
+            if ($course->is_discount_active) {
+                $isDiscountActive = $course->discount_start_at && $course->discount_end_at
+                    ? now()->between($course->discount_start_at, $course->discount_end_at)
+                    : true;
+
+                if ($isDiscountActive) {
+                    if ($course->discount_type === 'percent') {
+                        $discount = intval($basePrice * $course->discount_value / 100);
+                    } elseif ($course->discount_type === 'nominal') {
+                        $discount = $course->discount_value;
+                    }
                 }
             }
 
             $priceAfterDiscount = max(0, $basePrice - $discount);
 
-            $couponUsage = \App\Models\CouponUsage::where('user_id', $user->id)
+            // --- Cek kupon ---
+            $couponUsage = CouponUsage::where('user_id', $user->id)
                 ->where('course_id', $course->id)
                 ->first();
 
@@ -76,17 +76,21 @@ class EnrollmentController extends Controller
                         return (new PostResource(false, 'Kupon sudah mencapai batas penggunaan.', null))->response()->setStatusCode(400);
                     }
 
-                    if ($coupon->type === 'percent') {
-                        $couponDiscount = intval($priceAfterDiscount * $coupon->value / 100);
-                    } else {
-                        $couponDiscount = $coupon->value;
-                    }
+                    $couponDiscount = $coupon->type === 'percent'
+                        ? intval($priceAfterDiscount * $coupon->value / 100)
+                        : $coupon->value;
+
                     $couponId = $coupon->id;
                 }
             }
 
             $finalPrice = max(0, $priceAfterDiscount - $couponDiscount);
 
+            // Hitung PPN 12%
+            $ppn = $finalPrice > 0 ? intval(round($finalPrice * 0.12)) : 0;
+            $totalWithPpn = $finalPrice + $ppn;
+
+            // --- Kursus gratis langsung aktif ---
             if ($finalPrice <= 0) {
                 $enrollment = CourseEnrollment::create([
                     'id' => (string) Str::uuid(),
@@ -94,6 +98,8 @@ class EnrollmentController extends Controller
                     'course_id' => $course->id,
                     'coupon_id' => $couponId,
                     'price' => 0,
+                    'ppn' => 0,
+                    'total' => 0,
                     'payment_type' => 'free',
                     'payment_status' => 'paid',
                     'access_status' => 'active',
@@ -102,13 +108,11 @@ class EnrollmentController extends Controller
                 ]);
 
                 if ($couponId && !$couponUsage) {
-                    \App\Models\CouponUsage::firstOrCreate([
+                    CouponUsage::firstOrCreate([
                         'user_id' => $user->id,
                         'course_id' => $course->id,
                         'coupon_id' => $couponId,
-                    ], [
-                        'used_at' => now(),
-                    ]);
+                    ], ['used_at' => now()]);
                     Coupon::where('id', $couponId)->increment('used_count');
                 }
 
@@ -117,6 +121,7 @@ class EnrollmentController extends Controller
                 ]);
             }
 
+            // --- Cek apakah ada transaksi pending sebelumnya ---
             $pendingEnrollment = CourseEnrollment::where('user_id', $user->id)
                 ->where('course_id', $course->id)
                 ->where('payment_status', 'pending')
@@ -125,32 +130,36 @@ class EnrollmentController extends Controller
             if ($pendingEnrollment) {
                 $orderId = $pendingEnrollment->midtrans_order_id;
 
-                $pendingEnrollment->update([
-                    'price' => $finalPrice,
-                    'coupon_id' => $couponId,
-                ]);
+                try {
+                    $midtransStatus = \Midtrans\Transaction::status($orderId);
+                    $status = $midtransStatus->transaction_status ?? null;
 
-                $midtrans = MidtransService::createTransaction([
-                    'transaction_details' => [
-                        'order_id' => $orderId,
-                        'gross_amount' => (int)$finalPrice,
-                    ],
-                    'customer_details' => [
-                        'first_name' => $user->name,
-                        'email' => $user->email,
-                    ],
-                ]);
-
-                return new PostResource(true, 'Silakan lanjutkan pembayaran.', [
-                    'redirect_url' => $midtrans->redirect_url,
-                ]);
+                    if (in_array($status, ['expire', 'cancel', 'deny'])) {
+                        // kalau sudah tidak berlaku → update jadi expired
+                        $pendingEnrollment->update([
+                            'payment_status' => 'expired',
+                            'transaction_status' => $status,
+                        ]);
+                        $pendingEnrollment = null;
+                    } else {
+                        // masih pending → kembalikan redirect_url lama
+                        return new PostResource(true, 'Silakan lanjutkan pembayaran.', [
+                            'redirect_url' => $midtransStatus->redirect_url ?? null,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    // gagal cek status, lanjut bikin transaksi baru
+                    $pendingEnrollment = null;
+                }
             }
 
-            $orderId = 'ORDER-' . strtoupper(Str::uuid());
+            // --- Buat order baru ---
+            $orderId = 'ORD-' . now()->format('ymdHis') . '-' . Str::random(8);
+
             $midtrans = MidtransService::createTransaction([
                 'transaction_details' => [
                     'order_id' => $orderId,
-                    'gross_amount' => (int)$finalPrice,
+                    'gross_amount' => (int)$totalWithPpn,
                 ],
                 'customer_details' => [
                     'first_name' => $user->name,
@@ -164,6 +173,8 @@ class EnrollmentController extends Controller
                 'course_id' => $course->id,
                 'coupon_id' => $couponId,
                 'price' => $finalPrice,
+                'ppn' => $ppn,
+                'total' => $totalWithPpn,
                 'payment_type' => 'midtrans',
                 'payment_status' => 'pending',
                 'midtrans_order_id' => $orderId,
@@ -175,7 +186,14 @@ class EnrollmentController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return (new PostResource(false, 'Validasi gagal', $e->errors()))->response()->setStatusCode(422);
         } catch (\Exception $e) {
-            return (new PostResource(false, 'Terjadi kesalahan pada server.', null))->response()->setStatusCode(500);
+            $message = 'Terjadi kesalahan pada server.';
+            if (app()->environment(['local', 'development'])) {
+                $message .= ' ' . $e->getMessage();
+            }
+            return (new PostResource(false, $message, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]))->response()->setStatusCode(500);
         }
     }
 

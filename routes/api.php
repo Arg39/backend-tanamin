@@ -87,7 +87,7 @@ Route::post('/company/message', [CompanyContactUsController::class, 'store']);
 // ───────────────────────────────
 Route::middleware('role:student')->group(function () {
     // enrollment
-    Route::get('/checkout/buy-now/{courseId}', [EnrollmentController::class, 'checkoutBuyNowContent']);
+    Route::get('/checkout/buy-now/{courseId}', [CheckoutCourseController::class, 'checkoutBuyNowContent']);
     Route::post('/enrollments/buy-now/{courseId}', [EnrollmentController::class, 'buyNow']);
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
     Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
@@ -204,7 +204,7 @@ Route::middleware('role:instructor')->group(function () {
     Route::get('/instructor/courses', [InstructorCourseController::class, 'index']);
     // instructor course
     // detail: attribute course
-    Route::post('course/{courseId}/attribute', [CheckoutCourseController::class, 'storeOrUpdateAttribute']);
+    Route::post('course/{courseId}/attribute', [AttributeCourseController::class, 'storeOrUpdateAttribute']);
     // detail: module course
     Route::post('course/{courseId}/module', [ModuleCourseController::class, 'store']);
     Route::patch('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'update']);

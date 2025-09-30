@@ -56,9 +56,10 @@ class OverviewCourseController extends Controller
             $course = Course::where('id', $courseId)->firstOrFail();
             $validated = $request->validated();
 
-            // Handle image upload
-            if (isset($validated['image'])) {
-                $newImagePath = $validated['image']->store('course', 'public');
+            // Ambil file image langsung dari request
+            $imageFile = $request->file('image');
+            if ($imageFile) {
+                $newImagePath = $imageFile->store('course', 'public');
                 if ($course->image && $course->image !== $newImagePath) {
                     if (Storage::disk('public')->exists($course->image)) {
                         Storage::disk('public')->delete($course->image);

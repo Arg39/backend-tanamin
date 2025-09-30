@@ -8,6 +8,7 @@ use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Course;
 use App\Models\CourseAttribute;
+use App\Models\CourseEnrollment;
 use Illuminate\Http\Request;
 
 class CheckoutCourseController extends Controller
@@ -15,25 +16,33 @@ class CheckoutCourseController extends Controller
     public function checkoutBuyNowContent($courseId, Request $request)
     {
         try {
-
             $user = $request->user();
-
-            // Ambil benefit (flatten)
-            $benefits = CourseAttribute::where('course_id', $courseId)
-                ->where('type', 'benefit')
-                ->pluck('content')
-                ->flatten()
-                ->toArray();
 
             $course = Course::select(
                 'title',
                 'price',
+                'image',
                 'discount_value',
                 'discount_type',
                 'discount_start_at',
                 'discount_end_at',
                 'is_discount_active'
             )->find($courseId);
+            if (!$course) {
+                return (new PostResource(false, 'Course not found', null))
+                    ->response()
+                    ->setStatusCode(404);
+            }
+
+            $benefits = CourseAttribute::where('course_id', $courseId)
+                ->where('type', 'benefit')
+                ->pluck('content')
+                ->flatten()
+                ->toArray();
+
+            if ($course && $course->image) {
+                $course->image = asset('storage/' . $course->image);
+            }
 
             $basePrice = $course->price ?? 0;
             $isDiscountActive = false;
@@ -80,12 +89,29 @@ class CheckoutCourseController extends Controller
 
             $total = max(0, $priceAfterDiscount - $couponDiscount);
 
+            // Hitung PPN 12%
+            $ppn = intval(round($total * 0.12));
+            $grandTotal = $total + $ppn;
+
             $response = [
                 'benefit' => $benefits,
                 'detail_course_checkout' => $course,
                 'coupon_usage' => $coupon,
                 'total' => $total,
+                'ppn' => $ppn,
+                'grand_total' => $grandTotal,
             ];
+
+            $courseIsEnrolled = CourseEnrollment::where('course_id', $courseId)
+                ->where('user_id', $user->id)
+                ->where('payment_status', 'paid')
+                ->whereIn('access_status', ['active', 'completed'])
+                ->first();
+            if ($courseIsEnrolled) {
+                $response['already_enrolled'] = true;
+            } else {
+                $response['already_enrolled'] = false;
+            }
 
             return new PostResource(true, 'Benefits retrieved successfully', $response);
         } catch (\Exception $e) {

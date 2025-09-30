@@ -84,7 +84,7 @@ class ModuleCourseController extends Controller
             }
 
             $hasAccess = $enrollment->payment_status === 'paid'
-                && $enrollment->access_status === 'active';
+                && ($enrollment->access_status === 'active' || $enrollment->access_status === 'completed');
 
             if (!$hasAccess) {
                 return new PostResource(false, 'Forbidden: Access denied for this course', null, 403);
