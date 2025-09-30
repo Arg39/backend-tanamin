@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CourseEnrollment;
+use App\Models\CourseCheckoutSession;
 use App\Http\Resources\TableResource;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -28,15 +29,17 @@ class IncomeController extends Controller
             $sortOrder = 'desc';
         }
 
+        // Ambil enrollment yang checkout session-nya paid dan paid_at tidak null
         $incomeQuery = CourseEnrollment::query()
             ->select([
-                DB::raw('DATE(paid_at) as date'),
-                DB::raw('SUM(price) as total_income'),
+                DB::raw('DATE(course_checkout_sessions.paid_at) as date'),
+                DB::raw('SUM(course_enrollments.price) as total_income'),
                 DB::raw('COUNT(*) as total_paid_enrollments')
             ])
-            ->where('payment_status', 'paid')
-            ->whereNotNull('paid_at')
-            ->groupBy(DB::raw('DATE(paid_at)'))
+            ->join('course_checkout_sessions', 'course_enrollments.checkout_session_id', '=', 'course_checkout_sessions.id')
+            ->where('course_checkout_sessions.payment_status', 'paid')
+            ->whereNotNull('course_checkout_sessions.paid_at')
+            ->groupBy(DB::raw('DATE(course_checkout_sessions.paid_at)'))
             ->orderBy($sortBy, $sortOrder);
 
         $paginated = $incomeQuery->paginate($perPage, ['*'], 'page', $page);

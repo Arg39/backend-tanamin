@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Course;
 
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Resources\PostResource;
@@ -67,6 +68,11 @@ class CertificateController extends Controller
                         $enrollment->access_status = 'completed';
                         $enrollment->save();
                     }
+
+                    $notificationController = new NotificationController();
+                    $title = "Selamat! Kamu telah menyelesaikan kursus";
+                    $body = "Kamu sudah menyelesaikan kursus \"{$course->title}\". Terima kasih sudah belajar di Tanamin!";
+                    $notificationController->makeNotification($user->id, $title, $body);
 
                     $certificateData = $certificate->toArray();
                     $certificateData['user_fullname'] = "{$user->first_name} {$user->last_name}";

@@ -27,11 +27,14 @@ class CardCourseController extends Controller
         $user = auth('api')->user();
         $ownedCourseIds = [];
         if ($user) {
+            // Ambil course_id dari course_enrollments yang sudah dibayar (payment_status 'paid' di course_checkout_sessions)
             $ownedCourseIds = CourseEnrollment::where('user_id', $user->id)
-                ->where('payment_status', 'paid')
+                ->whereHas('checkoutSession', function ($query) {
+                    $query->where('payment_status', 'paid');
+                })
                 ->pluck('course_id')
                 ->toArray();
-            // No longer exclude owned courses
+            // Tidak perlu exclude owned courses dari query
         }
 
         // Search
@@ -101,8 +104,11 @@ class CardCourseController extends Controller
         $perPage = $request->get('per_page', 10);
         $page = $request->get('page', 1);
 
-        // Step 1: Get top 10 course_ids by enrollment count
-        $topCourseIds = CourseEnrollment::select('course_id')
+        // Step 1: Get top 10 course_ids by enrollment count (hanya yang checkoutSession.payment_status = 'paid')
+        $topCourseIds = CourseEnrollment::whereHas('checkoutSession', function ($query) {
+            $query->where('payment_status', 'paid');
+        })
+            ->select('course_id')
             ->groupBy('course_id')
             ->orderByRaw('COUNT(*) DESC')
             ->limit(10)

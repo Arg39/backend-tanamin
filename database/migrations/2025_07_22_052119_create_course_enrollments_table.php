@@ -11,73 +11,47 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('course_checkout_sessions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+
+            $table->enum('checkout_type', ['cart', 'direct']);
+            $table->enum('payment_status', ['pending', 'paid', 'expired'])->default('pending');
+
+            // midtrans info
+            $table->string('midtrans_order_id')->nullable()->unique();
+            $table->string('midtrans_transaction_id')->nullable();
+            $table->enum('transaction_status', ['pending', 'settlement', 'expire', 'cancel'])->nullable();
+            $table->enum('fraud_status', ['accept', 'challenge', 'deny'])->nullable();
+            $table->string('payment_type')->nullable();
+
+            // important time 
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamps();
+
+            // Foreign key constraints
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        });
+
         Schema::create('course_enrollments', function (Blueprint $table) {
             $table->uuid('id')->primary();
-
-            // Foreign keys
+            $table->uuid('checkout_session_id');
             $table->uuid('user_id');
             $table->uuid('course_id');
             $table->uuid('coupon_id')->nullable();
-
-            // Info pembayaran
             $table->integer('price')->nullable();
             $table->enum('payment_type', ['free', 'midtrans']);
-            $table->enum('payment_status', ['pending', 'paid', 'expired'])->default('pending');
-
-            // Info Midtrans
-            $table->string('midtrans_order_id')->nullable()->unique();
-            $table->string('midtrans_transaction_id')->nullable();
-            $table->enum('transaction_status', ['capture', 'settlement', 'pending', 'deny', 'expire', 'cancel'])->nullable();
-            $table->enum('fraud_status', ['accept', 'challenge', 'deny'])->nullable();
-
-            // Status akses kursus
-            $table->enum('access_status', ['active', 'completed', 'cancelled'])->default('active');
-
-            // Waktu penting
-            $table->timestamp('enrolled_at')->nullable();
-            $table->timestamp('expired_at')->nullable();
-            $table->timestamp('paid_at')->nullable();
+            $table->enum('access_status', ['inactive', 'active', 'completed'])->default('inactive');
+            $table->timestamps();
 
             $table->unique(['user_id', 'course_id']);
-            $table->timestamps();
 
             // Foreign key constraints
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
             $table->foreign('coupon_id')->references('id')->on('coupons')->onDelete('set null');
-        });
-
-        Schema::create('course_checkout_sessions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            $table->uuid('user_id');
-            $table->integer('total_price')->nullable();
-
-            $table->enum('payment_status', ['pending', 'paid', 'expired'])->default('pending');
-            $table->string('midtrans_order_id')->nullable()->unique();
-            $table->string('midtrans_transaction_id')->nullable();
-            $table->enum('transaction_status', ['capture', 'settlement', 'pending', 'deny', 'expire', 'cancel'])->nullable();
-            $table->enum('fraud_status', ['accept', 'challenge', 'deny'])->nullable();
-
-            $table->timestamp('paid_at')->nullable();
-
-            $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
-
-        Schema::create('checkout_session_items', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            $table->uuid('course_checkout_session_id');
-            $table->uuid('course_id');
-            $table->integer('price')->nullable();
-
-            $table->timestamps();
-
-            $table->foreign('course_checkout_session_id')->references('id')->on('course_checkout_sessions')->onDelete('cascade');
-
-            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
+            $table->foreign('checkout_session_id')->references('id')->on('course_checkout_sessions')->onDelete('cascade');
         });
     }
 
@@ -86,8 +60,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('checkout_session_items');
-        Schema::dropIfExists('course_checkout_sessions');
         Schema::dropIfExists('course_enrollments');
+        Schema::dropIfExists('course_checkout_sessions');
     }
 };

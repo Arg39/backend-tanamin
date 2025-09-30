@@ -75,6 +75,7 @@ class ModuleCourseController extends Controller
                 return new PostResource(false, 'Forbidden: Only students can access this resource', null, 403);
             }
 
+            // Ambil enrollment berdasarkan user_id dan course_id
             $enrollment = CourseEnrollment::where('user_id', $user->id)
                 ->where('course_id', $courseId)
                 ->first();
@@ -83,8 +84,17 @@ class ModuleCourseController extends Controller
                 return new PostResource(false, 'Forbidden: Enrollment not found', null, 403);
             }
 
-            $hasAccess = $enrollment->payment_status === 'paid'
-                && ($enrollment->access_status === 'active' || $enrollment->access_status === 'completed');
+            // Cek akses berdasarkan payment_type dan access_status
+            $hasAccess = false;
+            if ($enrollment->payment_type === 'free') {
+                $hasAccess = $enrollment->access_status === 'active' || $enrollment->access_status === 'completed';
+            } elseif ($enrollment->payment_type === 'midtrans') {
+                // Untuk midtrans, pastikan checkout_session ada dan payment_status paid
+                $checkoutSession = $enrollment->checkoutSession;
+                $hasAccess = $checkoutSession
+                    && $checkoutSession->payment_status === 'paid'
+                    && ($enrollment->access_status === 'active' || $enrollment->access_status === 'completed');
+            }
 
             if (!$hasAccess) {
                 return new PostResource(false, 'Forbidden: Access denied for this course', null, 403);

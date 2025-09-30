@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ErrorResource;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
+use App\Models\CourseCheckoutSession;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Services\MidtransService;
@@ -28,7 +29,9 @@ class EnrollmentController extends Controller
             // Cek kalau user sudah pernah beli
             $alreadyEnrolled = CourseEnrollment::where('user_id', $user->id)
                 ->where('course_id', $course->id)
-                ->where('payment_status', 'paid')
+                ->whereHas('checkoutSession', function ($q) {
+                    $q->where('payment_status', 'paid');
+                })
                 ->exists();
 
             if ($alreadyEnrolled) {
@@ -92,43 +95,81 @@ class EnrollmentController extends Controller
 
             // --- Kursus gratis langsung aktif ---
             if ($finalPrice <= 0) {
-                $enrollment = CourseEnrollment::create([
-                    'id' => (string) Str::uuid(),
-                    'user_id' => $user->id,
-                    'course_id' => $course->id,
-                    'coupon_id' => $couponId,
-                    'price' => 0,
-                    'ppn' => 0,
-                    'total' => 0,
-                    'payment_type' => 'free',
-                    'payment_status' => 'paid',
-                    'access_status' => 'active',
-                    'enrolled_at' => now(),
-                    'paid_at' => now(),
-                ]);
+                // Cek apakah sudah ada enrollment inactive (pending) untuk user & course
+                $existingEnrollment = CourseEnrollment::where('user_id', $user->id)
+                    ->where('course_id', $course->id)
+                    ->first();
 
-                if ($couponId && !$couponUsage) {
-                    CouponUsage::firstOrCreate([
+                if ($existingEnrollment) {
+                    // Update ke status active dan buat session baru jika perlu
+                    $checkoutSession = CourseCheckoutSession::create([
+                        'user_id' => $user->id,
+                        'checkout_type' => 'direct',
+                        'payment_status' => 'paid',
+                        'payment_type' => 'free',
+                        'paid_at' => now(),
+                    ]);
+                    $existingEnrollment->update([
+                        'checkout_session_id' => $checkoutSession->id,
+                        'coupon_id' => $couponId,
+                        'price' => 0,
+                        'payment_type' => 'free',
+                        'access_status' => 'active',
+                    ]);
+                    if ($couponId && !$couponUsage) {
+                        CouponUsage::firstOrCreate([
+                            'user_id' => $user->id,
+                            'course_id' => $course->id,
+                            'coupon_id' => $couponId,
+                        ], ['used_at' => now()]);
+                        Coupon::where('id', $couponId)->increment('used_count');
+                    }
+                    return new PostResource(true, 'Kursus berhasil diakses secara gratis.', [
+                        'enrollment_id' => $existingEnrollment->id,
+                    ]);
+                } else {
+                    $checkoutSession = CourseCheckoutSession::create([
+                        'user_id' => $user->id,
+                        'checkout_type' => 'direct',
+                        'payment_status' => 'paid',
+                        'payment_type' => 'free',
+                        'paid_at' => now(),
+                    ]);
+                    $enrollment = CourseEnrollment::create([
+                        'checkout_session_id' => $checkoutSession->id,
                         'user_id' => $user->id,
                         'course_id' => $course->id,
                         'coupon_id' => $couponId,
-                    ], ['used_at' => now()]);
-                    Coupon::where('id', $couponId)->increment('used_count');
+                        'price' => 0,
+                        'payment_type' => 'free',
+                        'access_status' => 'active',
+                    ]);
+                    if ($couponId && !$couponUsage) {
+                        CouponUsage::firstOrCreate([
+                            'user_id' => $user->id,
+                            'course_id' => $course->id,
+                            'coupon_id' => $couponId,
+                        ], ['used_at' => now()]);
+                        Coupon::where('id', $couponId)->increment('used_count');
+                    }
+                    return new PostResource(true, 'Kursus berhasil diakses secara gratis.', [
+                        'enrollment_id' => $enrollment->id,
+                    ]);
                 }
-
-                return new PostResource(true, 'Kursus berhasil diakses secara gratis.', [
-                    'enrollment_id' => $enrollment->id,
-                ]);
             }
 
             // --- Cek apakah ada transaksi pending sebelumnya ---
-            $pendingEnrollment = CourseEnrollment::where('user_id', $user->id)
-                ->where('course_id', $course->id)
+            $pendingSession = CourseCheckoutSession::where('user_id', $user->id)
+                ->where('checkout_type', 'direct')
                 ->where('payment_status', 'pending')
+                ->whereHas('enrollments', function ($q) use ($course) {
+                    $q->where('course_id', $course->id);
+                })
+                ->latest()
                 ->first();
 
-            if ($pendingEnrollment) {
-                $orderId = $pendingEnrollment->midtrans_order_id;
+            if ($pendingSession) {
+                $orderId = $pendingSession->midtrans_order_id;
 
                 try {
                     $midtransStatus = \Midtrans\Transaction::status($orderId);
@@ -136,11 +177,32 @@ class EnrollmentController extends Controller
 
                     if (in_array($status, ['expire', 'cancel', 'deny'])) {
                         // kalau sudah tidak berlaku → update jadi expired
-                        $pendingEnrollment->update([
+                        $pendingSession->update([
                             'payment_status' => 'expired',
                             'transaction_status' => $status,
                         ]);
-                        $pendingEnrollment = null;
+                    } elseif ($status === null) {
+                        // Jika status null (tidak ditemukan di Midtrans), update session dengan order_id baru
+                        $orderId = 'ORD-' . now()->format('ymdHis') . '-' . Str::random(8);
+
+                        $midtrans = MidtransService::createTransaction([
+                            'transaction_details' => [
+                                'order_id' => $orderId,
+                                'gross_amount' => (int)$totalWithPpn,
+                            ],
+                            'customer_details' => [
+                                'first_name' => $user->name,
+                                'email' => $user->email,
+                            ],
+                        ]);
+
+                        $pendingSession->update([
+                            'midtrans_order_id' => $orderId,
+                        ]);
+
+                        return new PostResource(true, 'Silakan lanjutkan pembayaran.', [
+                            'redirect_url' => $midtrans->redirect_url,
+                        ]);
                     } else {
                         // masih pending → kembalikan redirect_url lama
                         return new PostResource(true, 'Silakan lanjutkan pembayaran.', [
@@ -148,8 +210,27 @@ class EnrollmentController extends Controller
                         ]);
                     }
                 } catch (\Exception $e) {
-                    // gagal cek status, lanjut bikin transaksi baru
-                    $pendingEnrollment = null;
+                    // Jika gagal cek status (misal order_id tidak ditemukan di Midtrans), buat order baru dan update session
+                    $orderId = 'ORD-' . now()->format('ymdHis') . '-' . Str::random(8);
+
+                    $midtrans = MidtransService::createTransaction([
+                        'transaction_details' => [
+                            'order_id' => $orderId,
+                            'gross_amount' => (int)$totalWithPpn,
+                        ],
+                        'customer_details' => [
+                            'first_name' => $user->name,
+                            'email' => $user->email,
+                        ],
+                    ]);
+
+                    $pendingSession->update([
+                        'midtrans_order_id' => $orderId,
+                    ]);
+
+                    return new PostResource(true, 'Silakan lanjutkan pembayaran.', [
+                        'redirect_url' => $midtrans->redirect_url,
+                    ]);
                 }
             }
 
@@ -167,18 +248,39 @@ class EnrollmentController extends Controller
                 ],
             ]);
 
-            CourseEnrollment::create([
-                'id' => (string) Str::uuid(),
+            $checkoutSession = CourseCheckoutSession::create([
                 'user_id' => $user->id,
-                'course_id' => $course->id,
-                'coupon_id' => $couponId,
-                'price' => $finalPrice,
-                'ppn' => $ppn,
-                'total' => $totalWithPpn,
-                'payment_type' => 'midtrans',
+                'checkout_type' => 'direct',
                 'payment_status' => 'pending',
                 'midtrans_order_id' => $orderId,
+                'payment_type' => 'midtrans',
             ]);
+
+            // Cek apakah sudah ada enrollment inactive (pending) untuk user & course
+            $existingEnrollment = CourseEnrollment::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->first();
+
+            if ($existingEnrollment) {
+                // Update ke session baru dan set status inactive
+                $existingEnrollment->update([
+                    'checkout_session_id' => $checkoutSession->id,
+                    'coupon_id' => $couponId,
+                    'price' => $finalPrice,
+                    'payment_type' => 'midtrans',
+                    'access_status' => 'inactive',
+                ]);
+            } else {
+                CourseEnrollment::create([
+                    'checkout_session_id' => $checkoutSession->id,
+                    'user_id' => $user->id,
+                    'course_id' => $course->id,
+                    'coupon_id' => $couponId,
+                    'price' => $finalPrice,
+                    'payment_type' => 'midtrans',
+                    'access_status' => 'inactive',
+                ]);
+            }
 
             return new PostResource(true, 'Silakan lanjutkan pembayaran.', [
                 'redirect_url' => $midtrans->redirect_url,
@@ -221,8 +323,8 @@ class EnrollmentController extends Controller
                 'transaction_id' => $transactionId,
             ]);
 
-            $enrollment = CourseEnrollment::where('midtrans_order_id', $orderId)->first();
-            if (!$enrollment) {
+            $checkoutSession = CourseCheckoutSession::where('midtrans_order_id', $orderId)->first();
+            if (!$checkoutSession) {
                 Log::warning('Order ID not found: ' . $orderId);
                 return response()->json(['status' => false, 'message' => 'Not Found'], 200);
             }
@@ -262,27 +364,43 @@ class EnrollmentController extends Controller
             ];
 
             if ($paymentStatus === 'paid') {
-                $updateData['enrolled_at']   = now();
-                $updateData['paid_at']       = now();
-                $updateData['access_status'] = 'active';
+                $updateData['paid_at'] = now();
 
-                if ($enrollment->coupon_id) {
-                    CouponUsage::firstOrCreate(
-                        [
-                            'user_id'   => $enrollment->user_id,
-                            'course_id' => $enrollment->course_id,
-                            'coupon_id' => $enrollment->coupon_id,
-                        ],
-                        [
-                            'used_at' => now(),
-                        ]
-                    );
+                // Update enrollments to active
+                foreach ($checkoutSession->enrollments as $enrollment) {
+                    $enrollment->access_status = 'active';
+                    $enrollment->save();
 
-                    Coupon::where('id', $enrollment->coupon_id)->increment('used_count');
+                    if ($enrollment->coupon_id) {
+                        CouponUsage::firstOrCreate(
+                            [
+                                'user_id'   => $enrollment->user_id,
+                                'course_id' => $enrollment->course_id,
+                                'coupon_id' => $enrollment->coupon_id,
+                            ],
+                            [
+                                'used_at' => now(),
+                            ]
+                        );
+
+                        Coupon::where('id', $enrollment->coupon_id)->increment('used_count');
+                    }
+
+                    // Kirim notifikasi ke user
+                    try {
+                        $notificationController = app(NotificationController::class);
+                        $notificationController->makeNotification(
+                            $enrollment->user_id,
+                            'Pembayaran Berhasil',
+                            'Pembayaran kursus "' . ($enrollment->course->title ?? '-') . '" berhasil. Anda sudah dapat mengakses kursus. Terima kasih telah belajar di Tanamin Kursus!'
+                        );
+                    } catch (\Exception $e) {
+                        Log::error('Gagal mengirim notifikasi pembayaran: ' . $e->getMessage());
+                    }
                 }
             }
 
-            $enrollment->update($updateData);
+            $checkoutSession->update($updateData);
 
             return response()->json(['status' => true, 'message' => 'OK'], 200);
         } catch (\Exception $e) {
@@ -294,12 +412,12 @@ class EnrollmentController extends Controller
     public function latestTransactions(Request $request)
     {
         try {
-            $allowedSortBy = ['enrolled_at', 'payment_status', 'access_status'];
-            $sortBy = $request->get('sortBy', 'enrolled_at');
+            $allowedSortBy = ['created_at', 'payment_status'];
+            $sortBy = $request->get('sortBy', 'created_at');
             $sortOrder = strtolower($request->get('sortOrder', 'desc')) === 'asc' ? 'asc' : 'desc';
 
             if (!in_array($sortBy, $allowedSortBy)) {
-                $sortBy = 'enrolled_at';
+                $sortBy = 'created_at';
             }
 
             $perPage = (int) $request->get('perPage', 10);
@@ -307,17 +425,15 @@ class EnrollmentController extends Controller
 
             $userSearch = $request->get('user');
 
-            $query = CourseEnrollment::with([
+            $query = CourseCheckoutSession::with([
                 'user:id,first_name,last_name',
-                'course:id,title'
+                'enrollments.course:id,title'
             ])->select([
                 'id',
                 'user_id',
-                'course_id',
-                'enrolled_at',
                 'payment_status',
-                'access_status',
-                'price'
+                'created_at',
+                'payment_type'
             ]);
 
             if ($userSearch) {
@@ -331,24 +447,28 @@ class EnrollmentController extends Controller
 
             $query->orderBy($sortBy, $sortOrder);
 
-            $enrollments = $query->paginate($perPage, ['*'], 'page', $page);
+            $sessions = $query->paginate($perPage, ['*'], 'page', $page);
 
             Carbon::setLocale('id');
 
-            $enrollments->getCollection()->transform(function ($enrollment) {
+            $sessions->getCollection()->transform(function ($session) {
+                $userName = $session->user ? ($session->user->full_name ?? trim($session->user->first_name . ' ' . $session->user->last_name)) : null;
+                $courses = $session->enrollments->map(function ($enrollment) {
+                    return $enrollment->course ? $enrollment->course->title : null;
+                })->filter()->values()->all();
+
                 return [
-                    'id' => $enrollment->id,
-                    'user' => $enrollment->user ? ($enrollment->user->full_name ?? trim($enrollment->user->first_name . ' ' . $enrollment->user->last_name)) : null,
-                    'course' => $enrollment->course ? $enrollment->course->title : null,
-                    'enrolled_at' => $enrollment->enrolled_at ? Carbon::parse($enrollment->enrolled_at)->translatedFormat('d F Y') : null,
-                    'payment_status' => $enrollment->payment_status,
-                    'access_status' => $enrollment->access_status,
-                    'price' => $enrollment->price,
+                    'id' => $session->id,
+                    'user' => $userName,
+                    'courses' => $courses,
+                    'created_at' => $session->created_at ? Carbon::parse($session->created_at)->translatedFormat('d F Y') : null,
+                    'payment_status' => $session->payment_status,
+                    'payment_type' => $session->payment_type,
                 ];
             });
 
             return new TableResource(true, 'Latest transactions retrieved successfully', [
-                'data' => $enrollments,
+                'data' => $sessions,
             ], 200);
         } catch (\Exception $e) {
             return (new ErrorResource(['message' => 'Failed to retrieve transactions: ' . $e->getMessage()]))

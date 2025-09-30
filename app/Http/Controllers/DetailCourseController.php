@@ -37,9 +37,11 @@ class DetailCourseController extends Controller
             $resource = new DetailCourseResource($course);
             $data = $resource->toArray(request());
 
+            // Count students: paid enrollments for this course
             $totalStudent = CourseEnrollment::where('course_id', $courseId)
-                ->where('payment_status', 'paid')
-                ->where('access_status', 'active')
+                ->whereHas('checkoutSession', function ($query) {
+                    $query->where('payment_status', 'paid');
+                })
                 ->count();
             $data['students_count'] = $totalStudent;
 
@@ -52,7 +54,11 @@ class DetailCourseController extends Controller
                     ->orderByDesc('created_at')
                     ->first();
 
-                if ($enrollment && $enrollment->payment_status === 'paid'  && ($enrollment->access_status === 'active' || $enrollment->access_status === 'completed')) {
+                if (
+                    $enrollment &&
+                    $enrollment->checkoutSession &&
+                    $enrollment->checkoutSession->payment_status === 'paid'
+                ) {
                     $access = true;
                     unset($data['price']);
                 }

@@ -102,16 +102,15 @@ class CheckoutCourseController extends Controller
                 'grand_total' => $grandTotal,
             ];
 
+            // Penyesuaian pengecekan enrollment sesuai struktur tabel baru
             $courseIsEnrolled = CourseEnrollment::where('course_id', $courseId)
                 ->where('user_id', $user->id)
-                ->where('payment_status', 'paid')
-                ->whereIn('access_status', ['active', 'completed'])
-                ->first();
-            if ($courseIsEnrolled) {
-                $response['already_enrolled'] = true;
-            } else {
-                $response['already_enrolled'] = false;
-            }
+                ->whereHas('checkoutSession', function ($query) {
+                    $query->where('payment_status', 'paid');
+                })
+                ->exists();
+
+            $response['already_enrolled'] = $courseIsEnrolled ? true : false;
 
             return new PostResource(true, 'Benefits retrieved successfully', $response);
         } catch (\Exception $e) {
