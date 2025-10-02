@@ -47,15 +47,15 @@ class AttributeCourseController extends Controller
     {
         try {
             $validated = $request->validate([
-                'attributes' => 'array',
+                'descriptions' => 'array',
                 'prerequisites' => 'array',
-                'benefits' => 'array', // perbaiki dari 'benefit' ke 'benefits'
+                'benefits' => 'array',
             ]);
 
             $types = [
-                'description' => $validated['attributes'] ?? [],
+                'description' => $validated['descriptions'] ?? [],
                 'prerequisite' => $validated['prerequisites'] ?? [],
-                'benefit' => $validated['benefits'] ?? [], // perbaiki dari 'benefit'
+                'benefit' => $validated['benefits'] ?? [],
             ];
 
             $result = [];

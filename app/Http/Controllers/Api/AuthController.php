@@ -185,6 +185,7 @@ class AuthController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
                 'role' => $user->role,
+                'photo_profile' => $user->photo_profile ?? null,
             ];
 
             return (new PostResource(true, 'Login successful', [
