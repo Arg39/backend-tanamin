@@ -89,6 +89,13 @@ class DetailCourseResource extends JsonResource
             ? Carbon::parse($this->updated_at)->locale('id')->isoFormat('D MMMM Y')
             : null;
 
+        $inCart = false;
+        if (isset($this->in_cart)) {
+            $inCart = $this->in_cart;
+        } elseif ($request->has('in_cart')) {
+            $inCart = $request->get('in_cart');
+        }
+
         return [
             'id'       => $this->id,
             'title'    => $this->title,
@@ -107,6 +114,7 @@ class DetailCourseResource extends JsonResource
             'total_materials' => $totalMaterials,
             'total_quizzes' => $totalQuizzes,
             'updated_at' => $updatedAt,
+            'in_cart' => $inCart,
         ];
     }
 }

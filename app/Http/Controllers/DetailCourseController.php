@@ -65,6 +65,20 @@ class DetailCourseController extends Controller
             }
             $data['access'] = $access;
 
+            // Cek apakah course ada di cart user (belum dibayar, status cart)
+            $inCart = false;
+            if ($user) {
+                $inCart = CourseEnrollment::where('user_id', $user->id)
+                    ->where('course_id', $courseId)
+                    ->where('access_status', 'inactive')
+                    ->whereHas('checkoutSession', function ($q) {
+                        $q->where('checkout_type', 'cart')
+                            ->where('payment_status', 'pending');
+                    })
+                    ->exists();
+            }
+            $data['in_cart'] = $inCart;
+
             // Coupon logic tetap
             $couponInfo = ['coupon' => false];
             if ($user) {

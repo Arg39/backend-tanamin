@@ -366,7 +366,7 @@ class EnrollmentController extends Controller
             if ($paymentStatus === 'paid') {
                 $updateData['paid_at'] = now();
 
-                // Update enrollments to active
+                // Update semua enrollments pada session ini (baik direct maupun cart)
                 foreach ($checkoutSession->enrollments as $enrollment) {
                     $enrollment->access_status = 'active';
                     $enrollment->save();
@@ -397,6 +397,12 @@ class EnrollmentController extends Controller
                     } catch (\Exception $e) {
                         Log::error('Gagal mengirim notifikasi pembayaran: ' . $e->getMessage());
                     }
+                }
+            } elseif ($paymentStatus === 'expired') {
+                // Jika expired, pastikan semua enrollment access_status tetap 'inactive'
+                foreach ($checkoutSession->enrollments as $enrollment) {
+                    $enrollment->access_status = 'inactive';
+                    $enrollment->save();
                 }
             }
 
@@ -474,6 +480,126 @@ class EnrollmentController extends Controller
             return (new ErrorResource(['message' => 'Failed to retrieve transactions: ' . $e->getMessage()]))
                 ->response()
                 ->setStatusCode(500);
+        }
+    }
+
+    public function checkoutCart(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Ambil session cart aktif user
+            $cartSession = \App\Models\CourseCheckoutSession::where('user_id', $user->id)
+                ->where('checkout_type', 'cart')
+                ->where('payment_status', 'pending')
+                ->with('enrollments.course')
+                ->first();
+
+            if (!$cartSession || $cartSession->enrollments->isEmpty()) {
+                return (new PostResource(false, 'Cart kosong.', null))->response()->setStatusCode(400);
+            }
+
+            $totalPrice = 0;
+            $enrollmentsToPay = [];
+            $enrollmentsFree = [];
+
+            // Hitung total harga & kelompokkan enrollment
+            foreach ($cartSession->enrollments as $enrollment) {
+                $course = $enrollment->course;
+                if (!$course) continue;
+
+                // Hitung harga & diskon
+                $basePrice = $course->price ?? 0;
+                $discount = 0;
+                if ($course->is_discount_active) {
+                    $isDiscountActive = $course->discount_start_at && $course->discount_end_at
+                        ? now()->between($course->discount_start_at, $course->discount_end_at)
+                        : true;
+                    if ($isDiscountActive) {
+                        if ($course->discount_type === 'percent') {
+                            $discount = intval($basePrice * $course->discount_value / 100);
+                        } elseif ($course->discount_type === 'nominal') {
+                            $discount = $course->discount_value;
+                        }
+                    }
+                }
+                $finalPrice = max(0, $basePrice - $discount);
+
+                // Update enrollment price & payment_type
+                $enrollment->price = $finalPrice;
+                $enrollment->payment_type = $finalPrice > 0 ? 'midtrans' : 'free';
+                $enrollment->save();
+
+                if ($finalPrice > 0) {
+                    $totalPrice += $finalPrice;
+                    $enrollmentsToPay[] = $enrollment;
+                } else {
+                    $enrollmentsFree[] = $enrollment;
+                }
+            }
+
+            // Hitung PPN 12% jika ada yang berbayar
+            $ppn = $totalPrice > 0 ? intval(round($totalPrice * 0.12)) : 0;
+            $totalWithPpn = $totalPrice + $ppn;
+
+            // Proses course gratis: langsung aktifkan
+            foreach ($enrollmentsFree as $enrollment) {
+                $enrollment->access_status = 'active';
+                $enrollment->payment_type = 'free';
+                $enrollment->save();
+            }
+
+            // Jika semua course gratis
+            if (empty($enrollmentsToPay)) {
+                $cartSession->update([
+                    'payment_status' => 'paid',
+                    'payment_type' => 'free',
+                    'paid_at' => now(),
+                ]);
+                return new PostResource(true, 'Semua kursus gratis berhasil diakses.', [
+                    'enrollment_ids' => $cartSession->enrollments->pluck('id'),
+                ]);
+            }
+
+            // Buat order Midtrans untuk course berbayar
+            $orderId = 'CART-' . now()->format('ymdHis') . '-' . \Illuminate\Support\Str::random(8);
+
+            $midtrans = \App\Services\MidtransService::createTransaction([
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => (int)$totalWithPpn,
+                ],
+                'customer_details' => [
+                    'first_name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ]);
+
+            // Update session cart
+            $cartSession->update([
+                'midtrans_order_id' => $orderId,
+                'payment_type' => 'midtrans',
+            ]);
+
+            // Pastikan enrollmentsToPay access_status tetap inactive, payment_type midtrans
+            foreach ($enrollmentsToPay as $enrollment) {
+                $enrollment->access_status = 'inactive';
+                $enrollment->payment_type = 'midtrans';
+                $enrollment->save();
+            }
+
+            return new PostResource(true, 'Silakan lanjutkan pembayaran.', [
+                'redirect_url' => $midtrans->redirect_url,
+            ]);
+        } catch (\Exception $e) {
+            $message = 'Terjadi kesalahan pada server.';
+            if (app()->environment(['local', 'development'])) {
+                $message .= ' ' . $e->getMessage();
+            }
+            return (new PostResource(false, $message, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]))->response()->setStatusCode(500);
         }
     }
 }

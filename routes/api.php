@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
 use App\Http\Controllers\Api\Course\AttributeCourseController;
+use App\Http\Controllers\Api\Course\CartController;
 use App\Http\Controllers\Api\Course\FilteringCardController;
 use App\Http\Controllers\Api\Course\Material\LessonCourseController;
 use App\Http\Controllers\Api\Course\Material\LessonProgressCourseController;
@@ -100,6 +101,11 @@ Route::middleware('role:student')->group(function () {
     Route::post('tanamin-course/lesson/{lessonId}/quiz/answer', [QuizCourseController::class, 'submitAnswers']);
     Route::post('/tanamin-course/lesson/progress', [LessonProgressCourseController::class, 'storeProgressLesson']);
     Route::get('/tanamin-course/certificate/{courseId}', [CertificateController::class, 'getInformationCertificate']);
+
+    Route::get('/cart', [CartController::class, 'getCartCourses']);
+    Route::post('/cart/add/{courseId}', [CartController::class, 'addToCart']);
+    Route::get('/checkout/cart', [CheckoutCourseController::class, 'checkoutCartContent']);
+    Route::post('/checkout/cart', [EnrollmentController::class, 'checkoutCart']);
 
     // certificate
     Route::middleware('disable.octane')->group(function () {
