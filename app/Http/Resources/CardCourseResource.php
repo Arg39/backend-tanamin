@@ -14,7 +14,7 @@ class CardCourseResource extends JsonResource
      */
     public function toArray($request)
     {
-        return [
+        $array = [
             'id' => $this->id,
             'image' => $this->image ? asset('storage/' . $this->image) : null,
             'title' => $this->title,
@@ -29,5 +29,12 @@ class CardCourseResource extends JsonResource
             'average_rating' => round($this->avg_rating, 2),
             'total_rating' => $this->total_ratings,
         ];
+
+        // Inject progress jika ada di resource (khusus myCourses)
+        if (isset($this->additional['progress'])) {
+            $array['progress'] = $this->additional['progress'];
+        }
+
+        return $array;
     }
 }

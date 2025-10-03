@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\CourseReview;
 use App\Http\Resources\TableResource;
 use App\Http\Resources\CardCourseResource;
+use App\Http\Resources\PostResource;
 use App\Models\CourseEnrollment;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -155,5 +156,63 @@ class CardCourseController extends Controller
             ['data' => $paginator],
             200
         );
+    }
+
+    public function myCourses(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return new PostResource(false, 'Unauthorized', null);
+        }
+
+        $filter = $request->get('filter', 'enrolled'); // default: enrolled
+
+        // Query enrollments with paid checkout session
+        $enrollmentsQuery = CourseEnrollment::with(['course'])
+            ->where('user_id', $user->id)
+            ->whereHas('checkoutSession', function ($q) {
+                $q->where('payment_status', 'paid');
+            });
+
+        // Filter by access_status if needed
+        if ($filter === 'ongoing') {
+            $enrollmentsQuery->where('access_status', 'active');
+        } elseif ($filter === 'completed') {
+            $enrollmentsQuery->where('access_status', 'completed');
+        }
+        // 'enrolled' = all (default, no extra filter)
+
+        $enrollments = $enrollmentsQuery->orderByDesc('created_at')->get();
+
+        // Map to CardCourseResource with progress
+        $courses = $enrollments->map(function ($enrollment) use ($user) {
+            $course = $enrollment->course;
+            if (!$course) return null;
+
+            // Ambil semua lesson id pada course
+            $lessonIds = \App\Models\LessonCourse::whereIn(
+                'module_id',
+                \App\Models\ModuleCourse::where('course_id', $course->id)->pluck('id')
+            )->pluck('id');
+
+            $totalLessons = $lessonIds->count();
+
+            // Hitung lesson yang sudah selesai oleh user
+            $completedLessons = \App\Models\LessonProgress::where('user_id', $user->id)
+                ->whereIn('lesson_id', $lessonIds)
+                ->whereNotNull('completed_at')
+                ->count();
+
+            $progress = "{$completedLessons}/{$totalLessons}";
+
+            // Inject progress ke resource
+            return (new \App\Http\Resources\CardCourseResource($course))->additional([
+                'progress' => $progress
+            ])->resolve(request());
+        })->filter()->values();
+
+        return new PostResource(true, 'My courses retrieved successfully', [
+            'courses' => $courses,
+        ]);
     }
 }

@@ -101,6 +101,7 @@ Route::middleware('role:student')->group(function () {
     Route::post('tanamin-course/lesson/{lessonId}/quiz/answer', [QuizCourseController::class, 'submitAnswers']);
     Route::post('/tanamin-course/lesson/progress', [LessonProgressCourseController::class, 'storeProgressLesson']);
     Route::get('/tanamin-course/certificate/{courseId}', [CertificateController::class, 'getInformationCertificate']);
+    Route::get('/tanamin-courses/my-courses', [CardCourseController::class, 'myCourses']);
 
     Route::get('/cart', [CartController::class, 'getCartCourses']);
     Route::post('/cart/add/{courseId}', [CartController::class, 'addToCart']);
