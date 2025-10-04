@@ -8,7 +8,12 @@ use App\Models\CourseReview;
 use App\Http\Resources\TableResource;
 use App\Http\Resources\CardCourseResource;
 use App\Http\Resources\PostResource;
+use App\Models\Bookmark;
 use App\Models\CourseEnrollment;
+use App\Models\LessonCourse;
+use App\Models\LessonProgress;
+use App\Models\ModuleCourse;
+use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CardCourseController extends Controller
@@ -27,15 +32,18 @@ class CardCourseController extends Controller
 
         $user = auth('api')->user();
         $ownedCourseIds = [];
+        $bookmarkedCourseIds = [];
         if ($user) {
-            // Ambil course_id dari course_enrollments yang sudah dibayar (payment_status 'paid' di course_checkout_sessions)
             $ownedCourseIds = CourseEnrollment::where('user_id', $user->id)
                 ->whereHas('checkoutSession', function ($query) {
                     $query->where('payment_status', 'paid');
                 })
                 ->pluck('course_id')
                 ->toArray();
-            // Tidak perlu exclude owned courses dari query
+            // Ambil course_id yang dibookmark user
+            $bookmarkedCourseIds = Bookmark::where('user_id', $user->id)
+                ->pluck('course_id')
+                ->toArray();
         }
 
         // Search
@@ -80,11 +88,17 @@ class CardCourseController extends Controller
 
         $courses = $query->paginate($perPage);
 
-        $items = $courses->getCollection()->map(function ($course) use ($ownedCourseIds) {
-            $data = (new CardCourseResource($course))->resolve(request());
+        $items = $courses->getCollection()->map(function ($course) use ($ownedCourseIds, $bookmarkedCourseIds) {
+            $resource = new CardCourseResource($course);
+            $resource->additional([
+                'owned' => in_array($course->id, $ownedCourseIds),
+                'bookmark' => in_array($course->id, $bookmarkedCourseIds),
+            ]);
+            $data = $resource->resolve(request());
             $data['average_rating'] = round($course->reviews()->avg('rating') ?? 0, 2);
             $data['total_rating'] = $course->reviews()->count();
             $data['owned'] = in_array($course->id, $ownedCourseIds);
+            $data['bookmark'] = in_array($course->id, $bookmarkedCourseIds);
             return $data;
         });
 
@@ -190,15 +204,15 @@ class CardCourseController extends Controller
             if (!$course) return null;
 
             // Ambil semua lesson id pada course
-            $lessonIds = \App\Models\LessonCourse::whereIn(
+            $lessonIds = LessonCourse::whereIn(
                 'module_id',
-                \App\Models\ModuleCourse::where('course_id', $course->id)->pluck('id')
+                ModuleCourse::where('course_id', $course->id)->pluck('id')
             )->pluck('id');
 
             $totalLessons = $lessonIds->count();
 
             // Hitung lesson yang sudah selesai oleh user
-            $completedLessons = \App\Models\LessonProgress::where('user_id', $user->id)
+            $completedLessons = LessonProgress::where('user_id', $user->id)
                 ->whereIn('lesson_id', $lessonIds)
                 ->whereNotNull('completed_at')
                 ->count();
@@ -206,12 +220,91 @@ class CardCourseController extends Controller
             $progress = "{$completedLessons}/{$totalLessons}";
 
             // Inject progress ke resource
-            return (new \App\Http\Resources\CardCourseResource($course))->additional([
+            return (new CardCourseResource($course))->additional([
                 'progress' => $progress
             ])->resolve(request());
         })->filter()->values();
 
         return new PostResource(true, 'My courses retrieved successfully', [
+            'courses' => $courses,
+        ]);
+    }
+
+    public function purchaseHistory(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return new PostResource(false, 'Unauthorized', null);
+        }
+
+        // Ambil semua enrollments yang sudah dibayar (checkoutSession.payment_status = 'paid')
+        $enrollments = CourseEnrollment::with(['course', 'checkoutSession'])
+            ->where('user_id', $user->id)
+            ->whereHas('checkoutSession', function ($q) {
+                $q->where('payment_status', 'paid');
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        $history = $enrollments->map(function ($enrollment) {
+            $course = $enrollment->course;
+            $checkout = $enrollment->checkoutSession;
+
+            // Format tanggal dengan Carbon dan locale Indonesia
+            $tanggal = '-';
+            $dateObj = $checkout ? $checkout->created_at : $enrollment->created_at;
+            if ($dateObj) {
+                $tanggal = Carbon::parse($dateObj)->locale('id')->translatedFormat('j F Y');
+            }
+
+            return [
+                'course_id'   => $course ? $course->id : null,
+                'order_id'    => $enrollment->checkout_session_id,
+                'nama_course' => $course ? $course->title : '-',
+                'tanggal'     => $tanggal,
+                'total'       => $enrollment->price ?? 0,
+                'status'      => $checkout ? $checkout->payment_status : '-',
+            ];
+        })->values();
+
+        return new PostResource(true, 'Riwayat pembelian berhasil diambil.', [
+            'data' => $history,
+            'total' => $history->count(),
+        ]);
+    }
+
+    public function bookmarkedCourses(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return new PostResource(false, 'Unauthorized', null);
+        }
+
+        // Ambil semua course_id yang sudah di-enroll (dibayar)
+        $enrolledCourseIds = CourseEnrollment::where('user_id', $user->id)
+            ->whereHas('checkoutSession', function ($q) {
+                $q->where('payment_status', 'paid');
+            })
+            ->pluck('course_id')
+            ->toArray();
+
+        // Ambil bookmark yang belum di-enroll
+        $bookmarkedCourses = Bookmark::with('course')
+            ->where('user_id', $user->id)
+            ->whereHas('course', function ($q) use ($enrolledCourseIds) {
+                if (!empty($enrolledCourseIds)) {
+                    $q->whereNotIn('id', $enrolledCourseIds);
+                }
+            })
+            ->get()
+            ->pluck('course')
+            ->filter();
+
+        $courses = $bookmarkedCourses->map(function ($course) {
+            return (new CardCourseResource($course))->resolve(request());
+        })->values();
+
+        return new PostResource(true, 'Bookmarked courses retrieved successfully.', [
             'courses' => $courses,
         ]);
     }

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
 use App\Http\Controllers\Api\Course\AttributeCourseController;
+use App\Http\Controllers\Api\Course\BookmarkController;
 use App\Http\Controllers\Api\Course\CartController;
 use App\Http\Controllers\Api\Course\FilteringCardController;
 use App\Http\Controllers\Api\Course\Material\LessonCourseController;
@@ -49,8 +50,6 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 
-Route::post('/orders', [OrderController::class, 'store']);
-Route::post('/midtrans/webhook', [OrderController::class, 'webhook']);
 Route::get('categories', [CategoryController::class, 'index']);
 Route::post('/enrollments/midtrans/callback', [EnrollmentController::class, 'midtransCallback']);
 
@@ -93,7 +92,8 @@ Route::middleware('role:student')->group(function () {
     Route::get('/checkout/buy-now/{courseId}', [CheckoutCourseController::class, 'checkoutBuyNowContent']);
     Route::post('/enrollments/buy-now/{courseId}', [EnrollmentController::class, 'buyNow']);
     Route::post('/enrollments/cart/checkout', [EnrollmentController::class, 'checkoutCart']);
-    Route::get('/my-courses', [EnrollmentController::class, 'myCourses']);
+    Route::post('/bookmark/{courseId}/add', [BookmarkController::class, 'addBookmark']);
+    Route::post('/bookmark/{courseId}/remove', [BookmarkController::class, 'removeBookmark']);
     Route::get('/tanamin-course/{courseId}/modules', [ModuleCourseController::class, 'indexForStudent']);
     Route::get('/tanamin-course/lesson/{lessonId}/material', [LessonCourseController::class, 'show']);
     Route::get('/tanamin-course/lesson/{lessonId}/quiz', [QuizCourseController::class, 'showQuiz']);
@@ -102,6 +102,8 @@ Route::middleware('role:student')->group(function () {
     Route::post('/tanamin-course/lesson/progress', [LessonProgressCourseController::class, 'storeProgressLesson']);
     Route::get('/tanamin-course/certificate/{courseId}', [CertificateController::class, 'getInformationCertificate']);
     Route::get('/tanamin-courses/my-courses', [CardCourseController::class, 'myCourses']);
+    Route::get('/tanamin-courses/bookmarked', [CardCourseController::class, 'bookmarkedCourses']);
+    Route::get('/tanamin-courses/purchase-history', [CardCourseController::class, 'purchaseHistory']);
 
     Route::get('/cart', [CartController::class, 'getCartCourses']);
     Route::post('/cart/add/{courseId}', [CartController::class, 'addToCart']);

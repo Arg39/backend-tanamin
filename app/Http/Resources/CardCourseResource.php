@@ -35,6 +35,13 @@ class CardCourseResource extends JsonResource
             $array['progress'] = $this->additional['progress'];
         }
 
+        if (isset($this->additional['owned'])) {
+            $array['owned'] = $this->additional['owned'];
+        }
+        if (isset($this->additional['bookmark'])) {
+            $array['bookmark'] = $this->additional['bookmark'];
+        }
+
         return $array;
     }
 }
