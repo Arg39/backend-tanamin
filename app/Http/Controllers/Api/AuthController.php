@@ -23,13 +23,29 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
         if ($validator->fails()) {
             return (new PostResource(false, 'Validation errors', $validator->errors()))
+                ->response()
+                ->setStatusCode(422);
+        }
+
+        // Manual check for username/email uniqueness
+        if (User::where('username', $request->username)->exists()) {
+            return (new PostResource(false, 'Username sudah digunakan', [
+                'username' => ['Username sudah digunakan.']
+            ]))
+                ->response()
+                ->setStatusCode(422);
+        }
+        if (User::where('email', $request->email)->exists()) {
+            return (new PostResource(false, 'Email sudah digunakan', [
+                'email' => ['Email sudah digunakan.']
+            ]))
                 ->response()
                 ->setStatusCode(422);
         }
@@ -90,8 +106,8 @@ class AuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'username' => 'required|string|max:255|unique:users',
-                'email' => 'required|string|email|max:255|unique:users',
+                'username' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255',
                 'password' => 'required|string|min:6|confirmed',
                 'role' => 'required|string|in:admin,instructor',
                 'category_id' => 'required|uuid',
@@ -99,6 +115,22 @@ class AuthController extends Controller
 
             if ($validator->fails()) {
                 return (new PostResource(false, 'Validation errors', $validator->errors()))
+                    ->response()
+                    ->setStatusCode(422);
+            }
+
+            // Manual check for username/email uniqueness
+            if (User::where('username', $request->username)->exists()) {
+                return (new PostResource(false, 'Username sudah digunakan', [
+                    'username' => ['Username sudah digunakan.']
+                ]))
+                    ->response()
+                    ->setStatusCode(422);
+            }
+            if (User::where('email', $request->email)->exists()) {
+                return (new PostResource(false, 'Email sudah digunakan', [
+                    'email' => ['Email sudah digunakan.']
+                ]))
                     ->response()
                     ->setStatusCode(422);
             }
@@ -185,7 +217,7 @@ class AuthController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
                 'role' => $user->role,
-                'photo_profile' => $user->photo_profile ?? null,
+                'photo_profile' => $user->photo_profile ? asset('storage/' . $user->photo_profile) : null,
             ];
 
             return (new PostResource(true, 'Login successful', [

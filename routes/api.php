@@ -235,6 +235,7 @@ Route::middleware('role:instructor,student')->group(function () {
     // profile
     Route::get('/profile', [UserProfileController::class, 'getProfile']);
     Route::match(['put', 'post'], '/profile', [UserProfileController::class, 'updateProfile']);
+    Route::put('/profile/password', [UserProfileController::class, 'updatePassword']);
 });
 
 // ───────────────────────────────

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 
 class UserProfileController extends Controller
 {
@@ -31,11 +32,39 @@ class UserProfileController extends Controller
             }
         }
 
+        // Cek username sudah digunakan user lain
+        if (isset($input['username']) && $input['username'] !== $user->username) {
+            $usernameExists = \App\Models\User::where('username', $input['username'])
+                ->where('id', '!=', $user->id)
+                ->exists();
+            if ($usernameExists) {
+                return (new \App\Http\Resources\PostResource(false, 'Username sudah digunakan', [
+                    'username' => ['Username sudah digunakan.']
+                ]))
+                    ->response()
+                    ->setStatusCode(422);
+            }
+        }
+
+        // Cek email sudah digunakan user lain
+        if (isset($input['email']) && $input['email'] !== $user->email) {
+            $emailExists = \App\Models\User::where('email', $input['email'])
+                ->where('id', '!=', $user->id)
+                ->exists();
+            if ($emailExists) {
+                return (new \App\Http\Resources\PostResource(false, 'Email sudah digunakan', [
+                    'email' => ['Email sudah digunakan.']
+                ]))
+                    ->response()
+                    ->setStatusCode(422);
+            }
+        }
+
         $validator = Validator::make($input, [
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'username' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'nullable|email|max:255',
             'telephone' => 'nullable|string|max:15',
             'expertise' => 'nullable|string|max:255',
             'about' => 'nullable|string|max:1000',
@@ -393,6 +422,39 @@ class UserProfileController extends Controller
                 ->setStatusCode(200);
         } catch (\Exception $e) {
             return (new PostResource(false, 'Failed to delete user: ' . $e->getMessage(), null))
+                ->response()
+                ->setStatusCode(500);
+        }
+    }
+
+    public function updatePassword(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validator = Validator::make($request->all(), [
+                'password' => 'required|string|min:6',
+            ]);
+
+            if ($validator->fails()) {
+                return (new PostResource(false, 'Validation errors', $validator->errors()))
+                    ->response()
+                    ->setStatusCode(422);
+            }
+
+            $user->password = Hash::make($request->input('password'));
+            $user->save();
+
+            // Optionally update user_details.update_password to false
+            if ($user->detail) {
+                $user->detail->update(['update_password' => false]);
+            }
+
+            return (new PostResource(true, 'Password updated successfully.', null))
+                ->response()
+                ->setStatusCode(200);
+        } catch (\Exception $e) {
+            return (new PostResource(false, 'Failed to update password: ' . $e->getMessage(), null))
                 ->response()
                 ->setStatusCode(500);
         }
