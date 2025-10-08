@@ -94,4 +94,34 @@ class ReviewCourseController extends Controller
 
         return new PostResource(true, 'Ratings fetched successfully', $data);
     }
+
+    public function getReviewsCourse($courseId)
+    {
+        $course = Course::find($courseId);
+        if (!$course) {
+            return new PostResource(false, 'Course not found', null);
+        }
+
+        // Ambil semua review beserta user
+        $reviews = CourseReview::where('course_id', $courseId)
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->get();
+
+        if ($reviews->isEmpty()) {
+            return new PostResource(true, 'No reviews found for this course', []);
+        }
+
+        $result = $reviews->map(function ($review) {
+            return [
+                'id_user' => $review->user ? $review->user->id : null,
+                'photo_profile' => $review->user ? asset('storage/' . $review->user->photo_profile) : null,
+                'rating' => $review->rating,
+                'created_at' => $review->created_at ? $review->created_at->toDateTimeString() : null,
+                'comment' => $review->comment,
+            ];
+        });
+
+        return new PostResource(true, 'Reviews fetched successfully', $result);
+    }
 }

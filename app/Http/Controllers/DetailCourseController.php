@@ -6,6 +6,7 @@ use App\Http\Resources\CardCourseResource;
 use App\Http\Resources\DetailCourseResource;
 use App\Http\Resources\InstructorResource;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\TableResource;
 use App\Http\Resources\UserResource;
 use App\Models\Coupon;
 use App\Models\CouponUsage;

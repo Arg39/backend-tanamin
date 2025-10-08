@@ -11,11 +11,17 @@ use App\Models\CourseAttribute;
 use App\Models\CourseCheckoutSession;
 use App\Models\CourseEnrollment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class CheckoutCourseController extends Controller
 {
     public function checkoutBuyNowContent($courseId, Request $request)
     {
+
+        Log::info('Authorization Header:', [$request->header('Authorization')]);
+        Log::info('Auth user:', [Auth::user()]);
+
         try {
             $user = $request->user();
 

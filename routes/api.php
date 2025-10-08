@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\Company\CompanyContactController;
 use App\Http\Controllers\Api\Company\CompanyContactUsController;
 use App\Http\Controllers\Api\Company\CompanyPartnershipController;
 use App\Http\Controllers\Api\Company\CompanyProfileController;
-use App\Http\Controllers\Api\Company\MessageController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
@@ -29,6 +28,7 @@ use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\Course\Material\QuizCourseController;
 use App\Http\Controllers\Api\Course\ReviewCourseController;
+use App\Http\Controllers\Api\Course\StudentCourseController;
 use App\Http\Controllers\Api\IncomeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -62,6 +62,7 @@ Route::get('/tanamin-courses/{courseId}/attribute', [DetailCourseController::cla
 Route::get('/tanamin-courses/{courseId}/material', [DetailCourseController::class, 'getMaterialPublic']);
 Route::get('/tanamin-courses/{courseId}/instructor', [DetailCourseController::class, 'getDetailInstructor']);
 Route::get('/tanamin-courses/{courseId}/ratings', [ReviewCourseController::class, 'getRatingsCourse']);
+Route::get('/tanamin-courses/{courseId}/reviews', [ReviewCourseController::class, 'getReviewsCourse']);
 Route::get('/tanamin-courses/{courseId}/other-instructor-courses', [DetailCourseController::class, 'getOtherCoursesInstructor']);
 Route::get('/tanamin-courses/instructor-list', [UserProfileController::class, 'getInstructorListByCategory']);
 Route::get('/tanamin-courses/instructor-courses/{courseId}', [DetailCourseController::class, 'getCoursesFromInstructorId']);
@@ -79,8 +80,6 @@ Route::get('/company/profile', [CompanyProfileController::class, 'detailCompanyP
 Route::get('/company/activities', [CompanyActivityController::class, 'indexCompanyActivity']);
 Route::get('/company/partnerships', [CompanyPartnershipController::class, 'indexCompanyPartnership']);
 
-// contact
-Route::post('/message/add', [MessageController::class, 'store']);
 // contact us
 Route::post('/company/message', [CompanyContactUsController::class, 'store']);
 
@@ -124,6 +123,7 @@ Route::middleware('role:student')->group(function () {
 // Admin Role
 // ───────────────────────────────
 Route::middleware('role:admin')->group(function () {
+    Route::get('dashboard', [DashboardController::class, 'getDashboardAdmin']);
     // user
     Route::post('register-instructor', [AuthController::class, 'registerInstructor']);
     Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
@@ -199,6 +199,8 @@ Route::middleware('role:admin,instructor')->group(function () {
     Route::get('course/{courseId}/module/{moduleId}', [ModuleCourseController::class, 'show']);
     // detail: material course => lesson
     Route::get('course/lesson/{lessonId}', [LessonCourseController::class, 'show']);
+    Route::get('course/{courseId}/students', [StudentCourseController::class, 'getStudentsEnrolledCourse']);
+    Route::get('course/{courseId}/reviews', [StudentCourseController::class, 'getCourseReviews']);
     // Coupon
     Route::get('coupons', [CouponController::class, 'index']);
     Route::post('coupon', [CouponController::class, 'store']);
