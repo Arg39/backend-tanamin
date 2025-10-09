@@ -63,6 +63,7 @@ Route::get('/tanamin-courses/{courseId}/material', [DetailCourseController::clas
 Route::get('/tanamin-courses/{courseId}/instructor', [DetailCourseController::class, 'getDetailInstructor']);
 Route::get('/tanamin-courses/{courseId}/ratings', [ReviewCourseController::class, 'getRatingsCourse']);
 Route::get('/tanamin-courses/{courseId}/reviews', [ReviewCourseController::class, 'getReviewsCourse']);
+Route::get('course/{courseId}/reviews', [StudentCourseController::class, 'getCourseReviews']);
 Route::get('/tanamin-courses/{courseId}/other-instructor-courses', [DetailCourseController::class, 'getOtherCoursesInstructor']);
 Route::get('/tanamin-courses/instructor-list', [UserProfileController::class, 'getInstructorListByCategory']);
 Route::get('/tanamin-courses/instructor-courses/{courseId}', [DetailCourseController::class, 'getCoursesFromInstructorId']);
@@ -123,7 +124,7 @@ Route::middleware('role:student')->group(function () {
 // Admin Role
 // ───────────────────────────────
 Route::middleware('role:admin')->group(function () {
-    Route::get('dashboard', [DashboardController::class, 'getDashboardAdmin']);
+    Route::get('dashboard/admin', [DashboardController::class, 'getDashboardAdmin']);
     // user
     Route::post('register-instructor', [AuthController::class, 'registerInstructor']);
     Route::get('instructor-select', [UserProfileController::class, 'getInstructorForSelect']);
@@ -200,7 +201,6 @@ Route::middleware('role:admin,instructor')->group(function () {
     // detail: material course => lesson
     Route::get('course/lesson/{lessonId}', [LessonCourseController::class, 'show']);
     Route::get('course/{courseId}/students', [StudentCourseController::class, 'getStudentsEnrolledCourse']);
-    Route::get('course/{courseId}/reviews', [StudentCourseController::class, 'getCourseReviews']);
     // Coupon
     Route::get('coupons', [CouponController::class, 'index']);
     Route::post('coupon', [CouponController::class, 'store']);
@@ -213,6 +213,7 @@ Route::middleware('role:admin,instructor')->group(function () {
 // Instructor Role
 // ───────────────────────────────
 Route::middleware('role:instructor')->group(function () {
+    Route::get('/dashboard/instructor', [DashboardController::class, 'getDashboardInstructur']);
     // all course
     Route::get('/instructor/courses', [InstructorCourseController::class, 'index']);
     // instructor course

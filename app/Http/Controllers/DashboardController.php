@@ -90,9 +90,51 @@ class DashboardController extends Controller
         }
     }
 
-    public function getCourseTopInWeek()
+    public function getDashboardInstructur(Request $request)
     {
-        // This function is intended to retrieve top courses for the week for the dashboard.
+        try {
+            $user = $request->user();
+
+            // Total seluruh kursus
+            $totalCourses = Course::count();
+
+            // Total kursus yang dipegang instructor
+            $totalMyCourses = Course::where('instructor_id', $user->id)->count();
+
+            // Total kategori
+            $totalCategories = Category::count();
+
+            // Total kupon
+            $totalCoupon = Coupon::count();
+
+            // Progress kursus yang dipegang instructor
+            $progress = [
+                'new' => Course::where('instructor_id', $user->id)->where('status', 'new')->count(),
+                'edited' => Course::where('instructor_id', $user->id)->where('status', 'edited')->count(),
+                'awaiting_approval' => Course::where('instructor_id', $user->id)->where('status', 'awaiting_approval')->count(),
+                'published' => Course::where('instructor_id', $user->id)->where('status', 'published')->count(),
+            ];
+
+            $data = [
+                'total_courses' => $totalCourses,
+                'total_my_courses' => $totalMyCourses,
+                'total_categories' => $totalCategories,
+                'total_coupon' => $totalCoupon,
+                'progress' => $progress,
+            ];
+
+            return new PostResource(
+                true,
+                'Dashboard instructor data retrieved successfully.',
+                $data
+            );
+        } catch (\Exception $e) {
+            return new PostResource(
+                false,
+                'Failed to retrieve dashboard instructor data: ' . $e->getMessage(),
+                null
+            );
+        }
     }
 
     public function getInstructor()
@@ -123,10 +165,5 @@ class DashboardController extends Controller
                 []
             );
         }
-    }
-
-    public function getCourse()
-    {
-        // This function is intended to retrieve courses for the dashboard.
     }
 }

@@ -433,13 +433,12 @@ class EnrollmentController extends Controller
 
             $query = CourseCheckoutSession::with([
                 'user:id,first_name,last_name',
-                'enrollments.course:id,title'
+                'enrollments.course:id,title,price'
             ])->select([
                 'id',
                 'user_id',
                 'payment_status',
                 'created_at',
-                'payment_type'
             ]);
 
             if ($userSearch) {
@@ -466,10 +465,10 @@ class EnrollmentController extends Controller
                 return [
                     'id' => $session->id,
                     'user' => $userName,
+                    'price' => $session->enrollments->sum('price'),
                     'courses' => $courses,
                     'created_at' => $session->created_at ? Carbon::parse($session->created_at)->translatedFormat('d F Y') : null,
                     'payment_status' => $session->payment_status,
-                    'payment_type' => $session->payment_type,
                 ];
             });
 
