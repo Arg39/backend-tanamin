@@ -7,9 +7,24 @@ services:
     ports:
       - "8001:80"
     volumes:
-      - .:/app
+      - ./:/app
       - ./.env:/app/.env
+      # Jangan mount ./public atau ./storage secara terpisah!
     environment:
-      MAX_REQUESTS: 500
+      MAX_REQUESTS: 100
+      APP_ENV: local
+      APP_DEBUG: "true"
+      OCTANE_SERVER_STATE_FILE: /app/storage/framework/octane-server-state.json
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # user: "www-data"   # <--- Hapus baris ini
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:

@@ -1,27 +1,45 @@
 FROM dunglas/frankenphp:latest
 
-# Install dependencies & PHP extensions
 RUN apt-get update && apt-get install -y \
     git unzip curl \
     libpng-dev libjpeg-dev libfreetype6-dev \
     libonig-dev default-mysql-client \
+    libzip-dev \
+    autoconf g++ make \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pcntl pdo pdo_mysql mbstring \
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install gd pcntl pdo pdo_mysql mbstring zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apt-get remove -y autoconf g++ make \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Install gosu (official way)
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    url="https://github.com/tianon/gosu/releases/download/1.16/gosu-${arch}"; \
+    curl -fsSL "$url" -o /usr/local/bin/gosu; \
+    chmod +x /usr/local/bin/gosu; \
+    gosu nobody true
 
 WORKDIR /app
 
 COPY . /app
 
 RUN composer clear-cache
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-interaction
 
-# Run storage:link after composer install
-RUN php artisan storage:link
+# Hapus baris ini:
+# RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-interaction
 
-RUN chown -R www-data:www-data /app
+# Hapus baris ini:
+# RUN chown -R www-data:www-data /app
+
+RUN mkdir -p /app/storage /app/public/storage /app/bootstrap/cache
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
 
-CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
