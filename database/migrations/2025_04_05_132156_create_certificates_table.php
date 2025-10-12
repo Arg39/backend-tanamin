@@ -16,7 +16,6 @@ return new class extends Migration
             $table->uuid('user_id');
             $table->uuid('course_id');
             $table->string('certificate_code')->unique();
-            $table->enum('rank', ['gold', 'silver', 'bronze'])->nullable();
             $table->timestamp('issued_at')->nullable();
             $table->timestamps();
 

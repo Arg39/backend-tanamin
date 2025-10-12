@@ -32,4 +32,14 @@ class UserDetail extends Model
     protected $casts = [
         'social_media' => 'array',
     ];
+
+    protected $attributes = [
+        'update_password' => false,
+    ];
+
+    // Tambahkan relasi belongsTo ke User
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

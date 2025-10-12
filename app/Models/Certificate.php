@@ -10,15 +10,21 @@ class Certificate extends Model
 {
     use HasFactory;
 
+    protected $keyType = 'string';
+    public $incrementing = false;
+
     protected $fillable = [
+        'id',
         'user_id',
         'course_id',
         'certificate_code',
         'issued_at',
-        'file_path',
     ];
 
-    // Add this to auto-generate UUID for 'id'
+    protected $casts = [
+        'issued_at' => 'datetime',
+    ];
+
     protected static function boot()
     {
         parent::boot();

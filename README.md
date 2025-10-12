@@ -156,4 +156,25 @@ Jika Anda ingin menerima callback dari Midtrans saat aplikasi masih berjalan sec
 -   `app/`: Direktori utama aplikasi Laravel.
 -   `.env`: File konfigurasi lingkungan aplikasi.
 
+
 ---
+
+---
+
+### 🧪 Testing
+
+1.  **Membuat File Test** Untuk membuat file test baru di Laravel, gunakan perintah artisan berikut:
+
+    ```bash
+    php artisan make:test NamaTest --unit
+    ```
+
+2.  **Cara untuk menjalankan testing** dapat dilaukan dengan dengan berikut:
+
+    ```bash
+    # Menjalankan Seluruh Test
+    php artisan test
+
+    # Menjalankan Test salah 1
+    php artisan test --filter=NamaTest
+    ```
