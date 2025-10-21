@@ -148,6 +148,10 @@ Jika Anda ingin menerima callback dari Midtrans saat aplikasi masih berjalan sec
       php artisan octane:reload
       ```
 
+    - Jalankan perintah beikut jika terjadi `Permission denied`
+      ```bash
+      sudo chown -R $USER:www-data storage bootstrap/cache
+      ```    
 ---
 
 ### 📂 Struktur Direktori

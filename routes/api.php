@@ -25,7 +25,6 @@ use App\Http\Controllers\Api\Course\OverviewCourseController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ImageController;
-use App\Http\Controllers\Api\Material\MaterialCourseController;
 use App\Http\Controllers\Api\Course\Material\QuizCourseController;
 use App\Http\Controllers\Api\Course\ReviewCourseController;
 use App\Http\Controllers\Api\Course\StudentCourseController;
@@ -107,6 +106,7 @@ Route::middleware('role:student')->group(function () {
 
     Route::get('/cart', [CartController::class, 'getCartCourses']);
     Route::post('/cart/add/{courseId}', [CartController::class, 'addToCart']);
+    Route::delete('/cart/remove/{courseId}', [CartController::class, 'removeFromCart']);
     Route::get('/checkout/cart', [CheckoutCourseController::class, 'checkoutCartContent']);
     Route::post('/checkout/cart', [EnrollmentController::class, 'checkoutCart']);
 

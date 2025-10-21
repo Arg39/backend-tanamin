@@ -6,7 +6,7 @@ use Tests\TestCase;
 use App\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 
-class UserModelTest extends TestCase
+class UserTest extends TestCase
 {
     #[Test]
     public function it_can_fill_and_get_attributes()

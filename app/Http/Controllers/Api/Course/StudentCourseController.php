@@ -67,6 +67,7 @@ class StudentCourseController extends Controller
         try {
             $course = Course::where('id', $courseId)->where('status', 'published')->first();
             if (!$course) {
+                dd($course);
                 return new TableResource(false, 'Course not found.', null, 404);
             }
 

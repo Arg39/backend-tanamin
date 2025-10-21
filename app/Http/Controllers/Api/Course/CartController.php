@@ -109,4 +109,34 @@ class CartController extends Controller
 
         return new PostResource(true, 'Course berhasil ditambahkan ke cart.', $enrollment);
     }
+
+    public function removeFromCart($courseId, Request $request)
+    {
+        $user = $request->user();
+
+        // Cari session cart aktif user
+        $cartSession = CourseCheckoutSession::where('user_id', $user->id)
+            ->where('checkout_type', 'cart')
+            ->where('payment_status', 'pending')
+            ->first();
+
+        if (!$cartSession) {
+            return new PostResource(false, 'Cart kosong.', null);
+        }
+
+        // Cari enrollment course di cart session ini
+        $enrollment = CourseEnrollment::where('checkout_session_id', $cartSession->id)
+            ->where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->where('access_status', 'inactive')
+            ->first();
+
+        if (!$enrollment) {
+            return new PostResource(false, 'Course tidak ada di cart.', null);
+        }
+
+        $enrollment->delete();
+
+        return new PostResource(true, 'Course berhasil dihapus dari cart.', null);
+    }
 }
