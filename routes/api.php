@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CardCourseController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutCourseController;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Api\Company\CompanyContactController;
 use App\Http\Controllers\Api\Company\CompanyContactUsController;
 use App\Http\Controllers\Api\Company\CompanyPartnershipController;
 use App\Http\Controllers\Api\Company\CompanyProfileController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\Course\CourseAttributeController;
 use App\Http\Controllers\Api\Course\InstructorCourseController;
 use App\Http\Controllers\Api\Course\AdminCourseController;
@@ -28,17 +30,11 @@ use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Course\Material\QuizCourseController;
 use App\Http\Controllers\Api\Course\ReviewCourseController;
 use App\Http\Controllers\Api\Course\StudentCourseController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DetailCourseController;
 use App\Http\Controllers\Api\IncomeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserProfileController;
-use App\Http\Controllers\CardCourseController;
-use App\Http\Controllers\CouponController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DetailCourseController;
-use App\Http\Controllers\DiscountController;
-use App\Http\Controllers\OrderController;
-use App\Models\CourseAttribute;
-use App\Models\Notification;
 
 // ───────────────────────────────
 // Public Routes
