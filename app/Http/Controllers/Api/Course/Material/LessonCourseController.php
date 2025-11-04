@@ -72,7 +72,7 @@ class LessonCourseController extends Controller
                             'id' => (string) Str::uuid(),
                             'question_id' => $question->id,
                             'answer' => $optionText,
-                            'is_correct' => $optIndex == $qData['correctAnswer'],
+                            'is_correct' => $optIndex == $qData['correctAnswer'] ? 1 : 0,
                         ]);
                     }
                 }

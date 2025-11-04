@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Http\Resources\CardCourseResource;
 use App\Http\Resources\DetailCourseResource;
 use App\Http\Resources\InstructorResource;
@@ -17,7 +19,6 @@ use App\Models\LessonCourse;
 use App\Models\LessonMaterial;
 use App\Models\ModuleCourse;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Exception;
 
 class DetailCourseController extends Controller
