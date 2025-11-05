@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class LoginTest extends TestCase
+class AuthLoginTest extends TestCase
 {
     use DatabaseTransactions;
 

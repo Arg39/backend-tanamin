@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-class IndexCategoryTest extends TestCase
+class CategoryIndexTest extends TestCase
 {
     use DatabaseTransactions;
 

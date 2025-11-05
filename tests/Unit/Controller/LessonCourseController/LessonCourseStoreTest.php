@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-class StoreLessonTest extends TestCase
+class LessonCourseStoreTest extends TestCase
 {
     use DatabaseTransactions;
 

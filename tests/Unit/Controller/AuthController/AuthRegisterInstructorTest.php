@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 
-class RegisterInstructorTest extends TestCase
+class AuthRegisterInstructorTest extends TestCase
 {
     use DatabaseTransactions;
 

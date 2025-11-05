@@ -7,7 +7,7 @@ use Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
 
-class RegisterTest extends TestCase
+class AuthRegisterTest extends TestCase
 {
     use DatabaseTransactions;
 

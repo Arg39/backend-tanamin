@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tests\TestCase;
 
-class StoreCategoryTest extends TestCase
+class CategoryStoreTest extends TestCase
 {
     use DatabaseTransactions;
 
