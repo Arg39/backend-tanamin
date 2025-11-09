@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -57,16 +58,42 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string,string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Boot method to set defaults on creating.
+     */
+    protected static function boot()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        parent::boot();
+
+        static::creating(function ($model) {
+            // Ensure UUID id when not provided
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+
+            // Ensure username exists (generate from email or random)
+            if (empty($model->username)) {
+                if (!empty($model->email) && strpos($model->email, '@') !== false) {
+                    $model->username = strtok($model->email, '@');
+                } else {
+                    $model->username = 'user_' . Str::random(8);
+                }
+            }
+
+            // Default role if not set
+            if (empty($model->role)) {
+                $model->role = 'user';
+            }
+        });
     }
 
     /**

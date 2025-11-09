@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Course extends Model
 {
@@ -29,6 +30,27 @@ class Course extends Model
         'discount_end_at',
         'is_discount_active',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            // Ensure UUID id when not provided
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+
+            // Provide safe defaults to avoid DB enum/strict mode truncation
+            if (!isset($model->level) || $model->level === '') {
+                $model->level = 'beginner';
+            }
+
+            if (!isset($model->status) || $model->status === '') {
+                $model->status = 'new';
+            }
+        });
+    }
 
     public function category()
     {
@@ -95,32 +117,43 @@ class Course extends Model
         return $this->reviews()->count();
     }
 
+    protected function fetchModuleIds()
+    {
+        return ModuleCourse::where('course_id', $this->id)->pluck('id');
+    }
+
+    protected function fetchLessonIds($moduleIds)
+    {
+        return LessonCourse::whereIn('module_id', $moduleIds)->pluck('id');
+    }
+
+    protected function countMaterialsByLessonIds($lessonIds)
+    {
+        return LessonMaterial::whereIn('lesson_id', $lessonIds)->count();
+    }
+
+    protected function countQuizzesByLessonIds($lessonIds)
+    {
+        return LessonQuiz::whereIn('lesson_id', $lessonIds)->count();
+    }
+
     public function getTotalMaterialsAttribute()
     {
-        return LessonMaterial::whereIn(
-            'lesson_id',
-            LessonCourse::whereIn(
-                'module_id',
-                ModuleCourse::where('course_id', $this->id)->pluck('id')
-            )->pluck('id')
-        )->count();
+        $moduleIds = $this->fetchModuleIds();
+        $lessonIds = $this->fetchLessonIds($moduleIds);
+        return $this->countMaterialsByLessonIds($lessonIds);
     }
 
     public function getTotalQuizAttribute()
     {
-        return LessonQuiz::whereIn(
-            'lesson_id',
-            LessonCourse::whereIn(
-                'module_id',
-                ModuleCourse::where('course_id', $this->id)->pluck('id')
-            )->pluck('id')
-        )->count();
+        $moduleIds = $this->fetchModuleIds();
+        $lessonIds = $this->fetchLessonIds($moduleIds);
+        return $this->countQuizzesByLessonIds($lessonIds);
     }
 
-    // 🔎 Flexible search (pecah kata agar lebih cocok)
     public function scopeSearch($query, $search)
     {
-        $terms = preg_split('/\s+/', trim($search)); // pecah berdasarkan spasi
+        $terms = preg_split('/\s+/', trim($search));
         return $query->where(function ($q) use ($terms) {
             foreach ($terms as $term) {
                 $q->where('title', 'like', '%' . $term . '%');

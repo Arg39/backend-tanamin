@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         // Table untuk mencatat progress pengguna terhadap lesson
-        Schema::create('lesson_progress', function (Blueprint $table) {
-            $table->id();
+        Schema::create('lesson_progresses', function (Blueprint $table) {
+            $table->uuid('id')->primary();
             $table->uuid('user_id');
             $table->uuid('lesson_id');
             $table->timestamp('completed_at')->nullable();
@@ -47,6 +47,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('quiz_attempts');
-        Schema::dropIfExists('lesson_progress');
+        Schema::dropIfExists('lesson_progresses');
     }
 };

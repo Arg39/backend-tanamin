@@ -57,9 +57,9 @@ class ModuleCourseController extends Controller
                 ];
             }
 
-            return new \App\Http\Resources\PostResource(true, 'Modules fetched successfully', $result);
+            return new PostResource(true, 'Modules fetched successfully', $result);
         } catch (\Exception $e) {
-            return new \App\Http\Resources\PostResource(false, 'Failed to fetch modules', $e->getMessage());
+            return new PostResource(false, 'Failed to fetch modules', null);
         }
     }
 
@@ -139,7 +139,7 @@ class ModuleCourseController extends Controller
 
             return new PostResource(true, 'Modules fetched successfully', $result);
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to fetch modules for student', $e->getMessage(), 500);
+            return new PostResource(false, 'Failed to fetch modules for student', null);
         }
     }
 
@@ -150,7 +150,7 @@ class ModuleCourseController extends Controller
             $module = ModuleCourse::where('course_id', $courseId)->findOrFail($moduleId);
             return new PostResource(true, 'Module found', (new ModuleCourseResource($module))->resolve(request()));
         } catch (\Exception $e) {
-            return new PostResource(false, 'Module not found', $e->getMessage());
+            return new PostResource(false, 'Module not found', null);
         }
     }
 
@@ -179,7 +179,7 @@ class ModuleCourseController extends Controller
 
             return new PostResource(true, 'Module created successfully', (new ModuleCourseResource($module))->resolve(request()));
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to create module', $e->getMessage());
+            return new PostResource(false, 'Failed to create module', null);
         }
     }
 
@@ -236,7 +236,7 @@ class ModuleCourseController extends Controller
 
             return new PostResource(true, 'Module order updated successfully', (new ModuleCourseResource($movedModule))->resolve(request()));
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to update module order', $e->getMessage());
+            return new PostResource(false, 'Failed to update module order', null);
         }
     }
 
@@ -252,7 +252,7 @@ class ModuleCourseController extends Controller
 
             return new PostResource(true, 'Module deleted successfully', null);
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to delete module', $e->getMessage());
+            return new PostResource(false, 'Failed to delete module', null);
         }
     }
 

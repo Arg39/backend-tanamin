@@ -8,6 +8,7 @@ use App\Models\LessonProgress;
 use App\Http\Resources\PostResource;
 use Carbon\Carbon;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Str;
 
 class LessonProgressCourseController extends Controller
 {
@@ -19,7 +20,8 @@ class LessonProgressCourseController extends Controller
                 'lesson_id' => 'required|uuid',
             ]);
 
-            $userId = JWTAuth::user()->id;
+            $user = JWTAuth::user();
+            $userId = $user ? $user->id : null;
 
             if (!$userId) {
                 return new PostResource(
@@ -33,6 +35,10 @@ class LessonProgressCourseController extends Controller
                 'user_id'   => $userId,
                 'lesson_id' => $request->lesson_id,
             ]);
+
+            if (empty($progress->getKey())) {
+                $progress->id = (string) Str::uuid();
+            }
 
             // Only update if not completed
             if (is_null($progress->completed_at)) {
