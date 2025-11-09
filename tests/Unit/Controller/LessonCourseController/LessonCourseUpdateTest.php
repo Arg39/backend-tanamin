@@ -26,7 +26,6 @@ class LessonCourseUpdateTest extends TestCase
      */
     public function test_updates_material_lesson_successfully()
     {
-        // ...existing code...
         $instructor = User::create([
             'id' => Str::uuid()->toString(),
             'first_name' => 'John',
@@ -93,7 +92,6 @@ class LessonCourseUpdateTest extends TestCase
         $this->assertNotNull($materialFresh);
         $this->assertStringContainsString('Updated content', $materialFresh->content);
         $this->assertTrue((bool)$materialFresh->visible);
-        // ...existing code...
     }
 
     /**
@@ -101,7 +99,6 @@ class LessonCourseUpdateTest extends TestCase
      */
     public function test_update_returns_error_when_material_missing()
     {
-        // ...existing code...
         $instructor = User::create([
             'id' => Str::uuid()->toString(),
             'first_name' => 'NoMat',
@@ -156,7 +153,6 @@ class LessonCourseUpdateTest extends TestCase
         } else {
             $this->assertFalse($data['status']);
         }
-        // ...existing code...
     }
 
     /**
@@ -165,7 +161,6 @@ class LessonCourseUpdateTest extends TestCase
      */
     public function test_updates_quiz_lesson_questions_and_options_and_deletes_removed()
     {
-        // ...existing code...
         $instructor = User::create([
             'id' => Str::uuid()->toString(),
             'first_name' => 'Quiz',
