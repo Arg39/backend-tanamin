@@ -21,7 +21,7 @@ return new class extends Migration
             // midtrans info
             $table->string('midtrans_order_id')->nullable()->unique();
             $table->string('midtrans_transaction_id')->nullable();
-            $table->enum('transaction_status', ['pending', 'settlement', 'expire', 'cancel'])->nullable();
+            $table->enum('transaction_status', ['pending', 'capture', 'settlement', 'deny', 'expire', 'cancel'])->nullable();
             $table->enum('fraud_status', ['accept', 'challenge', 'deny'])->nullable();
             $table->string('payment_type')->nullable();
 
@@ -41,7 +41,7 @@ return new class extends Migration
             $table->uuid('course_id');
             $table->uuid('coupon_id')->nullable();
             $table->integer('price')->nullable();
-            $table->enum('payment_type', ['free', 'midtrans']);
+            $table->enum('payment_type', ['free', 'midtrans', 'pending'])->default('pending');
             $table->enum('access_status', ['inactive', 'active', 'completed'])->default('inactive');
             $table->timestamps();
 
