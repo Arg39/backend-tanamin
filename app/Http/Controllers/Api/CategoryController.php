@@ -19,16 +19,28 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         try {
-            $filterable = ['name', 'date'];
+            $filterable = ['name'];
 
-            $query = Category::query();
+            $query = Category::query()->withCount(['courses as used']);
+
+            if ($request->filled('name')) {
+                $name = trim((string) $request->query('name'));
+                $query->where(function ($q) use ($name) {
+                    $q->where('name', 'like', '%' . $name . '%');
+                });
+            }
 
             $categories = $this->filterQuery($query, $request, $filterable, ['name']);
 
-            $categories->getCollection()->transform(function ($category) {
-                $category->used = $category->courses()->count();
-                return $category;
-            });
+            if (
+                method_exists($categories, 'isEmpty')
+                && $categories->isEmpty()
+                && method_exists($categories, 'total')
+                && $categories->total() > 0
+            ) {
+                $request->merge(['page' => 1]);
+                $categories = $this->filterQuery($query, $request, $filterable, ['name']);
+            }
 
             return new TableResource(true, 'Categories retrieved successfully', [
                 'data' => $categories,

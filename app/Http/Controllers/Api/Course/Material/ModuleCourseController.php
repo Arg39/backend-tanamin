@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Course\Material;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ModuleCourseResource;
 use App\Http\Resources\PostResource;
+use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\ModuleCourse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class ModuleCourseController extends Controller
                     ->pluck('lesson_id')
                     ->toArray();
             }
+            $statusCourse = Course::find($courseId)?->status;
 
             $modules = \App\Models\ModuleCourse::where('course_id', $courseId)
                 ->orderBy('order', 'asc')
@@ -57,9 +59,19 @@ class ModuleCourseController extends Controller
                 ];
             }
 
-            return new PostResource(true, 'Modules fetched successfully', $result);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Modules fetched successfully',
+                'status_course' => $statusCourse,
+                'data' => $result,
+            ], 200);
         } catch (\Exception $e) {
-            return new PostResource(false, 'Failed to fetch modules', null);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch modules',
+                'status_course' => null,
+                'data' => null,
+            ], 500);
         }
     }
 

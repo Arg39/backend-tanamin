@@ -10,6 +10,7 @@ use App\Models\LessonQuiz;
 use App\Models\ModuleCourse;
 use App\Models\Question;
 use App\Models\AnswerOption;
+use App\Models\Course;
 use App\Traits\WysiwygTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -184,6 +185,11 @@ class LessonCourseController extends Controller
                 $data['quiz'] = null;
             }
         }
+
+        $courseId = $lesson->module->course_id;
+        $courseStatus = $lesson->module->course?->status;
+        $data['course_id'] = $courseId;
+        $data['course_status'] = $courseStatus;
 
         return new PostResource(true, 'Lesson detail fetched successfully', $data);
     }

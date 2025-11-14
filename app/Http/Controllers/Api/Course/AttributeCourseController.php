@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Course;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AttributeResource;
 use App\Http\Resources\PostResource;
+use App\Models\Course;
 use App\Models\CourseAttribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -18,6 +19,12 @@ class AttributeCourseController extends Controller
             if (!$id) {
                 return response()->json(['error' => 'Course ID is required'], 400);
             }
+
+            $course = Course::find($id);
+            if (!$course) {
+                return new PostResource(false, 'Kursus tidak ditemukan.', null);
+            }
+
             $courseAttributes = CourseAttribute::where('course_id', $id)
                 ->orderBy('type')
                 ->orderBy('created_at', 'asc')
@@ -29,10 +36,16 @@ class AttributeCourseController extends Controller
                 );
             });
 
+            // tambahan: sertakan status kursus di dalam data response
+            $data = [
+                'status' => $course->status,
+                'attributes' => $grouped,
+            ];
+
             return new PostResource(
                 true,
                 'Data berhasil diambil.',
-                $grouped
+                $data
             );
         } catch (\Exception $e) {
             return new PostResource(
