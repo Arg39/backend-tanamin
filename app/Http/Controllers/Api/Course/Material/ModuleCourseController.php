@@ -87,8 +87,9 @@ class ModuleCourseController extends Controller
                 return new PostResource(false, 'Forbidden: Only students can access this resource', null, 403);
             }
 
-            // Ambil enrollment berdasarkan user_id dan course_id
-            $enrollment = CourseEnrollment::where('user_id', $user->id)
+            // Ambil enrollment berdasarkan user_id dan course_id, sekaligus session checkout-nya
+            $enrollment = CourseEnrollment::with('checkoutSession')
+                ->where('user_id', $user->id)
                 ->where('course_id', $courseId)
                 ->first();
 
@@ -96,16 +97,22 @@ class ModuleCourseController extends Controller
                 return new PostResource(false, 'Forbidden: Enrollment not found', null, 403);
             }
 
-            // Cek akses berdasarkan payment_type dan access_status
+            $accessActive = in_array($enrollment->access_status, ['active', 'completed'], true);
+            $checkoutSession = $enrollment->checkoutSession;
+            $sessionPaid = $checkoutSession && $checkoutSession->payment_status === 'paid';
+
             $hasAccess = false;
-            if ($enrollment->payment_type === 'free') {
-                $hasAccess = $enrollment->access_status === 'active' || $enrollment->access_status === 'completed';
-            } elseif ($enrollment->payment_type === 'midtrans') {
-                // Untuk midtrans, pastikan checkout_session ada dan payment_status paid
-                $checkoutSession = $enrollment->checkoutSession;
-                $hasAccess = $checkoutSession
-                    && $checkoutSession->payment_status === 'paid'
-                    && ($enrollment->access_status === 'active' || $enrollment->access_status === 'completed');
+            switch ($enrollment->payment_type) {
+                case 'free':
+                    $hasAccess = $accessActive || $sessionPaid;
+                    break;
+                case 'midtrans':
+                    $hasAccess = $sessionPaid || $accessActive;
+                    break;
+                case 'pending':
+                default:
+                    $hasAccess = $sessionPaid;
+                    break;
             }
 
             if (!$hasAccess) {
@@ -154,6 +161,7 @@ class ModuleCourseController extends Controller
             return new PostResource(false, 'Failed to fetch modules for student', null);
         }
     }
+
 
     // get module by id
     public function show($courseId, $moduleId)

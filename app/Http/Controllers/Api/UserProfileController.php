@@ -79,6 +79,7 @@ class UserProfileController extends Controller
                 ->setStatusCode(422);
         }
 
+        // Handle photo_profile upload only (avoid nullifying other columns)
         if ($request->hasFile('photo_profile')) {
             if ($user->photo_profile && Storage::disk('public')->exists($user->photo_profile)) {
                 Storage::disk('public')->delete($user->photo_profile);
@@ -87,7 +88,23 @@ class UserProfileController extends Controller
             $user->photo_profile = $photoProfilePath;
         }
 
-        $user->fill(array_intersect_key($input, array_flip(['first_name', 'last_name', 'email', 'username', 'telephone'])));
+        // Only fill fields that are actually present (has()) and not null.
+        $updatable = ['first_name', 'last_name', 'email', 'username', 'telephone'];
+        $safeData = [];
+        foreach ($updatable as $field) {
+            // has() ensures key exists in request; skip null to prevent overwriting required columns
+            if ($request->has($field) && $input[$field] !== null) {
+                // Optionally skip empty string to avoid clearing non-nullable columns
+                if ($field === 'last_name' && $input[$field] === '') {
+                    // ignore empty last_name to preserve existing value
+                    continue;
+                }
+                $safeData[$field] = $input[$field];
+            }
+        }
+        if (!empty($safeData)) {
+            $user->fill($safeData);
+        }
         $user->save();
 
         $detailData = array_intersect_key($input, array_flip(['expertise', 'about', 'social_media']));

@@ -39,11 +39,11 @@ trait FilteringTrait
         if (in_array('date', $filterable)) {
             $startDate = $request->input('dateStart', $request->input('startDate'));
             $endDate = $request->input('dateEnd', $request->input('endDate'));
-        
+
             if ($endDate && !preg_match('/\d{2}:\d{2}:\d{2}/', $endDate)) {
                 $endDate .= ' 23:59:59';
             }
-        
+
             if ($startDate && $endDate) {
                 $query->whereBetween('updated_at', [$startDate, $endDate]);
             } else {

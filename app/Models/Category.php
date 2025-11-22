@@ -19,6 +19,9 @@ class Category extends Model
         'image',
     ];
 
+    // expose image_url automatically when model is serialized
+    protected $appends = ['image_url'];
+
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -37,12 +40,18 @@ class Category extends Model
     // Accessor for created_at
     public function getCreatedAtAttribute($value)
     {
+        if (!$value) {
+            return null;
+        }
         return \Carbon\Carbon::parse($value)->format('Y-m-d H:i');
     }
 
     // Accessor for updated_at
     public function getUpdatedAtAttribute($value)
     {
+        if (!$value) {
+            return null;
+        }
         return \Carbon\Carbon::parse($value)->format('Y-m-d H:i');
     }
 

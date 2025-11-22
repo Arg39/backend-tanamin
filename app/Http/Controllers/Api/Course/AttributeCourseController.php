@@ -36,16 +36,12 @@ class AttributeCourseController extends Controller
                 );
             });
 
-            // tambahan: sertakan status kursus di dalam data response
-            $data = [
-                'status' => $course->status,
-                'attributes' => $grouped,
-            ];
+            $grouped['stats_course'] = $course->status;
 
             return new PostResource(
                 true,
                 'Data berhasil diambil.',
-                $data
+                $grouped
             );
         } catch (\Exception $e) {
             return new PostResource(

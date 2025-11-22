@@ -19,7 +19,6 @@ class CourseEnrollment extends Model
         'course_id',
         'coupon_id',
         'price',
-        'payment_type',
         'access_status',
     ];
 

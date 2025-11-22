@@ -92,26 +92,25 @@ class StudentCourseGetCourseReviewsTest extends TestCase
             'role' => 'student',
         ]);
 
-        // older review (created_at earlier)
+        // older review (created_at earlier) - ensure distinct timestamps to avoid DB precision collisions
         $rev1 = CourseReview::create([
             'id' => Str::uuid()->toString(),
             'course_id' => $course->id,
             'user_id' => $userA->id,
             'rating' => 4,
             'comment' => 'Good course',
-            'created_at' => now()->subMinutes(5),
-            'updated_at' => now()->subMinutes(5),
+            'created_at' => now()->subSeconds(120),
+            'updated_at' => now()->subSeconds(120),
         ]);
 
-        // newer review
         $rev2 = CourseReview::create([
             'id' => Str::uuid()->toString(),
             'course_id' => $course->id,
             'user_id' => $userB->id,
             'rating' => 5,
             'comment' => 'Excellent!',
-            'created_at' => now()->subMinutes(1),
-            'updated_at' => now()->subMinutes(1),
+            'created_at' => now()->subSeconds(60),
+            'updated_at' => now()->subSeconds(60),
         ]);
 
         $controller = new StudentCourseController();
@@ -368,7 +367,7 @@ class StudentCourseGetCourseReviewsTest extends TestCase
         $this->assertCount(2, $reviewsCsv);
         $ratings = array_column($reviewsCsv, 'rating');
         sort($ratings);
-        $this->assertEquals([4,5], $ratings);
+        $this->assertEquals([4, 5], $ratings);
     }
 
     public function test_returns_empty_when_no_reviews()
